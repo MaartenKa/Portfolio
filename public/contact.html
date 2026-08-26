@@ -51,7 +51,70 @@
           contact opnemen? Stuur gerust een bericht
         </p>
       </div>
+      <!-- </section> -->
+
+      <br>
+      <br>
+
+
+      <!-- <section class="section"> -->
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">BERICHT</p>
+
+          <h2>Stuur een bericht</h2>
+
+          <p>
+          <p class="form-privacy">
+            Door dit formulier te versturen worden je gegevens verwerkt om je bericht
+            te kunnen beantwoorden.
+            <a href="/privacy.html">Lees de privacyverklaring</a>.
+          </p>
+          </p>
+        </div>
+
+
+
+        <div class="card">
+          <form action="https://forms.formward.eu/f/269c7657-9b51-4404-b3c8-0f3acd13c0d7" method="POST">
+            <div>
+              <label for="name">Naam</label>
+              <input type="text" id="name" name="name" placeholder="Uw naam" required />
+            </div>
+
+            <div>
+              <label for="email">E-mailadres</label>
+              <input type="email" id="email" name="email" placeholder="Uw@email.nl" required />
+            </div>
+
+            <div>
+              <label for="subject">Onderwerp</label>
+              <input type="text" id="subject" name="subject" placeholder="Waar gaat uw bericht over?" />
+            </div>
+
+            <div>
+              <label for="message">Bericht</label>
+              <textarea id="message" name="message" rows="7" placeholder="Schrijf hier uw bericht..."
+                required></textarea>
+            </div>
+
+            <!-- Honeypot tegen spam -->
+            <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
+
+            <!-- ###################################
+            ##Verander settings wanneer pagina gehost is bij formward allowed origan
+            ################################# -->
+
+            <input type="hidden" name="_redirect" value="/bedankt.html">
+
+            <button type="submit" class="button primary">
+              Verstuur bericht
+            </button>
+          </form>
+        </div>
+      </div>
     </section>
+
 
     <section class="section section-dark">
       <div class="container about-grid">
@@ -93,74 +156,6 @@
       </div>
     </section>
 
-    <section class="section">
-      <div class="container">
-        <div class="section-heading">
-          <p class="eyebrow">BERICHT</p>
-
-          <h2>Stuur een bericht</h2>
-
-          <p>
-          <p class="form-privacy">
-            Door dit formulier te versturen worden je gegevens verwerkt om je bericht
-            te kunnen beantwoorden.
-            <a href="/privacy.html">Lees de privacyverklaring</a>.
-          </p>
-          </p>
-        </div>
-
-        <div class="card">
-          <form action="https://forms.formward.eu/f/269c7657-9b51-4404-b3c8-0f3acd13c0d7" method="POST">
-            <div>
-              <label for="name">Naam</label>
-              <input type="text" id="name" name="name" placeholder="Uw naam" required />
-            </div>
-
-            <div>
-              <label for="email">E-mailadres</label>
-              <input type="email" id="email" name="email" placeholder="Uw@email.nl" required />
-            </div>
-
-            <div>
-              <label for="subject">Onderwerp</label>
-              <input type="text" id="subject" name="subject" placeholder="Waar gaat uw bericht over?" />
-            </div>
-
-            <div>
-              <label for="message">Bericht</label>
-              <textarea id="message" name="message" rows="7" placeholder="Schrijf hier uw bericht..."
-                required></textarea>
-            </div>
-
-            <!-- Honeypot tegen spam -->
-            <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
-
-            <!-- Redirect for submit -->
-            <input type="hidden" name="_redirect" value="https://jouwdomein.nl/bedankt.html" />
-
-            <!-- ###################################
-            ##Verander settings wanneer pagina gehost is bij formward allowed origan
-            ################################# -->
-
-            <input type="hidden" name="_redirect" value="/bedankt.html">
-
-            <button type="submit" class="button primary">
-              Verstuur bericht
-            </button>
-          </form>
-        </div>
-      </div>
-    </section>
-
-    <!-- <section>
-      <section class="section">
-        <div class="container">
-          De gegevens die je via dit formulier invult, worden gebruikt om je bericht te beantwoorden. Je gegevens worden
-          hiervoor verwerkt via Basin. We bewaren je gegevens niet langer dan noodzakelijk voor dit doel. Bekijk onze
-          [privacyverklaring] voor meer informatie.
-        </div>
-      </section>
-    </section> -->
 
     <section class="section section-dark">
       <div class="container cta">

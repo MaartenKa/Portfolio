@@ -15,12 +15,14 @@
   /* Text */
   --text: #f8fafc;
   --text-muted: #a7b0c2;
-  --text-subtle: #6f7b91;
+  /* --text-subtle: #6f7b91; */
+  --text-subtle: #92a1be;
 
   /* Brand */
   --primary: #8b5cf6;
-  --primary-light: #a78bfa;
+  --primary-light: #e0d6ff;
   --primary-dark: #7c3aed;
+  --primary-active: #86efac;   
 
   --secondary: #3b82f6;
   --secondary-light: #60a5fa;
@@ -297,7 +299,8 @@ p {
 }
 
 .nav-links a.active {
-  color: var(--primary-light);
+  /* color: var(--primary-light); */
+  color: var(--primary-active);
 
   background: rgba(139, 92, 246, 0.1);
 }
