@@ -7,7 +7,11 @@
     "build": "tsc",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "test:headed": "playwright test --headed"
+    "test:headed": "playwright test --headed",
+    "testChromium": "playwright test --project=chromium",
+    "test_homepage": "playwright test homepage.spec.ts",
+    "test_debug": "playwright test --debug",
+    "test_codegen": "playwright codegen"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
