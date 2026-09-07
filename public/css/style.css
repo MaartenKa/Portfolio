@@ -258,9 +258,13 @@ p {
 }
 
 .logo {
-  font-size: 1.4rem;
+  /* font-size: 1.4rem;
   font-weight: 850;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.04em; */
+  width: 50px !important;
+  height: auto !important;
+  max-width: 100px !important;
+  display: block;
 }
 
 .logo span {
