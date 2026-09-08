@@ -1,4 +1,5 @@
 "use strict";
+// Menu toggle for mobile devices
 const menuToggle = document.querySelector("#menu-toggle");
 const navLinks = document.querySelector("#nav-links");
 if (menuToggle && navLinks) {

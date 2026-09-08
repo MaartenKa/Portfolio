@@ -8,7 +8,6 @@
   <meta name="description"
     content="Persoonlijk portfolio van Maarten Kamps - QA, software testing en test automation." />
   <title>Maarten Kamps | QA & Test Automation</title>
-
   <link rel="stylesheet" href="css/style.css" />
 </head>
 
@@ -18,7 +17,10 @@
       <a href="index.html" class="logo">
         <img src="images/logoipsum-407.png" alt="Mijn logo">
       </a>
-      <button class="menu-toggle" id="menu-toggle" aria-label="Open navigatie" aria-expanded="false"></button>
+      // Button used for mobile devices see mail.js
+      <button class="menu-toggle" id="menu-toggle" aria-label="Open navigatie" aria-expanded="false">
+        ☰
+      </button>
 
       <ul class="nav-links" id="nav-links">
         <li><a href="index.html" class="active">Home</a></li>
@@ -106,7 +108,9 @@
               fout optreed. Je moet kritisch nadenken en spoort fouten op voordat gebruikers ze tegenkomen. Je helpt bij
               het verbeteren van het product.
             </p>
-            <a href="testing.html" class="card-link"> Meer over testing → </a>
+            <div class="link-below">
+              <a href="testing.html" class="card-link"> Meer over testing → </a>
+            </div>
           </article>
 
           <article class="card">
