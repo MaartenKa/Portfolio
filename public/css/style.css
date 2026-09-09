@@ -375,6 +375,10 @@ p {
   margin-top: 32px;
 }
 
+.menu-toggle {
+  display: none;
+}
+
 /* =========================================================
    BUTTONS
    ========================================================= */
@@ -774,12 +778,12 @@ textarea {
     --header-height: 68px;
   }
 
-  .section {
-    padding: 90px 0;
-  }
-
   .menu-toggle {
     display: inline-flex;
+  }
+
+  .section {
+    padding: 90px 0;
   }
 
   .nav-links {
