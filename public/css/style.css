@@ -215,6 +215,11 @@ p {
   margin-bottom: 55px;
 }
 
+.table {
+  padding-left: 30px;
+  list-style-type: disc;
+}
+
 /* =========================================================
    NAVIGATION
    ========================================================= */
@@ -242,10 +247,6 @@ p {
   max-width: 100px !important;
   display: block;
 }
-
-/* .logo span {
-  color: var(--primary-light);
-} */
 
 .nav-links {
   display: flex;
