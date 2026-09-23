@@ -10,6 +10,7 @@
     "test:headed": "playwright test --headed",
     "testChromium": "playwright test --project=chromium",
     "test_homepage": "playwright test homepage.spec.ts",
+    "test_smoke": "playwright test smoke.spec.ts",
     "test_debug": "playwright test --debug",
     "test_list_tests": "npx playwright test --list",
     "test_codegen": "playwright codegen"
@@ -22,3 +23,4 @@
     "typescript": "^5.9.0"
   }
 }
+
