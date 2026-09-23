@@ -1,7 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./tests",
+  testDir: "./playwright/tests",
+
+  outputDir: "./playwright/test-results",
 
   fullyParallel: true,
 
@@ -11,7 +13,9 @@ export default defineConfig({
 
   workers: process.env.CI ? 1 : undefined,
 
-  reporter: "html",
+  reporter: [
+    ["html", { outputFolder: "./playwright/playwright-report", open: "never" }],
+  ],
 
   use: {
     baseURL: "http://127.0.0.1:3000",
