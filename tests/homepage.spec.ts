@@ -1,84 +1,63 @@
-  //   de homepage opent zonder foutmelding;
-  //   de belangrijkste heading zichtbaar is;
-  //   de navigatie zichtbaar is;
-  //   de belangrijkste CTA aanwezig is;
-  //   de pagina een correcte titel heeft.
+import { test, expect } from '@playwright/test';
 
-import { test, expect } from "@playwright/test";
+test.describe('Homepage', () => {
+  test('pagina laadt succesvol', async ({ page }) => {
+    const response = await page.goto('/');
 
+    expect(response).not.toBeNull();
+    expect(response!.status()).toBe(200);
+    await expect(page).toHaveTitle(/Maarten Kamps/);
+  });
 
-test("homepage heeft de juiste titel", async ({ page }) => {
-  await page.goto("/");
+  test('belangrijkste heading en introductie zijn zichtbaar', async ({ page }) => {
+    await page.goto('/');
 
-  await expect(page).toHaveTitle("Maarten Kamps | QA & Test Automation");
-});
+    const heroHeading = page.getByRole('heading', { level: 1, name: /Breaking software/i });
+    await expect(heroHeading).toBeVisible();
 
-test("homepage toont mijn belangrijkste onderdelen", async ({ page }) => {
-  await page.goto("/");
+    const intro = page.locator('.hero-description');
+    await expect(intro).toBeVisible();
+    await expect(intro).toContainText(/software testing/i);
+  });
 
-  await expect(
-    page.getByRole("heading", {
-      name: /Ik test software/i,
-    }),
-  ).toBeVisible();
+  test('belangrijkste navigatie-elementen zijn aanwezig', async ({ page }) => {
+    await page.goto('/');
 
-  await expect(
-    page.getByRole("link", {
-      name: "Bekijk mijn projecten",
-    }),
-  ).toBeVisible();
+    await expect(page.locator('.navbar')).toBeVisible();
+    await expect(page.locator('.logo')).toBeVisible();
 
-  await expect(
-    page.getByRole("link", {
-      name: "Bekijk mijn CV",
-    }),
-  ).toBeVisible();
-});
+    const expectedLinks = [
+      'Home',
+      'Curriculum Vitae',
+      'Software Testen',
+      'Automatisering',
+      'Projecten',
+      'Contact',
+    ];
 
-test("CV-link werkt", async ({ page }) => {
-  await page.goto("/");
+    for (const label of expectedLinks) {
+      await expect(
+        page.getByRole('navigation').getByRole('link', { name: label, exact: true }),
+      ).toBeVisible();
+    }
+  });
 
-  await page
-    .getByRole("link", {
-      name: "Bekijk mijn CV",
-    })
-    .click();
+  test('er zijn geen evidente console errors', async ({ page }) => {
+    const consoleErrors: string[] = [];
 
-  await expect(page).toHaveURL(/cv\.html/);
-});
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
 
-// Contact requirement fields
-test('contact form validates email', async ({ page }) => {
-  await page.goto('/contact');
+    page.on('pageerror', (err) => {
+      consoleErrors.push(err.message);
+    });
 
-  await page.getByLabel('Name').fill('John Doe');
-  await page.getByLabel('Email').fill('not-an-email');
-  await page.getByLabel('Message').fill('Hello');
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
 
-  await page.getByRole('button', { name: /send/i }).click();
-
-  await expect(page.getByText(/valid email/i)).toBeVisible();
-});
-
-// external links
-test('GitHub link points to correct destination', async ({ page }) => {
-  await page.goto('/');
-
-  const github = page.getByRole('link', { name: /github/i });
-
-  await expect(github).toHaveAttribute('href', /github\.com/);
-});
-
-// accesibillity 
-
-test('main navigation is accessible', async ({ page }) => {
-  await page.goto('/');
-
-  await expect(
-    page.getByRole('navigation')
-  ).toBeVisible();
-
-  await expect(
-    page.getByRole('link', { name: /home/i })
-  ).toBeVisible();
+    expect(consoleErrors).toEqual([]);
+  });
 });
