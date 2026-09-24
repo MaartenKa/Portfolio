@@ -1,0 +1,242 @@
+<!doctype html>
+
+<html lang="nl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:," />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Test Automatisering portfolio van Maarten Kamps met Playwright en TypeScript.">
+  <title>Maarten Kamps | Test Automatisering</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar container">
+      <a href="index.html" class="logo">
+        <img src="images/logoipsum-407.png" alt="Mijn logo">
+      </a>
+      <button class="menu-toggle" id="menu-toggle" aria-label="Open navigatie" aria-expanded="false">
+        ☰
+      </button>
+
+      <ul class="nav-links" id="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="curriculum.html">Curriculum Vitae</a></li>
+        <li><a href="testing.html">Software Testen</a></li>
+        <li><a href="automation.html" class="active">Automatisering</a></li>
+        <li><a href="projects.html">Projecten</a></li>
+        <li><a href="personal.html">Persoonlijke Projecten</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <p class="eyebrow">TEST AUTOMATISERING</p>
+        <h1>Automatiseren</h1>
+        <br>
+        <p class="hero-description">
+          Automatisering gebruiken om sneller, betrouwbaarder en herhaalbaar
+          softwarekwaliteit te controleren.
+        </p>
+      </div>
+    </section>
+
+    <section class="section section-dark">
+      <div class="container about-grid">
+        <div>
+          <p class="eyebrow">AUTOMATION</p>
+
+          <h2>Laat tests het werk doen</h2>
+        </div>
+
+        <div>
+          <p>
+            Automatiseren van testen heeft verschillende voordelen. Door tests automatisch uit te voeren, kunnen ze
+            sneller en vaker worden uitgevoerd. Dit bespaart tijd en zorgt ervoor dat testers zich kunnen richten op
+            andere belangrijke taken. Ook wordt de kans op menselijke fouten kleiner. Vooral bij regression testing is
+            automatisering handig, omdat dezelfde tests na iedere wijziging opnieuw uitgevoerd kunnen worden. Hierdoor
+            kan de kwaliteit van de software beter en efficiënter worden gecontroleerd.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">TECHNOLOGIE</p>
+
+          <h2>Mijn automation stack</h2>
+        </div>
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-icon">🎭</div>
+
+            <h3>Playwright</h3>
+            <p>Voor het automatisch testen van webapplicaties gebruik ik Playwright. Hiermee kan ik bijvoorbeeld een
+              browser openen, op knoppen klikken, formulieren invullen en gebruikersinteracties nabootsen. Vervolgens
+              kan ik controleren of de applicatie het verwachte resultaat geeft. Playwright ondersteunt onder andere
+              Chrome, Firefox en Safari en ik gebruik het voornamelijk voor end-to-end testing.</P>
+            <P> Daarnaast kan ik met
+              Playwright ook mocks gebruiken voor externe (third-party) providers, zodat afhankelijkheden van
+              bijvoorbeeld API’s of andere externe diensten tijdens het testen gecontroleerd kunnen worden nagebootst.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">⌨️</div>
+
+            <h3>TypeScript</h3>
+            <p>
+              Voor het schrijven van mijn geautomatiseerde tests gebruik ik JavaScript en TypeScript. Met JavaScript kan
+              ik onder andere testlogica schrijven, gegevens verwerken en interactie met webapplicaties automatiseren.
+            </p>
+            <p>
+              TypeScript is gebaseerd op JavaScript en voegt onder andere statische typering toe. Dit helpt mij om
+              fouten al tijdens het ontwikkelen van mijn tests te ontdekken. Daarnaast zorgt TypeScript ervoor dat mijn
+              testcode overzichtelijker en beter onderhoudbaar blijft.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">⚙️</div>
+
+            <h3>Cypress</h3>
+            <p>Cypress gebruik ik als testframework voor het automatisch testen van webapplicaties. Wat ik prettig vind
+              aan Cypress is dat het relatief eenvoudig te installeren en te gebruiken is. Daarnaast biedt het een
+              gebruiksvriendelijke testomgeving waarin ik mijn tests eenvoudig kan uitvoeren en resultaten kan bekijken.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">⚙️</div>
+
+            <h3>Node.js</h3>
+            <p>Node.js gebruik ik als runtime-omgeving om JavaScript en TypeScript buiten de browser uit te voeren.
+              Binnen mijn testomgeving gebruik ik Node.js onder andere om tests met Cypress en Playwright uit te voeren
+              en om testresultaten te verwerken.</p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">⚙️</div>
+
+            <h3>Dev tools</h3>
+            <p>Met Developer Tools, de ingebouwde hulpmiddelen van moderne webbrowsers, kan ik webapplicaties
+              inspecteren, testen en debuggen. Ik gebruik deze tools onder andere om de HTML- en CSS-structuur te
+              bekijken, JavaScript-fouten te onderzoeken en netwerkverkeer te analyseren. Ook kan ik hiermee het gedrag
+              van een webpagina tijdens het gebruik controleren. Dit helpt mij om problemen sneller te vinden en te
+              begrijpen waar ze vandaan komen.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-dark">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">TESTS</p>
+
+          <h2>Wat ik automatiseer</h2>
+        </div>
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-icon">🔗</div>
+
+            <h3>End-to-End Tests</h3>
+            <p>Met End-to-End Tests controleer ik een complete applicatie van begin tot eind.
+              Hierbij controleer ik of een volledige gebruikershandeling goed werkt, bijvoorbeeld het inloggen, invullen
+              van een formulier en uitvoeren van een actie. Op deze manier controleer ik of alle onderdelen van het
+              systeem goed met elkaar samenwerken.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">🖥️</div>
+
+            <h3>UI Tests</h3>
+            <p>Bij UI Tests controleer ik of de gebruikersinterface van een applicatie goed werkt.
+              Hierbij test ik bijvoorbeeld of knoppen, menu’s, formulieren en links correct reageren wanneer een
+              gebruiker ermee werkt. Zo kan ik controleren of de applicatie gebruiksvriendelijk en functioneel werkt.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">🔌</div>
+
+            <h3>API Tests</h3>
+            <p>Met API Tests controleer ik of een API correct werkt en goed communiceert tussen verschillende systemen
+              of onderdelen van een applicatie. Hierbij test ik bijvoorbeeld of de juiste gegevens worden
+              verstuurd, ontvangen en verwerkt. Ook controleer ik of de API de juiste foutmeldingen geeft wanneer er
+              iets misgaat.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-heading">
+          <p class="eyebrow">TESTRESULTATEN</p>
+
+          <h2>Deze website test zichzelf.</h2>
+          <p>
+            [IN PROGRESS] Hier komen Playwright-resultaten, screenshots, video's,
+            teststatistieken en reports
+          </p>
+        </div>
+
+        <div class="card-grid">
+          <article class="card">
+            <div class="card-icon">✅</div>
+            <h3>[Aantal]</h3>
+            <p>Tests uitgevoerd</p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">📊</div>
+            <h3>[Percentage]</h3>
+            <p>Tests geslaagd</p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">🚀</div>
+            <h3>[Status]</h3>
+            <p>Laatste test run</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-dark">
+      <div class="container cta">
+        <p class="eyebrow">PROJECTEN</p>
+
+        <h2>Bekijk de automation projecten</h2>
+        <p>Bekijk mijn praktische voorbeelden van testing en automation.</p>
+        <a href="projects.html" class="button primary"> Bekijk projecten </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-content">
+      <p>Maarten Kamps © 2026</p>
+      <div class="footer-links">
+        <a href="contact.html">Contact</a>
+        <a href="https://github.com/MaartenKa/Portfolio">GitHub</a>
+        <a href="https://www.linkedin.com/in/maarten-kamps-a6909527/">LinkedIn</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
+    </div>
+  </footer>
+  <script type="module" src="js/ts/main.js"></script>
+</body>
+
+</html>
