@@ -15,26 +15,26 @@
 
 <body>
   <header class="site-header">
-    <nav class="navbar container" aria-label="Hoofdnavigatie">
+    <nav class="navbar container">
       <a href="index.html" class="logo">
         <img src="images/logoipsum-407.png" alt="Mijn logo">
       </a>
-      <button class="menu-toggle" id="menu-toggle" data-testid="menu-toggle" aria-label="Open navigatie" aria-expanded="false">
+      <button class="menu-toggle" id="menu-toggle" aria-label="Open navigatie" aria-expanded="false">
         ☰
       </button>
       <ul class="nav-links" id="nav-links">
-        <li><a href="index.html" data-testid="nav-home">Home</a></li>
-        <li><a href="curriculum.html" data-testid="nav-curriculum">Curriculum Vitae</a></li>
-        <li><a href="testing.html" data-testid="nav-testing">Software Testen</a></li>
-        <li><a href="automation.html" data-testid="nav-automation">Automatisering </a></li>
-        <li><a href="projects.html" class="active" data-testid="nav-projects">Projecten</a></li>
-        <li><a href="personal.html" data-testid="nav-personal">Persoonlijke Projecten</a></li>
-        <li><a href="contact.html" data-testid="nav-contact">Contact</a></li>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="curriculum.html">Curriculum Vitae</a></li>
+        <li><a href="testing.html">Software Testen</a></li>
+        <li><a href="automation.html">Automatisering </a></li>
+        <li><a href="projects.html" class="active">Projecten</a></li>
+        <li><a href="personal.html">Persoonlijke Projecten</a></li>
+        <li><a href="contact.html">Contact</a></li>
       </ul>
     </nav>
   </header>
   <main>
-    <section class="section" aria-label="Hero">
+    <section class="section">
       <div class="container">
         <p class="eyebrow">MIJN WERK</p>
 
@@ -46,7 +46,7 @@
         </p>
       </div>
     </section>
-    <section class="section section-dark" aria-label="Projecten">
+    <section class="section section-dark">
       <div class="container">
         <div class="section-heading">
           <p class="eyebrow">PORTFOLIO</p>
@@ -61,7 +61,7 @@
             <p>Hier vind je verschillende playwright testen die ik geschreven heb om mijn portfolio website te testen
             </p>
             <p><strong>Technologie:</strong> Playwright, TypeScript</p>
-            <a href="https://github.com/MaartenKa/Portfolio" class="card-link"> Bekijk de code op GitHub <span aria-hidden="true">→</span> </a>
+            <a href="https://github.com/MaartenKa/Portfolio" class="card-link"> Bekijk de code op GitHub → </a>
           </article>
           <article class="card">
             <div class="card-icon">💻</div>
@@ -74,12 +74,12 @@
             <p>
               <strong>Technologie:</strong> HTML, CSS, TypeScript, Playwright
             </p>
-            <a href="https://github.com/MaartenKa/Portfolio" class="card-link"> Bekijk de code op GitHub <span aria-hidden="true">→</span> </a>
+            <a href="https://github.com/MaartenKa/Portfolio" class="card-link"> Bekijk de code op GitHub → </a>
         </div>
       </div>
     </section>
 
-    <section class="section" aria-label="Toekomstige projecten">
+    <section class="section">
       <div class="container">
         <div class="section-heading">
           <p class="eyebrow">TOEKOMSTIGE PROJECTEN</p>
@@ -93,7 +93,7 @@
       </div>
     </section>
 
-    <section class="section section-dark" aria-label="Call to action">
+    <section class="section section-dark">
       <div class="container cta">
         <p class="eyebrow">CODE</p>
 
@@ -106,12 +106,12 @@
   <footer class="footer">
     <div class="container footer-content">
       <p>Maarten Kamps © 2026</p>
-      <nav class="footer-links" aria-label="Footernavigatie">
-        <a href="contact.html" data-testid="footer-contact">Contact</a>
-        <a href="https://github.com/MaartenKa/Portfolio" data-testid="footer-github">GitHub</a>
-        <a href="https://www.linkedin.com/in/maarten-kamps-a6909527/" data-testid="footer-linkedin">LinkedIn</a>
-        <a href="privacy.html" data-testid="footer-privacy">Privacy</a>
-      </nav>
+      <div class="footer-links">
+        <a href="contact.html">Contact</a>
+        <a href="https://github.com/MaartenKa/Portfolio">GitHub</a>
+        <a href="https://www.linkedin.com/in/maarten-kamps-a6909527/">LinkedIn</a>
+        <a href="privacy.html">Privacy</a>
+      </div>
     </div>
   </footer>
   <script type="module" src="js/ts/main.js"></script>
