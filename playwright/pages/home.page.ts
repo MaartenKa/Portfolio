@@ -23,37 +23,27 @@ export class HomePage extends BasePage {
   // Functionele navigatie (gebruikersgedrag)
 
   async clickProjectsCta() {
-    await this.page
-      .getByRole("link", { name: "Bekijk mijn projecten", exact: true })
-      .click();
+    await this.page.getByTestId("cta-projects").click();
     await expect(this.page).toHaveURL(/projects\.html/);
   }
 
   async clickCurriculumCta() {
-    await this.page
-      .getByRole("link", { name: "Bekijk mijn Curriculum vitae", exact: true })
-      .click();
+    await this.page.getByTestId("cta-curriculum").click();
     await expect(this.page).toHaveURL(/curriculum\.html/);
   }
 
   async clickContactNavLink() {
-    await this.page
-      .getByRole("navigation")
-      .getByRole("link", { name: "Contact", exact: true })
-      .click();
+    await this.page.getByTestId("nav-contact").click();
     await expect(this.page).toHaveURL(/contact\.html/);
   }
 
   async clickProjectsNavLink() {
-    await this.page
-      .getByRole("navigation")
-      .getByRole("link", { name: "Projecten", exact: true })
-      .click();
+    await this.page.getByTestId("nav-projects").click();
     await expect(this.page).toHaveURL(/projects\.html/);
   }
 
   async clickTestingCardLink() {
-    await this.page.getByRole("link", { name: /Meer over testing/ }).click();
+    await this.page.getByTestId("card-link-testing").click();
     await expect(this.page).toHaveURL(/testing\.html/);
   }
 }
