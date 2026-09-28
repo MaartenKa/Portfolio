@@ -27,10 +27,13 @@ export class ContactPage extends BasePage {
   /** Mock de Formward POST zodat tests deterministisch zijn en geen internet nodig hebben. */
   async mockFormSubmit(): Promise<void> {
     await this.page.route(FORMWARD_URL, async (route) => {
+      // Het formulier doet een top-level document-navigatie (POST).
+      // Een `Location`-header heeft alleen effect op een redirect-status (3xx);
+      // met status 200 zou de browser hem negeren. Retourneer daarom een echte
+      // 302-redirect zodat de browser naar /bedankt.html navigeert, zonder dat
+      // het request het lokale domein verlaat (geen echt Formward-mailtje).
       await route.fulfill({
-        status: 200,
-        contentType: "text/html",
-        body: "redirecting",
+        status: 302,
         headers: { Location: "/bedankt.html" },
       });
     });
@@ -100,7 +103,7 @@ export class ContactPage extends BasePage {
   }
 
   async expectGitHubLink(): Promise<void> {
-    const link = this.page.getByRole("link", { name: "GitHub" });
+    const link = this.page.getByTestId("footer-github");
     await expect(link).toBeVisible();
     await expect(link).toHaveAttribute(
       "href",
@@ -109,7 +112,7 @@ export class ContactPage extends BasePage {
   }
 
   async expectLinkedInLink(): Promise<void> {
-    const link = this.page.getByRole("link", { name: "LinkedIn" });
+    const link = this.page.getByTestId("footer-linkedin");
     await expect(link).toBeVisible();
     await expect(link).toHaveAttribute(
       "href",
