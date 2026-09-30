@@ -27,12 +27,17 @@ export class ContactPage extends BasePage {
   /** Mock de Formward POST zodat tests deterministisch zijn en geen internet nodig hebben. */
   async mockFormSubmit(): Promise<void> {
     await this.page.route(FORMWARD_URL, async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "text/html",
-        body: "redirecting",
-        headers: { Location: "/bedankt.html" },
-      });
+      if (route.request().method() === "POST") {
+        // Simuleer Formward's redirect-gedrag: browser navigeert naar bedanktpagina
+        await route.fulfill({
+          status: 200,
+          contentType: "text/html",
+          body: `<!DOCTYPE html><html><head><title>Redirecting</title><script>window.location.href='/bedankt.html';</script></head><body></body></html>`,
+        });
+      } else {
+        // Block any GET to Formward (should not happen)
+        await route.abort();
+      }
     });
   }
 
@@ -100,7 +105,7 @@ export class ContactPage extends BasePage {
   }
 
   async expectGitHubLink(): Promise<void> {
-    const link = this.page.getByRole("link", { name: "GitHub" });
+    const link = this.page.getByRole("link", { name: "GitHub" }).first();
     await expect(link).toBeVisible();
     await expect(link).toHaveAttribute(
       "href",
@@ -109,7 +114,7 @@ export class ContactPage extends BasePage {
   }
 
   async expectLinkedInLink(): Promise<void> {
-    const link = this.page.getByRole("link", { name: "LinkedIn" });
+    const link = this.page.getByRole("link", { name: "LinkedIn" }).first();
     await expect(link).toBeVisible();
     await expect(link).toHaveAttribute(
       "href",

@@ -14,7 +14,6 @@
     "test_debug": "playwright test --debug",
     "test_list_tests": "npx playwright test --list",
     "test_codegen": "playwright codegen"
-    
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",
@@ -23,4 +22,3 @@
     "typescript": "^5.9.0"
   }
 }
-
