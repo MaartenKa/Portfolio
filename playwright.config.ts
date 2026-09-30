@@ -38,7 +38,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: "npx http-server public -p 3000",
+    command: "npx http-server docs -p 3000",
 
     url: "http://127.0.0.1:3000",
 
