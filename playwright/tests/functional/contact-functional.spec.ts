@@ -6,6 +6,11 @@ test.describe("Contactpagina - functionele tests", () => {
 
   test.beforeEach(async ({ page }) => {
     contact = new ContactPage(page);
+    // Installeer de Formward-mock VÓÓR het navigeren, zodat elke request naar
+    // Formward (incl. een eventuele submit) al geïntercepteerd wordt en er nooit
+    // een echt POST/mailtje weggaat. Tests die native validatie willen testen,
+    // roepen zelf clearFormMock() aan.
+    await contact.mockFormSubmit();
     await contact.navigate();
   });
 
@@ -43,10 +48,7 @@ test.describe("Contactpagina - functionele tests", () => {
   });
 
   test.describe("Formulier-inzending", () => {
-    test.beforeEach(async () => {
-      await contact.mockFormSubmit();
-    });
-
+    // De Formward-mock staat al in de bovenliggende beforeEach.
     test("geldig formulier redirect naar bedanktpagina", async () => {
       await contact.fillForm({
         name: "Test Gebruiker",
@@ -76,3 +78,4 @@ test.describe("Contactpagina - functionele tests", () => {
     });
   });
 });
+
