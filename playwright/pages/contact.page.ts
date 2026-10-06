@@ -17,7 +17,7 @@ export class ContactPage extends BasePage {
   }
 
   async navigate(): Promise<ContactPage> {
-    const response = await super.goto("/contact.html");
+    const response = await super.goto("contact.html");
     expect(response).not.toBeNull();
     expect(response!.status()).toBe(200);
     await expect(this.page).toHaveTitle(/Contact/);
