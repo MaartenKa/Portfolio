@@ -34,7 +34,7 @@ export class ContactPage extends BasePage {
       // het request het lokale domein verlaat (geen echt Formward-mailtje).
       await route.fulfill({
         status: 302,
-        headers: { Location: "/bedankt.html" },
+        headers: { Location: "https://maartenka.github.io/Portfolio/bedankt.html" },
       });
     });
   }
