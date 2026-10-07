@@ -34,7 +34,7 @@ network mocking, CI-ready configuratie).
 ├── package.json              # scripts + devDependencies
 ├── tsconfig.json             # TypeScript-config (strict, ES2020, outDir ./dist)
 ├── playwright.config.ts      # Playwright configuratie
-├── public/                   # STATISCHE WEBSITE (root van de site)
+├── docs/                   # STATISCHE WEBSITE (root van de site)
 │   ├── index.html            # Home pagina
 │   ├── curriculum.html
 │   ├── testing.html
