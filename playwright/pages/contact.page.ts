@@ -17,7 +17,7 @@ export class ContactPage extends BasePage {
   }
 
   async navigate(): Promise<ContactPage> {
-    const response = await super.goto("/contact.html");
+    const response = await super.goto("contact.html");
     expect(response).not.toBeNull();
     expect(response!.status()).toBe(200);
     await expect(this.page).toHaveTitle(/Contact/);
@@ -34,7 +34,7 @@ export class ContactPage extends BasePage {
       // het request het lokale domein verlaat (geen echt Formward-mailtje).
       await route.fulfill({
         status: 302,
-        headers: { Location: "/bedankt.html" },
+        headers: { Location: "https://maartenka.github.io/Portfolio/bedankt.html" },
       });
     });
   }

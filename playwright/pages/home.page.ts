@@ -7,7 +7,7 @@ export class HomePage extends BasePage {
   }
 
   async navigate(): Promise<HomePage> {
-    const response = await super.goto("/");
+    const response = await super.goto("");
     expect(response).not.toBeNull();
     expect(response!.status()).toBe(200);
     await expect(this.page).toHaveTitle(/Maarten Kamps/);

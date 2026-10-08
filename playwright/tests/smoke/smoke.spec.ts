@@ -3,14 +3,14 @@ import { HomePage } from "../../pages/home.page";
 
 // De overige pagina's die we willen controleren op basis van je routes
 const otherPagesToTest = [
-  "/curriculum.html",
-  "/testing.html",
-  "/automation.html",
-  "/projects.html",
-  "/personal.html",
-  "/contact.html",
-  "/privacy.html",
-  "/bedankt.html",
+  "curriculum.html",
+  "testing.html",
+  "automation.html",
+  "projects.html",
+  "personal.html",
+  "contact.html",
+  "privacy.html",
+  "bedankt.html",
 ];
 
 test.describe("Smoke test – Index pagina (Deep Check)", () => {

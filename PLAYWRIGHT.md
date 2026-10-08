@@ -18,14 +18,14 @@ network mocking, CI-ready configuratie).
 
 ## 2. Tech stack
 
-| Onderdeel      | Technologie                                  |
-|----------------|----------------------------------------------|
-| Testframework  | Playwright (`@playwright/test` v1.62.x)      |
-| Taal (tests + site-JS) | TypeScript (strict mode)            |
-| Website        | Statisch HTML/CSS + klein TS-module          |
-| Testserver     | `http-server` (lokaal op poort 3000)         |
-| Reporter       | Playwright HTML reporter                      |
-| Browser        | Chromium (Desktop Chrome)                     |
+| Onderdeel      | Technologie                                          |
+|----------------|------------------------------------------------------|
+| Testframework  | Playwright (`@playwright/test` v1.62.x)              |
+| Taal (tests + site-JS) | TypeScript (strict mode)                     |
+| Website        | Statisch HTML/CSS + klein TS-module                  |
+| Testserver     | `http-server` (lokaal op poort 3000) is uitgeschakeld |
+| Reporter       | Playwright HTML reporter                             |
+| Browser        | Chromium (Desktop Chrome)                            |
 
 ## 3. Projectstructuur
 
@@ -34,7 +34,7 @@ network mocking, CI-ready configuratie).
 ├── package.json              # scripts + devDependencies
 ├── tsconfig.json             # TypeScript-config (strict, ES2020, outDir ./dist)
 ├── playwright.config.ts      # Playwright configuratie
-├── public/                   # STATISCHE WEBSITE (root van de site)
+├── docs/                   # STATISCHE WEBSITE (root van de site)
 │   ├── index.html            # Home pagina
 │   ├── curriculum.html
 │   ├── testing.html
@@ -66,8 +66,8 @@ network mocking, CI-ready configuratie).
 │   └── tests/
 │       ├── smoke/smoke.spec.ts          # smoke tests (huidig)
 │       ├── functional/homepage-functional.spec.ts
-│       ├── functional/contact-functional.spec.ts
-│       └── old/                        # oude specs (legacy, NIET actueel)
+│       └── functional/contact-functional.spec.ts
+│       
 └── playwright-report/        # HTML rapport (ge-genereerd, in .gitignore)
 ```
 
@@ -125,8 +125,10 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 
 ### Config (playwright.config.ts)
 - `testDir`: `./playwright/tests`
-- `baseURL`: `http://127.0.0.1:3000`
-- `webServer`: `npx http-server public -p 3000` (auto-start, `reuseExistingServer`)
+ `baseURL`: `https://maartenka.github.io/Portfolio/` (standaard)
+  of lokaal: `http://127.0.0.1:3000` (handmatig omzetten in config)
+- `webServer`: `npx http-server public -p 3000` — alleen actief wanneer
+  de config op localhost staat (auto-start, `reuseExistingServer`)
 - Reporter: HTML → `./playwright/playwright-report`
 - Op failure: screenshot; op retry: trace; op failure: video (retained)
 - `fullyParallel: true`; CI: 2 retries + 1 worker + `forbidOnly`
@@ -151,7 +153,7 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 
 ```bash
 npm install                 # dependencies
-npm test                    # draait http-server (poort 3000) + alle Playwright tests
+npm test                    # draait alle Playwright tests (en of start lokaal de webserver wanneer dit gedefinieerd is in de playwright config)
 npm run test:headed         # met zichtbare browser
 npm run test:ui             # interactieve UI
 npm run build               # TS compileren (naar ./dist)
@@ -175,13 +177,23 @@ npm run build               # TS compileren (naar ./dist)
 - De website is **Nederlands**; test-namen en UI-teksten zijn dus in het
   Nederlands.
 
+- **Pad-conventie voor `page.goto(...)`:** gebruik **relatieve paden**
+  (zonder leading `/`) zodat Playwright ze oplost ten opzichte van `baseURL`.
+  - ✅ `page.goto("")` → home pagina
+  - ✅ `page.goto("curriculum.html")`
+  - ❌ `page.goto("/")` → lost op als root van de domain, NIET ten opzichte van baseURL
+  - ❌ `page.goto("/curriculum.html")`
+  Dit is cruciaal wanneer `baseURL` een subpath bevat, bijv.
+  `https://maartenka.github.io/Portfolio/`. Een leading `/` zou dan naar
+  `https://maartenka.github.io/curriculum.html` navigeren (404).
+
 ## 9. Snelreferentie
 
 - Home title regex: `/Maarten Kamps/`
 - Contact title regex: `/Contact/`
 - Thank-you tekst: `"Bedankt uw bericht is ontvangen"`
 - Formward URL: `https://forms.formward.eu/f/269c7657-9b51-4404-b3c8-0f3acd13c0d7`
-- Bedankt-pagina: `/bedankt.html`
+- Bedankt-pagina: `bedankt.html`
 - Privacy-link: `privacy.html`
 - E-mail: `mailto:Maarten.kamps.bee@outlook.com`
 - GitHub: `https://github.com/MaartenKa/Portfolio`
