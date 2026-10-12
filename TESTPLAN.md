@@ -21,12 +21,13 @@ kwaliteitsrisico's liggen daarom op vier vlakken:
 3. **Client-side gedrag** — de mobiele menu-toggle (de enige echte site-JS).
 4. **Non-functioneel** — responsive, accessibility, SEO, performance, cross-browser.
 
-De huidige suite dekt (1) en (2) goed. **Het grootste gat is de mobiele
-menu-toggle**: dat is de enige echte JavaScript-functionaliteit, maar die is
-momenteel niet geautomatiseerd. Daarnaast ontbreken responsive, accessibility,
-SEO, visual-regression, performance en een CI/CD-pipeline.
+De huidige suite dekt (1), (2) **én (3)** — de mobiele menu-toggle is reeds
+geautomatiseerd in `mobile-menu-functional.spec.ts` (incl. ARIA-asserts en
+state-transities). De resterende gaten liggen op vlak **(4)**: responsive,
+accessibility, SEO, visual-regression, performance ontbreken nog als
+geautomatiseerde tests, evenals een CI/CD-pipeline.
 
-Deze strategie vult die gaten op met een gestructureerde, gefaseerde aanpak
+Deze strategie sluit die gaten op met een gestructureerde, gefaseerde aanpak
 (zie §10 Roadmap) zodat het portfolio een professioneel, compleet testprofiel
 toont. De ISTQB-indeling (testniveaus / testtypes / testtechnieken) wordt als
 kader gebruikt om de scope te bepalen en prioriteiten te onderbouwen.
@@ -133,7 +134,8 @@ risico-profiel van een statische portfolio-site.
 - **Smoke / sanity:** elke pagina laadt (HTTP 200), geen console/page errors. _(bestaand)_
 - **Navigatie:** elke `nav-*`-link, CTA en card-link opent de juiste URL. _(bestaand, uitbreiden)_
 - **Formulier:** zie §7 (validatie, honeypot, submit, redirect).
-- **Menu-toggle (MOBIEEL — nieuw, hoogste prioriteit):** zie TC-MENU hieronder.
+- **Menu-toggle (MOBIEEL — bestaand, stabiliseren/uitbreiden):** zie TC-MENU
+  in §8.3 (`mobile-menu-functional.spec.ts`).
 
 ### 5.2 Non-functioneel
 
@@ -208,8 +210,13 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
 
 ### 6.2 Omgeving & determinisme
 
-- **Lokaal/CI server:** `http-server` op `127.0.0.1:3000` (via `webServer` in
-  `playwright.config.ts`).
+- **Huidige configuratie:** `baseURL = https://maartenka.github.io/Portfolio/`
+  (live GitHub Pages). De `webServer`-blokken (`http-server` op `127.0.0.1:3000`)
+  staan in `playwright.config.ts` gecommenteerd als fallback voor lokaal testen
+  tegen de `docs/`-build.
+- **Aanbeveling (fase 6 CI):** schakel in CI over naar de lokale `webServer`
+  (`http-server docs -p 3000`) zodat tests deterministisch zijn en niet afhangen
+  van de live-deploy; de live-URL blijft als handmatige smoke-omgeving.
 - **Externe netwerkaanroepen (Formward) worden gemockt** via `page.route(...)` zodat
   tests offline, snel en betrouwbaar draaien. **Geen** echte POST's in de suite.
 - **Externe links (GitHub/LinkedIn):** in CI alleen **link-structuur** checken
@@ -234,10 +241,237 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
 
 De belangrijkste data-flow. Verwacht-gedrag per scenario:
 
-| #   | Scenario                        | Input                   | Verwacht resultaat                                                                                     |
-| --- | ------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------ |
-| F1  | Geldige submit                  | alle velden geldig      | POST → redirect naar `/bedankt.html` + tekst "Bedankt uw bericht is ontvangen"                         |
-| F2  | Lege verplichte velden          | name/email/bericht leeg | géén submit (native validatie), blijft op `contact.html`, validatiemelding                             |
-| F3  | Ongeldige e-mail                | `ongeldig-email`        | géén submit, e-mail-validatiemelding                                                                   |
-| F4  | Alleen optioneel veld ontbreekt | `subject` leeg          | WEL geldige submit (subject is niet `required`)                                                        |
-| F5  | Honeypot ingevuld (bot)         | `_gotcha` gevuld        | spamfilter: géén geldig bericht (Formward verwijdert; lokaal: assert veld blijft hidden + tabindex -1) |
+| #   | Scenario                          | Input                                 | Verwacht resultaat                                                                                       |
+| --- | --------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| F1  | Geldige submit                    | alle velden geldig                    | POST → redirect naar `/bedankt.html` + tekst "Bedankt uw bericht is ontvangen"                           |
+| F2  | Lege verplichte velden            | name/email/bericht leeg               | géén submit (native validatie), blijft op `contact.html`, validatiemelding                               |
+| F3  | Ongeldige e-mail                  | `ongeldig-email`                      | géén submit, e-mail-validatiemelding                                                                     |
+| F4  | Alleen optioneel veld ontbreekt   | `subject` leeg                        | WEL geldige submit (subject is niet `required`)                                                          |
+| F5  | Honeypot ingevuld (bot)           | `_gotcha` gevuld                      | spamfilter: géén geldig bericht (Formward verwijdert; lokaal: assert veld blijft hidden + tabindex -1)   |
+| F6  | Boundary: minimale/ extreme tekst | naam = 1 teken, bericht = 500+ tekens | WEL geldige submit; geen fouten/truncatie in UI (boundary value analysis)                                |
+| F7  | Speciale tekens / unicode         | emoji, quotes, accents                | WEL geldige submit; tekst wordt veilig gerenderd (geen HTML-injectie op static page)                     |
+| F8  | Dubbel submit                     | snel dubbel klikken op verstuurknop   | Maximaal één POST naar Formward; redirect blijft idempotent                                              |
+| F9  | Redirect-target is correct        | geldige submit                        | eind-URL = `bedankt.html` + bedankt-tekst zichtbaar (geen lege/pagina-not-found)                         |
+| F10 | Terugnavigatie na redirect        | geldige submit → back                 | browser back werkt naar `contact.html` zonder crash; formulier is gereset/leeg (nieuwe context per test) |
+
+> **Testdata-koppeling:** de datasets uit §6.1 (`valid`, `missingRequired`,
+> `invalidEmail`, `boundary`, `specialChars`, `honeypotFilled`) mappen 1-op-1 op
+> F1–F7. De Formward-mock (`ContactPage.mockFormSubmit`) garandeert dat er nooit
+> een echt POST/mailtje weggaat; tests die native validatie controleren roepen
+> zelf `clearFormMock()` aan (bestaand patroon in `contact-functional.spec.ts`).
+
+---
+
+## 8. Testmatrix — overige testcases
+
+Naast het formulier (§7) de concrete testcase-set per doeleiding. IDs volgen een
+logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPractices §25).
+
+### 8.1 Smoke / sanity (G1) — `smoke.spec.ts` _(bestaand)_
+
+| ID    | Testcase                                      | Verwacht resultaat                                                        |
+| ----- | --------------------------------------------- | ------------------------------------------------------------------------- |
+| SM-01 | Home (`index.html`) laadt                     | HTTP 200, `.navbar`/`.hero`/`.footer` zichtbaar, geen console/page errors |
+| SM-02 | Overige pagina's laden (curriculum … bedankt) | per pagina: HTTP 200 + geen console/page errors                           |
+| SM-03 | `404.html` fallback is bereikbaar             | onbekende pad → 404-fallback render, geen crash                           |
+
+### 8.2 Navigatie (G2) — `homepage-functional.spec.ts` _(bestaand, uitbreiden)_
+
+| ID     | Testcase                                             | Verwacht resultaat                                           |
+| ------ | ---------------------------------------------------- | ------------------------------------------------------------ |
+| NAV-01 | Elke `nav-*` link opent de juiste pagina             | URL matcht `NAV_ITEM_URLS[testId]`                           |
+| NAV-02 | CTA's (`cta-projects`, `cta-curriculum`) navigeren   | correcte bestemming                                          |
+| NAV-03 | Card-links (`card-link-testing/automation/projects`) | correcte bestemming                                          |
+| NAV-04 | Footer-links (contact, github, linkedin, privacy)    | interne → juiste URL; externe → juiste `href`/`target`/`rel` |
+
+### 8.3 Mobiele menu-toggle (G4) — `mobile-menu-functional.spec.ts` _(bestaand, hoogste prioriteit)_
+
+| ID      | Testcase                                           | Verwacht resultaat                                         |
+| ------- | -------------------------------------------------- | ---------------------------------------------------------- |
+| MENU-01 | Initiale toestand (mobiel ≤850px)                  | menu closed, `aria-expanded="false"`                       |
+| MENU-02 | Toggle openen                                      | `.open` + alle nav-items zichtbaar, `aria-expanded="true"` |
+| MENU-03 | Toggle sluiten                                     | geen `.open`, `aria-expanded="false"`                      |
+| MENU-04 | State-transition closed → open → closed (herhaald) | toestand wisselt correct, geen stale class                 |
+| MENU-05 | Navigatie via geopend menu werkt                   | nav-link klikt + juiste URL                                |
+| MENU-06 | Op desktop (≥850px) is toggle niet nodig/zichtbaar | menu inline zichtbaar zonder toggle                        |
+
+### 8.4 Non-functioneel (G5–G10) — nieuwe spec-bestanden _(fase 2–4)_
+
+| ID      | Categorie           | Testcase                                             | Verwacht resultaat                               |
+| ------- | ------------------- | ---------------------------------------------------- | ------------------------------------------------ |
+| RESP-01 | Responsive          | Layout per breakpoint (desktop/tablet/mobiel)        | juiste nav-stijl, geen horizontale scroll        |
+| A11Y-01 | Accessibility       | Keyboard-only navigatie + focus-visible              | alle interactieve elementen toetsbaar bereikbaar |
+| A11Y-02 | Accessibility       | `aria-expanded` / labels / `lang="nl"` / img `alt`   | attributen aanwezig en correct                   |
+| SEO-01  | SEO                 | unieke `<title>` + meta description per pagina       | geen duplicaten, NL-taal                         |
+| SEO-02  | SEO                 | één `h1` per pagina, geen duplicaat `id`, robots.txt | structuur correct                                |
+| LINK-01 | Content-integriteit | interne links op alle pagina's                       | geen gebroken interne links                      |
+| IMG-01  | Content-integriteit | afbeeldingen laden                                   | geen 404/bron-fouten                             |
+| VIS-01  | Visual (fase 4)     | screenshot-baseline per pagina × breakpoint          | geen onbedoelde regressies (tolerantie % klein)  |
+| PERF-01 | Performance         | Lighthouse (Perf/A11y/BestPractices/SEO) ≥ drempel   | scores binnen marges; snelle static-load         |
+
+---
+
+## 9. Risico-analyse & mitigatie
+
+Risico's gerangschikt op impact × waarschijnlijkheid voor een statische site.
+Mitigaties zijn bewust verweven in BestPractices (determinisme, mocking, isolation).
+
+| #   | Risico                                      | Impact | Waarschijnlijkheid | Mitigatie                                                                                            |
+| --- | ------------------------------------------- | :----: | :----------------: | ---------------------------------------------------------------------------------------------------- |
+| R1  | Formward-down/vertraagd → flaky suite       |  Hoog  |       Middel       | Altijd `page.route(...)` mock in CI; géén echte POST's (BestPractices §10, §22)                      |
+| R2  | Menu-regressie na CSS/JS-wijziging          |  Hoog  |       Middel       | TC MENU-01…06 reeds geautomatiseerd; suite groen houden in CI (fase 2: stabiliseren + uitbreiden met extra viewports) |
+| R3  | Flaky tests door timing/external deps       |  Hoog  |       Middel       | Auto-wait + web-first asserts; geen `waitForTimeout`; retries alleen als vangnet (BestPractices §13) |
+| R4  | Gebroken link/afbeelding na wijziging       | Middel |       Middel       | LINK-01 / IMG-01 in regression-set                                                                   |
+| R5  | Design-regressie (CSS) onopgemerkt          | Middel |       Middel       | Visual baseline VIS-01 (fase 4), kleine tolerantie                                                   |
+| R6  | Externe links (GitHub/LinkedIn) flaky in CI |  Laag  |        Hoog        | In CI alleen link-structuur checken, niet bereikbaarheid (§6.2)                                      |
+| R7  | a11y/SEO-regressie                          | Middel |    Laag-Middel     | A11Y/SEO-asserts (fase 3); optioneel axe-core                                                        |
+| R8  | Performance-degradatie                      |  Laag  |        Laag        | Lighthouse-drempels PERF-01, apart van E2E                                                           |
+| R9  | Legacy-mappen (`old/`) onbedoeld aangepakt  | Middel |        Laag        | Uit scope (§3.2); niet in `testDir` / config                                                         |
+
+---
+
+## 10. Roadmap (gefaseerde aanpak)
+
+Elke fase is self-contained en draait al na afloop groen in CI. Volgorde volgt
+impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish/CI.
+
+| Fase | Scope                                                                               | Levert / exit-criterium                                        |
+| :--: | ----------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+|  1   | Bestaande suite stabiliseren (smoke + navigatie + contact)                          | Alle huidige tests groen, deterministisch, gemockt; geen flaky |
+|  2   | **Mobiele menu-toggle stabiliseren & uitbreiden** (TC MENU-01…06, bestaand)        | Suite groen + deterministisch; extra viewports (850×1024, 360×640) toegevoegd; ARIA state-transition gedekt |
+|  3   | Testdata centraliseren (`utils/test-data.ts`) + boundary/special-char cases (F6/F7) | Formulier-testdataset centraal; F-matrix compleet gedekt       |
+|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks                            | RESP/A11Y/SEO/LINK/IMG groen op alle 9 pagina's                |
+|  5   | Visual regression + Lighthouse-drempels                                             | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)        |
+|  6   | CI/CD-pipeline (GitHub Actions): install → typecheck → lint → test → artifacts      | Elke PR auto gevalideerd; HTML report + trace als artifact     |
+|  7   | Optioneel: cross-browser (Firefox/WebKit) + exploratoire device-sessies             | Browser-coverage & handmatige findings geformaliseerd          |
+
+### CI-pipeline (fase 6, in lijn met BestPractices §18)
+
+```yaml
+# .github/workflows/ci.yml (concept)
+steps:
+  - run: npm ci
+  - run: npx playwright install --with-deps chromium
+  - run: npx tsc --noEmit # typecheck
+  - run: npx eslint . # lint (vergeten awaits, etc.)
+  - run: npx playwright test # suite (1 worker in CI)
+  - uses: actions/upload-artifact # HTML report + traces bij failure
+```
+
+---
+
+## 11. Entry- & exit-criteria
+
+### Entry criteria (voordat een release getest mag worden)
+
+- Statische site lokaal/CI serveerbaar op de geconfigureerde `baseURL`.
+- TypeScript compileert zonder fouten (`tsc --noEmit`); lint schoon.
+- Geen openstaande blokkerende defects uit de vorige run.
+
+### Exit criteria (acceptatie van een release)
+
+1. **Smoke 100%** — alle pagina's laden, geen console/page errors (SM-01…03).
+2. **Functioneel** — navigatie (NAV-\*) én formulier-matrix F1–F10 groen; menu-toggle MENU-01…06 groen.
+3. **Non-functioneel** — RESPONSIVE/A11Y/SEO/LINK checks groen op alle 9 pagina's.
+ 4. **Geen blokkerende defects**; bekende niet-blokerende issues gedocumenteerd.
+ 5. **Determinisme** — suite lokaal herhaaldelijk én in CI (parallel) reproduceerbaar groen; géén flaky tests.
+
+### Meetbare exit-metrics
+
+| Metric                                          | Doel              | Bron                              |
+| ----------------------------------------------- | ----------------- | --------------------------------- |
+| Testcase-executie (G1–G8)                       | 100% uitgevoerd   | Playwright HTML-report            |
+| Vereisten-dekking (traceerbaarheid §15)         | 100% in-scope doelen → ≥1 testcase | Traceerbaarheidsmatrix |
+| Pass-fail ratio                                   | 100% pass, 0 fail | CI-run                            |
+| Flaky-test-aandeel                                | 0%                | 3 opeenvolgende groene runs       |
+
+---
+
+## 12. Defectbeheer & opschortings-/herstartcriteria
+
+### 12.1 Defectcategorieën & ernst (severity)
+
+| Ernst      | Definitie                                              | Voorbeeld                          |
+| ---------- | ------------------------------------------------------ | ---------------------------------- |
+| Blokkerend | site onbruikbaar / data-verlies                        | pagina laadt niet; formulier crasht|
+| Hoog       | kernfunctionaliteit defect, geen workaround            | navigatie-link naar verkeerde URL  |
+| Middel     | functioneel gebrekkig met workaround                   | focus-ordening verstoord           |
+| Laag       | kosmeetisch / typografisch                            | tyfo in tekst; kleine margin       |
+
+Defects worden gerapporteerd als issue (of notitie bij het portfolio) met:
+stappen tot reproduceren, verwacht vs. daadwerkelijk resultaat, viewport/browser,
+screenshot/trace (Playwright `retain-on-failure`). Triage door de QA Engineer;
+fix-ownership bij de ontwikkelaar/site (zie §13 Rollen).
+
+### 12.2 Opschortingscriteria (test suspension)
+
+Testing wordt opgeschort wanneer:
+
+- ≥ **3 blokkerende defects** in één testrun, óf
+- de testomgeving niet stabiel is (bijv. live-deploy offline en lokale server niet startbaar), óf
+- een vereiste/ontwerp verandert waardoor bestaande testcases obsoleet zijn.
+
+### 12.3 Herstartcriteria (test resumption)
+
+Testing hervat wanneer:
+
+- alle blokkerende defects gefixt én geconfirmeerd (confirmation testing), óf
+- de omgeving weer stabiel is, óf
+- de gewijzigde vereisten zijn opgenomen in de testcases.
+
+---
+
+## 13. Rollen & verantwoordelijkheden
+
+| Rol                  | Verantwoordelijkheid                                              |
+| -------------------- | ----------------------------------------------------------------- |
+| QA Engineer (auteur) | Testplan, testcases, suite-onderhoud, CI-config, defectanalyse    |
+| Ontwikkelaar/site    | `data-testid`-contract, Page Object-aanpassingen, bugfixes        |
+| Reviewer             | PR-review op testkwaliteit (BestPractices §31 Definition of Done) |
+
+> Voor een 1-persoons portfolio is "QA" en "ontwikkelaar" dezelfde persoon;
+> de split bewaart wél het onderscheid tussen _testen_ en _implementeren_.
+
+---
+
+## 14. Definitie van Done (per test)
+
+Een testcase is klaar wanneer (BestPractices §31, samengevat):
+
+- gedrag is gebruikersgericht en in een duidelijke NL-testnaam benoemd;
+- locators zijn semantisch/stabiel (`getByRole`/`getByLabel`/`getByTestId`);
+- géén onnodige sleeps; web-first assertions gebruikt;
+- test is geïsoleerd, deterministisch en parallel-draaibaar;
+- externe dependencies (Formward) zijn bewust gemockt waar relevant;
+- `tsc --noEmit` + lint schoon; lokaal herhaald groen.
+
+---
+
+## 15. Traceerbaarheid (doel → testcases)
+
+| Doel | Testcases                                    |
+| ---- | -------------------------------------------- |
+| G1   | SM-01, SM-02, SM-03                          |
+| G2   | NAV-01…NAV-04                                |
+| G3   | F1–F10                                       |
+| G4   | MENU-01…MENU-06                              |
+| G5   | RESP-01                                      |
+| G6   | A11Y-01, A11Y-02                             |
+| G7   | SEO-01, SEO-02                               |
+| G8   | LINK-01, IMG-01                              |
+| G9   | VIS-01                                       |
+| G10  | PERF-01                                      |
+| G11  | CI-pipeline (fase 6) + determinisme-criteria |
+| G12  | CI/CD exit-criterium §11                     |
+
+---
+
+## Bijlage A — Terminologie & afkortingen
+
+- **Smoke:** kleine, snel draaiende subset die de kritieke paden bevestigt.
+- **Regression:** volledige suite als vangnet na wijzigingen.
+- **Honeypot:** verborgen formulier-veld (`_gotcha`) als spamfilter.
+- **ARIA:** Accessible Rich Internet Applications (toegankelijkheids-attributen).
+- **WCAG 2.1 AA:** international accessibility-standaard (niveau AA).
+- **Playwright E2E:** end-to-end browser-tests via `@playwright/test`.
+- **Page Object Model (POM):** UI-interactie gecentraliseerd in page objects.
