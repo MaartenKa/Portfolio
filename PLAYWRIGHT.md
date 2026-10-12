@@ -18,14 +18,14 @@ network mocking, CI-ready configuratie).
 
 ## 2. Tech stack
 
-| Onderdeel      | Technologie                                          |
-|----------------|------------------------------------------------------|
-| Testframework  | Playwright (`@playwright/test` v1.62.x)              |
-| Taal (tests + site-JS) | TypeScript (strict mode)                     |
-| Website        | Statisch HTML/CSS + klein TS-module                  |
-| Testserver     | `http-server` (lokaal op poort 3000) is uitgeschakeld |
-| Reporter       | Playwright HTML reporter                             |
-| Browser        | Chromium (Desktop Chrome)                            |
+| Onderdeel              | Technologie                                           |
+| ---------------------- | ----------------------------------------------------- |
+| Testframework          | Playwright (`@playwright/test` v1.62.x)               |
+| Taal (tests + site-JS) | TypeScript (strict mode)                              |
+| Website                | Statisch HTML/CSS + klein TS-module                   |
+| Testserver             | `http-server` (lokaal op poort 3000) is uitgeschakeld |
+| Reporter               | Playwright HTML reporter                              |
+| Browser                | Chromium (Desktop Chrome)                             |
 
 ## 3. Projectstructuur
 
@@ -58,17 +58,18 @@ network mocking, CI-ready configuratie).
 │   │   ├── base.page.ts      # BasePage: goto + console/page-error catch
 │   │   ├── home.page.ts      # HomePage
 │   │   ├── contact.page.ts   # ContactPage (incl. Formward-mock)
+│   │   ├── mobile.page.ts    # NavigationPage (mobiele menu-toggle)
 │   │   └── old/              # oude page objects (legacy)
 │   ├── fixtures/
-│   │   └── test-fixtures.ts  # (placeholder, leeg)
+│   │   └── test-fixtures.ts  # Custom Playwright fixtures (test.extend)
 │   ├── utils/
-│   │   └── test-data.ts      # (placeholder, leeg)
+│   │   └── test-data.ts      # Gedeelde statische data & constants
 │   └── tests/
 │       ├── smoke/smoke.spec.ts          # smoke tests (huidig)
 │       ├── functional/homepage-functional.spec.ts
-│       └── functional/contact-functional.spec.ts
-│       
-└── playwright-report/        # HTML rapport (ge-genereerd, in .gitignore)
+│       ├── functional/contact-functional.spec.ts
+│       └── functional/mobile-menu-functional.spec.ts
+│└── playwright-report/        # HTML rapport (ge-genereerd, in .gitignore)
 ```
 
 ## 4. Website (`public/`)
@@ -100,6 +101,7 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 ## 5. Testautomatisering (`playwright/`)
 
 ### Architectuur
+
 - **Page Object Model** in `playwright/pages/`:
   - `BasePage` — abstracte basis: `goto(path)` (wacht op `networkidle`,
     vangt console errors + page errors op), `expectNoConsoleErrors()`.
@@ -110,8 +112,13 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   - `ContactPage extends BasePage` — `navigate()`, `fillForm()`, `submitForm()`,
     `mockFormSubmit()` / `clearFormMock()` (route-mock op Formward),
     assertions op velden, honeypot, en externe links.
+  - `NavigationPage extends BasePage` (in `mobile.page.ts`) — mobiele
+    menu-toggle interactie: `toggleMenu()`, `expectMenuState()`,
+    `expectToggleAriaExpanded()`, `clickNavLink()`. Exporteert ook
+    `NAV_ITEM_TEST_IDS` en `NAV_ITEM_URLS` als page-specifieke constants.
 
 ### Test-categorieën (huidig)
+
 1. **Smoke** — `tests/smoke/smoke.spec.ts`
    - Deep check op `index.html`: structuur + geen console errors.
    - Lightweight check op overige pagina's (curriculum, testing, automation,
@@ -124,8 +131,9 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
      ongeldige/lege submit → géén redirect dankzij native validatie).
 
 ### Config (playwright.config.ts)
+
 - `testDir`: `./playwright/tests`
- `baseURL`: `https://maartenka.github.io/Portfolio/` (standaard)
+  `baseURL`: `https://maartenka.github.io/Portfolio/` (standaard)
   of lokaal: `http://127.0.0.1:3000` (handmatig omzetten in config)
 - `webServer`: `npx http-server public -p 3000` — alleen actief wanneer
   de config op localhost staat (auto-start, `reuseExistingServer`)
@@ -136,18 +144,18 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 
 ## 6. npm scripts
 
-| Script                  | Doel                                        |
-|-------------------------|---------------------------------------------|
-| `npm run build`         | `tsc` → TypeScript compileren naar `./dist` |
-| `npm test`              | `playwright test` (alle tests)              |
-| `npm run test:ui`       | Playwright UI mode                          |
-| `npm run test:headed`   | Headed browser                              |
-| `npm run testChromium`  | Alleen chromium project                     |
-| `npm run test_homepage` | `homepage.spec.ts`                          |
-| `npm run test_smoke`    | `smoke.spec.ts`                             |
-| `npm run test_debug`    | Debug mode                                  |
-| `npm run test_list_tests` | `--list` (tests opsommen)               |
-| `npm run test_codegen`  | `playwright codegen`                        |
+| Script                    | Doel                                        |
+| ------------------------- | ------------------------------------------- |
+| `npm run build`           | `tsc` → TypeScript compileren naar `./dist` |
+| `npm test`                | `playwright test` (alle tests)              |
+| `npm run test:ui`         | Playwright UI mode                          |
+| `npm run test:headed`     | Headed browser                              |
+| `npm run testChromium`    | Alleen chromium project                     |
+| `npm run test_homepage`   | `homepage.spec.ts`                          |
+| `npm run test_smoke`      | `smoke.spec.ts`                             |
+| `npm run test_debug`      | Debug mode                                  |
+| `npm run test_list_tests` | `--list` (tests opsommen)                   |
+| `npm run test_codegen`    | `playwright codegen`                        |
 
 ## 7. Hoe starten & testen
 
@@ -172,8 +180,11 @@ npm run build               # TS compileren (naar ./dist)
 - **TypeScript strict mode**; `noEmitOnError: true`.
 - **Legacy/old-mappen** (`public/old`, `pages/old`, `tests/old`) zijn
   verouderd — niet wijzigen tenzij expliciet gevraagd.
-- **`fixtures/test-fixtures.ts`** en **`utils/test-data.ts`** zijn momenteel
-  placeholders (leeg) — nog in te vullen indien nodig.
+- **`fixtures/test-fixtures.ts`** — custom Playwright fixtures (`test.extend`).
+  Nog leeg (geen fixtures gedefinieerd), klaar voor uitbreiding.
+- **`utils/test-data.ts`** — gedeelde statische constants (`FORMWARD_URL`,
+  `OTHER_PAGES_TO_TEST`, externe links, e-mail). Geïmporteerd door page
+  objects en specs waar nodig.
 - De website is **Nederlands**; test-namen en UI-teksten zijn dus in het
   Nederlands.
 
@@ -183,9 +194,13 @@ npm run build               # TS compileren (naar ./dist)
   - ✅ `page.goto("curriculum.html")`
   - ❌ `page.goto("/")` → lost op als root van de domain, NIET ten opzichte van baseURL
   - ❌ `page.goto("/curriculum.html")`
-  Dit is cruciaal wanneer `baseURL` een subpath bevat, bijv.
-  `https://maartenka.github.io/Portfolio/`. Een leading `/` zou dan naar
-  `https://maartenka.github.io/curriculum.html` navigeren (404).
+    Dit is cruciaal wanneer `baseURL` een subpath bevat, bijv.
+    `https://maartenka.github.io/Portfolio/`. Een leading `/` zou dan naar
+    `https://maartenka.github.io/curriculum.html` navigeren (404).
+
+- **`tsconfig.json` include:** dekt `src/`, `playwright/tests/`,
+  `playwright/pages/`, `playwright/utils/`, `playwright/fixtures/` en
+  `playwright.config.ts` af voor IDE type-checking.
 
 ## 9. Snelreferentie
 
