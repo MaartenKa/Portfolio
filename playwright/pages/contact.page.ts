@@ -1,8 +1,8 @@
 import { Page, expect } from "@playwright/test";
 import { BasePage } from "./base.page";
+import { FORMWARD_URL } from "../utils/test-data";
 
-const FORMWARD_URL =
-  "https://forms.formward.eu/f/269c7657-9b51-4404-b3c8-0f3acd13c0d7";
+// const FORMWARD_URL = "..."  ← VERWIJDERD (nu uit test-data)
 
 export interface ContactFormData {
   name?: string;
@@ -27,14 +27,11 @@ export class ContactPage extends BasePage {
   /** Mock de Formward POST zodat tests deterministisch zijn en geen internet nodig hebben. */
   async mockFormSubmit(): Promise<void> {
     await this.page.route(FORMWARD_URL, async (route) => {
-      // Het formulier doet een top-level document-navigatie (POST).
-      // Een `Location`-header heeft alleen effect op een redirect-status (3xx);
-      // met status 200 zou de browser hem negeren. Retourneer daarom een echte
-      // 302-redirect zodat de browser naar /bedankt.html navigeert, zonder dat
-      // het request het lokale domein verlaat (geen echt Formward-mailtje).
       await route.fulfill({
         status: 302,
-        headers: { Location: "https://maartenka.github.io/Portfolio/bedankt.html" },
+        headers: {
+          Location: "https://maartenka.github.io/Portfolio/bedankt.html",
+        },
       });
     });
   }

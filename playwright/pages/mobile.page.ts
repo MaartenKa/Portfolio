@@ -12,8 +12,19 @@ export const NAV_ITEM_TEST_IDS = [
   "nav-contact",
 ] as const;
 
+/** Mapping van nav-link testid → verwachte URL regex. */
+export const NAV_ITEM_URLS: Record<string, RegExp> = {
+  "nav-home": /index\.html$/,
+  "nav-curriculum": /curriculum\.html/,
+  "nav-testing": /testing\.html/,
+  "nav-automation": /automation\.html/,
+  "nav-projects": /projects\.html/,
+  "nav-personal": /personal\.html/,
+  "nav-contact": /contact\.html/,
+};
+
 /**
- * NavigationPage abstrahiert de globale navigatiebalk (header) die op elk
+ * NavigationPage hergebruikt de globale navigatiebalk (header) die op elk
  * onderdeel van de site dezelfde DOM/selectors draagt: #menu-toggle en
  * #nav-links. Het is dus niet pagina-specifiek, maar een gedeelde component.
  */
@@ -23,7 +34,6 @@ export class NavigationPage extends BasePage {
     super(page);
   }
 
-  // export class NavigationPage extends BasePage {
   // Locators (centraal in deze page object)
   get menuToggle() {
     return this.page.getByTestId("menu-toggle");

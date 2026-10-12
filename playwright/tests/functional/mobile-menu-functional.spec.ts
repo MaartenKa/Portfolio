@@ -1,5 +1,9 @@
 import { test, expect } from "@playwright/test";
-import { NavigationPage } from "../../pages/mobile.page";
+import {
+  NavigationPage,
+  NAV_ITEM_TEST_IDS,
+  NAV_ITEM_URLS,
+} from "../../pages/mobile.page";
 
 // Viewporten conform TESTSTRATEGY.md §5.1
 const DESKTOP_VIEWPORT = { width: 1920, height: 1080 }; // >850px breedte → nav inline
@@ -71,6 +75,26 @@ test.describe("Mobiele menu-toggle", () => {
       await nav.clickNavLink("nav-contact", /contact\.html/);
       await expect(nav.navLinks).not.toHaveClass(/open/);
       await expect(nav.menuToggle).toHaveAttribute("aria-expanded", "false");
+    });
+
+    test.describe("Alle nav-links navigeren naar de juiste pagina", () => {
+      for (const testId of NAV_ITEM_TEST_IDS) {
+        test(`nav-link "${testId}" navigeert naar ${NAV_ITEM_URLS[testId]}`, async () => {
+          // Open het menu
+          await nav.toggleMenu();
+          await nav.expectMenuState(true);
+
+          // Klik op de nav-link en verifieer de URL
+          await nav.clickNavLink(testId, NAV_ITEM_URLS[testId]);
+
+          // Menu is gesloten na navigatie
+          await expect(nav.navLinks).not.toHaveClass(/open/);
+          await expect(nav.menuToggle).toHaveAttribute(
+            "aria-expanded",
+            "false",
+          );
+        });
+      }
     });
   });
 });

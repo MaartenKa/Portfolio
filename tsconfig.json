@@ -15,5 +15,12 @@
     "types": ["node", "@playwright/test"]
   },
 
-  "include": ["src/**/*.ts", "playwright/tests/**/*.ts", "playwright.config.ts"]
+  "include": [
+    "src/**/*.ts",
+    "playwright/tests/**/*.ts",
+    "playwright/pages/**/*.ts",
+    "playwright/utils/**/*.ts",
+    "playwright/fixtures/**/*.ts",
+    "playwright.config.ts"
+  ]
 }
