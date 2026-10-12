@@ -23,7 +23,7 @@ network mocking, CI-ready configuratie).
 | Testframework          | Playwright (`@playwright/test` v1.62.x)               |
 | Taal (tests + site-JS) | TypeScript (strict mode)                              |
 | Website                | Statisch HTML/CSS + klein TS-module                   |
-| Testserver             | `http-server` (lokaal op poort 3000) is uitgeschakeld |
+| Testomgeving           | Live GitHub Pages (`https://maartenka.github.io/Portfolio/`) |
 | Reporter               | Playwright HTML reporter                              |
 | Browser                | Chromium (Desktop Chrome)                             |
 
@@ -48,9 +48,8 @@ network mocking, CI-ready configuratie).
 │   ├── robots.txt
 │   ├── css/style.css
 │   ├── images/
-│   ├── js/ts/main.ts         # bron: mobiel menu-toggle
-│   ├── js/ts/main.js         # gebouwd bestand (wordt geladen door de site)
-│   └── old/                  # oude/verouderde kopieën van de site (legacy)
+    │   ├── js/ts/main.ts         # bron: mobiel menu-toggle
+    │   └── js/ts/main.js         # gebouwd bestand (wordt geladen door de site)
 ├── src/
 │   └── ts/main.ts            # bron voor site-JS (menu-toggle), zie hieronder
 ├── playwright/               # TESTAUTOMATISERING
@@ -59,7 +58,7 @@ network mocking, CI-ready configuratie).
 │   │   ├── home.page.ts      # HomePage
 │   │   ├── contact.page.ts   # ContactPage (incl. Formward-mock)
 │   │   ├── mobile.page.ts    # NavigationPage (mobiele menu-toggle)
-│   │   └── old/              # oude page objects (legacy)
+│   │   
 │   ├── fixtures/
 │   │   └── test-fixtures.ts  # Custom Playwright fixtures (test.extend)
 │   ├── utils/
@@ -72,7 +71,7 @@ network mocking, CI-ready configuratie).
 │└── playwright-report/        # HTML rapport (ge-genereerd, in .gitignore)
 ```
 
-## 4. Website (`public/`)
+## 4. Website (`docs/`)
 
 Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 
@@ -89,14 +88,11 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   `https://forms.formward.eu/f/269c7657-9b51-4404-b3c8-0f3acd13c0d7`.
   Heeft een verborgen **honeypot**-veld (`data-testid="field-honeypot"`,
   `style="display:none"`) als spamfilter.
-- **Site-JS** (`src/ts/main.ts` → gebouwd naar `public/js/ts/main.js`):
-  togt de mobiele navigatie (`#menu-toggle` ↔ `#nav-links` classe `open`,
-  beheert `aria-expanded`).
+- **Site-JS** (`src/ts/main.ts` → gebouwd naar `docs/js/ts/main.js`):
+   togt de mobiele navigatie (`#menu-toggle` ↔ `#nav-links` classe `open`,
+   beheert `aria-expanded`).
 - **Links (extern):** GitHub `MaartenKa/Portfolio`,
   LinkedIn `maarten-kamps-a6909527`, e-mail `Maarten.kamps.bee@outlook.com`.
-
-> Let op: `public/old/`, `playwright/pages/old/` en `playwright/tests/old/`
-> bevatten verouderde/legacy kopieën. Werk hier niet aan, behoudens expliciet.
 
 ## 5. Testautomatisering (`playwright/`)
 
@@ -178,8 +174,6 @@ npm run build               # TS compileren (naar ./dist)
   `page.route(...)` zodat tests offline en betrouwbaar draaien.
 - **Console/page errors** worden centraal gevangen in `BasePage` en geassert.
 - **TypeScript strict mode**; `noEmitOnError: true`.
-- **Legacy/old-mappen** (`public/old`, `pages/old`, `tests/old`) zijn
-  verouderd — niet wijzigen tenzij expliciet gevraagd.
 - **`fixtures/test-fixtures.ts`** — custom Playwright fixtures (`test.extend`).
   Nog leeg (geen fixtures gedefinieerd), klaar voor uitbreiding.
 - **`utils/test-data.ts`** — gedeelde statische constants (`FORMWARD_URL`,
