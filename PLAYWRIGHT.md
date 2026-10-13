@@ -48,7 +48,6 @@ network mocking, CI-ready configuratie).
 │   ├── robots.txt
 │   ├── css/style.css
 │   ├── images/
-    │   ├── js/ts/main.ts         # bron: mobiel menu-toggle
     │   └── js/ts/main.js         # gebouwd bestand (wordt geladen door de site)
 ├── src/
 │   └── ts/main.ts            # bron voor site-JS (menu-toggle), zie hieronder
@@ -131,7 +130,7 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 - `testDir`: `./playwright/tests`
   `baseURL`: `https://maartenka.github.io/Portfolio/` (standaard)
   of lokaal: `http://127.0.0.1:3000` (handmatig omzetten in config)
-- `webServer`: `npx http-server public -p 3000` — alleen actief wanneer
+- `webServer`: `npx http-server docs -p 3000` — alleen actief wanneer
   de config op localhost staat (auto-start, `reuseExistingServer`)
 - Reporter: HTML → `./playwright/playwright-report`
 - Op failure: screenshot; op retry: trace; op failure: video (retained)

@@ -1,6 +1,6 @@
 import { Page, expect } from "@playwright/test";
 import { BasePage } from "./base.page";
-import { FORMWARD_URL } from "../utils/test-data";
+import { FORMWARD_URL, EMAIL, GITHUB_URL, LINKEDIN_URL } from "../utils/test-data";
 
 // const FORMWARD_URL = "..."  ← VERWIJDERD (nu uit test-data)
 
@@ -87,33 +87,26 @@ export class ContactPage extends BasePage {
   async expectPrivacyLink(): Promise<void> {
     const link = this.page.getByRole("link", { name: "privacyverklaring" });
     await expect(link).toBeVisible();
-    await expect(link).toHaveAttribute("href", /privacy\.html/);
+    // Relatieve pad (conventie PLAYWRIGHT.md §8): een absolute "/privacy.html"
+    // would 404 op de GitHub Pages /Portfolio/ subpath.
+    await expect(link).toHaveAttribute("href", /^privacy\.html$/);
   }
 
   async expectEmailLink(): Promise<void> {
     const link = this.page.getByRole("link", { name: "E-mailen" });
     await expect(link).toBeVisible();
-    await expect(link).toHaveAttribute(
-      "href",
-      "mailto:Maarten.kamps.bee@outlook.com",
-    );
+    await expect(link).toHaveAttribute("href", `mailto:${EMAIL}`);
   }
 
   async expectGitHubLink(): Promise<void> {
     const link = this.page.getByTestId("footer-github");
     await expect(link).toBeVisible();
-    await expect(link).toHaveAttribute(
-      "href",
-      "https://github.com/MaartenKa/Portfolio",
-    );
+    await expect(link).toHaveAttribute("href", GITHUB_URL);
   }
 
   async expectLinkedInLink(): Promise<void> {
     const link = this.page.getByTestId("footer-linkedin");
     await expect(link).toBeVisible();
-    await expect(link).toHaveAttribute(
-      "href",
-      "https://www.linkedin.com/in/maarten-kamps-a6909527/",
-    );
+    await expect(link).toHaveAttribute("href", LINKEDIN_URL);
   }
 }

@@ -5,7 +5,6 @@ import {
   NAV_ITEM_URLS,
 } from "../../pages/mobile.page";
 
-// Viewporten conform TESTSTRATEGY.md §5.1
 const DESKTOP_VIEWPORT = { width: 1920, height: 1080 }; // >850px breedte → nav inline
 const MOBILE_VIEWPORT = { width: 390, height: 844 }; // ≤850px breedte → menu-toggle zichtbaar
 

@@ -10,9 +10,7 @@
     "outDir": "./dist",
 
     "skipLibCheck": true,
-    "noEmitOnError": true,
-
-    "types": ["node", "@playwright/test"]
+    "noEmitOnError": true
   },
 
   "include": [

@@ -1,6 +1,6 @@
 # Testplan & Teststrategie — Portfolio Website
 
-> **Scope:** de statische portfolio-website in `public/` (9 pagina's, CSS-design-systeem,
+> **Scope:** de statische portfolio-website in `docs/` (9 pagina's, CSS-design-systeem,
 > één klein JS-module voor de mobiele menu-toggle, contactformulier via Formward)
 > en de bijbehorende Playwright-testsuite in `playwright/`.
 > **Taal:** Nederlands (website en test-namen).
