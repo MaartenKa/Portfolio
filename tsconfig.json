@@ -10,7 +10,8 @@
     "outDir": "./dist",
 
     "skipLibCheck": true,
-    "noEmitOnError": true
+    "noEmitOnError": true,
+    "noEmit": true
   },
 
   "include": [
