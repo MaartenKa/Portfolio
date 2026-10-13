@@ -32,7 +32,8 @@ network mocking, CI-ready configuratie).
 ```
 .
 ├── package.json              # scripts + devDependencies
-├── tsconfig.json             # TypeScript-config (strict, ES2020, outDir ./dist)
+├── tsconfig.json             # TypeScript-config (strict, ES2020, noEmit → type-check only)
+├── tsconfig.site.json        # extends tsconfig.json; site-JS → docs/js/ts (noEmit: false)
 ├── playwright.config.ts      # Playwright configuratie
 ├── docs/                   # STATISCHE WEBSITE (root van de site)
 │   ├── index.html            # Home pagina
@@ -48,7 +49,7 @@ network mocking, CI-ready configuratie).
 │   ├── robots.txt
 │   ├── css/style.css
 │   ├── images/
-    │   └── js/ts/main.js         # gebouwd bestand (wordt geladen door de site)
+│   └── js/ts/main.js         # gebouwd bestand (output van tsconfig.site.json, geladen door site)
 ├── src/
 │   └── ts/main.ts            # bron voor site-JS (menu-toggle), zie hieronder
 ├── playwright/               # TESTAUTOMATISERING
@@ -87,7 +88,8 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   `https://forms.formward.eu/f/269c7657-9b51-4404-b3c8-0f3acd13c0d7`.
   Heeft een verborgen **honeypot**-veld (`data-testid="field-honeypot"`,
   `style="display:none"`) als spamfilter.
-- **Site-JS** (`src/ts/main.ts` → gebouwd naar `docs/js/ts/main.js`):
+- **Site-JS** (`src/ts/main.ts` → gebouwd naar `docs/js/ts/main.js` via
+   `tsconfig.site.json`):
    togt de mobiele navigatie (`#menu-toggle` ↔ `#nav-links` classe `open`,
    beheert `aria-expanded`).
 - **Links (extern):** GitHub `MaartenKa/Portfolio`,
@@ -141,7 +143,7 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 
 | Script                    | Doel                                        |
 | ------------------------- | ------------------------------------------- |
-| `npm run build`           | `tsc` → TypeScript compileren naar `./dist` |
+| `npm run build`           | site-TS → `docs/js/ts` **&&** type-check alle TS (noEmit) |
 | `npm test`                | `playwright test` (alle tests)              |
 | `npm run test:ui`         | Playwright UI mode                          |
 | `npm run test:headed`     | Headed browser                              |
@@ -159,7 +161,7 @@ npm install                 # dependencies
 npm test                    # draait alle Playwright tests (en of start lokaal de webserver wanneer dit gedefinieerd is in de playwright config)
 npm run test:headed         # met zichtbare browser
 npm run test:ui             # interactieve UI
-npm run build               # TS compileren (naar ./dist)
+npm run build               # TS: site-JS → docs/js/ts, al het rest type-checken (noEmit)
 ```
 
 ## 8. Belangrijke conventies & aandachtspunten
@@ -172,7 +174,9 @@ npm run build               # TS compileren (naar ./dist)
 - **Determinisme:** externe netwerkaanroepen (Formward) worden gemockt via
   `page.route(...)` zodat tests offline en betrouwbaar draaien.
 - **Console/page errors** worden centraal gevangen in `BasePage` en geassert.
-- **TypeScript strict mode**; `noEmitOnError: true`.
+- **TypeScript strict mode**; `noEmitOnError: true`; `noEmit: true` in
+  `tsconfig.json` → de gezende `tsc`-run **type-checkt alleen** (no `dist/`
+  output). `tsconfig.site.json` overrules met `noEmit: false` voor de site-JS.
 - **`fixtures/test-fixtures.ts`** — custom Playwright fixtures (`test.extend`).
   Nog leeg (geen fixtures gedefinieerd), klaar voor uitbreiding.
 - **`utils/test-data.ts`** — gedeelde statische constants (`FORMWARD_URL`,
@@ -193,7 +197,8 @@ npm run build               # TS compileren (naar ./dist)
 
 - **`tsconfig.json` include:** dekt `src/`, `playwright/tests/`,
   `playwright/pages/`, `playwright/utils/`, `playwright/fixtures/` en
-  `playwright.config.ts` af voor IDE type-checking.
+  `playwright.config.ts` af voor IDE type-checking. `tsconfig.site.json`
+  `extends` dit config en **only** dekt `src/ts/` (emit naar `docs/js/ts`).
 
 ## 9. Snelreferentie
 
