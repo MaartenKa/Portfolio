@@ -4,7 +4,7 @@
   "private": true,
   "description": "Personal QA and Test Automation portfolio",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"const fs=require('fs');fs.copyFileSync('dist/src/ts/main.js','docs/js/ts/main.js')\"",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
