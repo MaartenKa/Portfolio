@@ -22,11 +22,13 @@ Doel: schrijf Playwright-tests die betrouwbaar, onderhoudbaar, snel, determinist
 
 2. Locators
 
-Voorkeursvolgorde:
+Voorkeursvolgorde (Playwright 1.x):
 
     getByRole()
 
     getByLabel()
+
+    getByTestId()
 
     getByPlaceholder()
 
@@ -36,9 +38,7 @@ Voorkeursvolgorde:
 
     getByTitle()
 
-    getByTestId()
-
-    CSS/XPath alleen wanneer nodig
+    CSS/XPath alleen als laatste redmiddel
 
 Goed:
 
@@ -162,9 +162,11 @@ use: {
 storageState: 'playwright/.auth/user.json',
 }
 
-Bewaar auth-state nooit in Git:
+Bewaar storageState-bestanden niet in Git. Ze bevatten cookies, tokens en sessiestate die per omgeving gelden. De login-credentials die je gebruikt om deze state aan te maken, hoort als secret behandeld te worden.
 
-playwright/.auth
+Voeg bijvoorbeeld toe aan `.gitignore`:
+
+playwright/.auth/
 
 Als tests server-side dezelfde account-state wijzigen:
 
@@ -265,7 +267,9 @@ Voor zeer grote suites kan sharding worden gebruikt:
 
 npx playwright test --shard=1/3
 
-Gebruik test.describe.configure({ mode: 'parallel' }) alleen wanneer tests daadwerkelijk onafhankelijk zijn. 13. Retries & flaky tests
+Gebruik `test.describe.configure({ mode: 'parallel' })` alleen wanneer tests daadwerkelijk onafhankelijk zijn.
+
+Overweeg soft assertions (`expect.soft`) voor meerdere onafhankelijke checks in één test; zo falen ze niet direct maar rapporteert Playwright alle failing assertions aan het einde van de test. 13. Retries & flaky tests
 
 Retries zijn een diagnostisch vangnet, geen oplossing.
 
@@ -354,11 +358,11 @@ CI moet minimaal:
 
     dependencies installeren;
 
-    benodigde Playwright browsers installeren;
+    alleen de benodigde Playwright browsers installeren;
 
-    typecheck uitvoeren;
+    typecheck uitvoeren (`tsc --noEmit`);
 
-    lint uitvoeren;
+    lint uitvoeren (ESLint);
 
     tests uitvoeren;
 
@@ -367,40 +371,49 @@ CI moet minimaal:
 Voorbeeld:
 
 npm ci
-npx playwright install --with-deps chromium
+npx playwright install chromium --with-deps
 npx tsc --noEmit
 npx eslint .
 npx playwright test
 
 Installeer alleen browsers die de pipeline daadwerkelijk nodig heeft.
 
-Gebruik bij CI bewust worker-count/parallelism. Een conservatieve default is één worker voor stabiliteit; schaal via workers/sharding wanneer de CI-omgeving dat betrouwbaar ondersteunt. 19. TypeScript & linting
+Gebruik Linux voor CI waar mogelijk (goedkoper en sneller). Schaal parallelism bewust via workers/sharding; een conservatieve default is één worker voor stabiliteit. 19. TypeScript & linting
 
-Gebruik TypeScript waar mogelijk.
+Gebruik TypeScript waar mogelijk. Playwright ondersteunt `.ts`-tests out of the box.
 
-Gebruik linting en voorkom vooral vergeten awaits.
+Gebruik ESLint met `@typescript-eslint/no-floating-promises` om vergeten awaits op te sporen.
 
-Aanbevolen controle:
+Aanbevolen controle in CI:
 
 tsc --noEmit
+npx eslint .
 
 Een vergeten await kan tot zeer verwarrend testgedrag leiden. 20. Debugging
 
-Gebruik Playwright tooling:
+Vooral voor CI-failures en lokale debugging is de **Trace Viewer** de belangrijkste bron: timeline, DOM-snapshots per actie, network requests en console logs in één PWA.
+
+Lokale opties (in volgorde van aanbeveling):
+
+1. VS Code extension — live breakpoints en locator-highlighting
+2. `npx playwright test --debug` of `--trace on`
+3. UI Mode (`npx playwright test --ui`)
+
+Overig tooling:
 
     Inspector
 
     UI Mode
 
-    Codegen
+    Codegen (startpunt, niet automatisch finale code)
 
     Trace Viewer
 
     HTML Reporter
 
-    screenshots/videos waar nuttig
+    screenshots/videos als aanvulling
 
-Codegen is een startpunt, niet automatisch finale code. Maak gegenereerde selectors daarna onderhoudbaar.
+Codegen is een startpunt; maak gegenereerde selectors daarna onderhoudbaar.
 
 Gebruik bijvoorbeeld:
 
@@ -408,7 +421,7 @@ use: {
 trace: 'on-first-retry',
 }
 
-om traces vooral bij problematische tests te verzamelen. 21. Reports
+om traces vooral bij problematische tests te verzamelen. Stel `trace` niet op `'on'` in voor alle tests, omdat dat prestatie-verzwakking geeft. 21. Reports
 
 Gebruik de HTML reporter voor lokale/CI debugging.
 
@@ -499,9 +512,9 @@ Vermijd:
 
 await page.waitForTimeout(...)
 
-await page.$(...)
+await page.$(...)          // deprecated; gebruik Locator
 
-await page.$eval(...)
+await page.$eval(...)      // deprecated; gebruik Locator
 
 page.locator('div:nth-child(4)')
 
@@ -603,7 +616,7 @@ Element zoeken
 ├─ Duidelijke placeholder/tekst/alt/title?
 │ └─ getByPlaceholder/getByText/getByAltText/getByTitle
 │
-├─ Geen betrouwbare user-facing locator?
+├─     Geen betrouwbare user-facing locator, of data-testid beschikbaar?
 │ └─ getByTestId()
 │
 └─ Nog steeds niet mogelijk?
