@@ -1,0 +1,43 @@
+# CI/CD: Playwright-tests worden dagelijks uitgevoerd
+
+name: Playwright Tests
+
+on:
+  schedule:
+    # Cron-format: minute hour day month day-of-week; always in UTC.
+    # 06:00 UTC = 08:00 in the Netherlands during winter (CET) and 07:00 during summer (CEST).
+    - cron: "0 6 * * *"
+
+  # manual trigger: via the Actions tab op GitHub can the workflow be started manually.
+  workflow-run:
+
+jobs:
+  test:
+    name: Run Playwright tests
+    runs-on: ubuntu-latest
+    env:
+      # Activeren de CI-instellingen in playwright.config.ts (retries, workers=1, forbidOnly)
+      CI: "1"
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: npm run test
+
+      - name: Upload Playwright HTML report
+        uses: actions/upload-artifact@v3
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright/playwright-report/
+          retention-days: 30
