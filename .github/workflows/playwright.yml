@@ -1,41 +1,45 @@
-# CI/CD: Playwright-tests worden dagelijks uitgevoerd
-
 name: Playwright Tests
 
 on:
   schedule:
-    # 06:00 UTC = 07:00 in Nederland tijdens de zomertijd
-    # en 07:00 UTC = 08:00 tijdens de wintertijd.
+    # Dagelijks om 06:00 UTC.
+    # Nederland: 07:00 in de winter, 08:00 in de zomer.
     - cron: "0 6 * * *"
 
-  # Handmatig starten via GitHub Actions
+  # Handmatig starten via GitHub Actions.
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   test:
     name: Run Playwright tests
     runs-on: ubuntu-latest
-    env:
-      # Activeren de CI-instellingen in playwright.config.ts (retries, workers=1, forbidOnly)
-      CI: "1"
-    steps:
-      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v4
+    env:
+      CI: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
         with:
           node-version: lts/*
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright Browsers
+      - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
       - name: Run Playwright tests
         run: npm run test
 
       - name: Upload Playwright HTML report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
