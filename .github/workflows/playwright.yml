@@ -4,12 +4,12 @@ name: Playwright Tests
 
 on:
   schedule:
-    # Cron-format: minute hour day month day-of-week; always in UTC.
-    # 06:00 UTC = 08:00 in the Netherlands during winter (CET) and 07:00 during summer (CEST).
+    # 06:00 UTC = 07:00 in Nederland tijdens de zomertijd
+    # en 07:00 UTC = 08:00 tijdens de wintertijd.
     - cron: "0 6 * * *"
 
-  # manual trigger: via the Actions tab op GitHub can the workflow be started manually.
-  workflow-run:
+  # Handmatig starten via GitHub Actions
+  workflow_dispatch:
 
 jobs:
   test:
@@ -35,7 +35,7 @@ jobs:
         run: npm run test
 
       - name: Upload Playwright HTML report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
