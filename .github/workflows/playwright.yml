@@ -4,7 +4,7 @@ on:
   schedule:
     # Dagelijks om 06:00 UTC.
     # Nederland: 07:00 in de winter, 08:00 in de zomer.
-    - cron: "0 6 * * *"
+    - cron: "*/15 * * * *"
 
   # Handmatig starten via GitHub Actions.
   workflow_dispatch:
