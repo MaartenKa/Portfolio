@@ -1,10 +1,26 @@
 name: Playwright Tests
 
 on:
+  # 4 pogingen per dag, elke 6 uur, op :17.
+  #
+  # Waarom niet één tijdstip: GitHub's scheduler is best-effort en dropt jobs
+  # onder belasting, met name rond de top van het uur. Gemeten met een test-cron
+  # (4x per uur op :07/:22/:37/:52): 2 runs uit 42 verwachte triggers = ~5%
+
   schedule:
-    # Dagelijks om 06:00 UTC.
-    # Nederland: 07:00 in de winter, 08:00 in de zomer.
-    - cron: "7,22,37,52 * * * *"
+    - cron: "17 0,6,12,18 * * *"
+
+  # Push-trigger staat UIT. Ik draai de tests zelf handmatig bij een push.
+  #
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'playwright/**'
+  #     - 'src/**'
+  #     - 'package.json'
+  #     - 'package-lock.json'
+  #     - 'playwright.config.ts'
+  #     - '.github/workflows/playwright.yml'
 
   # Handmatig starten via GitHub Actions.
   workflow_dispatch:
