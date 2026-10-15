@@ -1,0 +1,14 @@
+name: Cron Test
+
+on:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+
+  workflow_dispatch:
+
+jobs:
+  cron-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm scheduled workflow runs
+        run: echo "Cron werkt! Tijdstip UTC $(date -u)"
