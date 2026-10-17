@@ -95,8 +95,11 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    beheert `aria-expanded`).
 - **Statusbadge (`automation.html`):** toont de status van de laatste
   Playwright CI-run (workflow `playwright.yml`, draait op schedule) via een
-  shields.io badge, gelinkt naar de GitHub Actions runs. De badge geeft
-  uitsluitend de run-status (passing/failing), geen testcijfers. De
+  shields.io badge, gelinkt naar de GitHub Actions runs. De badge is in
+  site-stijl geïntegreerd: `for-the-badge` met `labelColor=111827`
+  (aansluitend bij `--card`) binnen een omlijst kaart-element
+  (`.automation-status-badge`) met `CI STATUS`-eyebrow, lazy-loaded. De badge
+  geeft uitsluitend de run-status (passing/failing), geen testcijfers. De
   placeholder-kaarten (`[Aantal]`, `[Percentage]`, `[Status]`) zijn nog niet
   gevuld (geplande uitbouw: cijfers via JSON-reporter + CI-commit).
 - **Links (extern):** GitHub `MaartenKa/Portfolio`,
@@ -213,7 +216,9 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   workflow-naam. Scheduled runs (cron) worden meegeteld; publieke repo → geen
   token nodig. Shields.io is niet-tracking (bewaart geen logs), maar de badge
   doet wel een externe request per pageview — verwerkt in de privacyverklaring
-  (`privacy.html`, sectie 9).
+  (`privacy.html`, sectie 9). De afbeelding staat op `loading="lazy"` en staat
+  onder de fold, zodat de request buiten de `networkidle`-wachttijd van
+  `BasePage.goto()` valt.
 
 ## 9. Snelreferentie
 
