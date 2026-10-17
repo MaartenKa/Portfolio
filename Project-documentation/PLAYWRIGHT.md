@@ -26,6 +26,7 @@ network mocking, CI-ready configuratie).
 | Testomgeving           | Live GitHub Pages (`https://maartenka.github.io/Portfolio/`) |
 | Reporter               | Playwright HTML reporter                              |
 | Browser                | Chromium (Desktop Chrome)                             |
+| Statusbadge (site)     | shields.io — GitHub Actions workflow-status           |
 
 ## 3. Projectstructuur
 
@@ -92,6 +93,12 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    `tsconfig.site.json`):
    togt de mobiele navigatie (`#menu-toggle` ↔ `#nav-links` classe `open`,
    beheert `aria-expanded`).
+- **Statusbadge (`automation.html`):** toont de status van de laatste
+  Playwright CI-run (workflow `playwright.yml`, draait op schedule) via een
+  shields.io badge, gelinkt naar de GitHub Actions runs. De badge geeft
+  uitsluitend de run-status (passing/failing), geen testcijfers. De
+  placeholder-kaarten (`[Aantal]`, `[Percentage]`, `[Status]`) zijn nog niet
+  gevuld (geplande uitbouw: cijfers via JSON-reporter + CI-commit).
 - **Links (extern):** GitHub `MaartenKa/Portfolio`,
   LinkedIn `maarten-kamps-a6909527`, e-mail `Maarten.kamps.bee@outlook.com`.
 
@@ -199,6 +206,14 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   `playwright/pages/`, `playwright/utils/`, `playwright/fixtures/` en
   `playwright.config.ts` af voor IDE type-checking. `tsconfig.site.json`
   `extends` dit config en **only** dekt `src/ts/` (emit naar `docs/js/ts`).
+
+- **Externe badge (shields.io):** `automation.html` laadt een externe
+  badge-afbeelding van `img.shields.io` (status van workflow `playwright.yml`).
+  Het endpoint gebruikt de **bestandsnaam** (`playwright.yml`), niet de
+  workflow-naam. Scheduled runs (cron) worden meegeteld; publieke repo → geen
+  token nodig. Shields.io is niet-tracking (bewaart geen logs), maar de badge
+  doet wel een externe request per pageview — verwerkt in de privacyverklaring
+  (`privacy.html`, sectie 9).
 
 ## 9. Snelreferentie
 

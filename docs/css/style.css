@@ -223,6 +223,15 @@ p {
   margin-bottom: 55px;
 }
 
+.automation-status-badge {
+  margin: 0 0 28px;
+  text-align: center;
+}
+
+.automation-status-badge img {
+  display: inline-block;
+}
+
 .table {
   padding-left: 30px;
   list-style-type: disc;
