@@ -564,7 +564,7 @@ p {
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 18px;
 }
 
@@ -862,10 +862,6 @@ textarea {
 
   .hero-card {
     max-width: 700px;
-  }
-
-  .card-grid {
-    grid-template-columns: 1fr;
   }
 
   .about-grid {
