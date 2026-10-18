@@ -213,6 +213,21 @@ section.container > h1 {
   font-weight: 800;
 }
 
+/* Verticale spacers vervangen handmatige <br />-vulling op utility-pages */
+.thank-you,
+.utility-page {
+  padding-block: 64px;
+}
+
+.thank-you > p {
+  margin-top: 24px;
+}
+
+.notice {
+  display: inline-block;
+  margin-top: 24px;
+}
+
 p {
   margin-bottom: 20px;
   color: var(--text-muted);

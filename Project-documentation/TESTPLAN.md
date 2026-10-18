@@ -243,7 +243,7 @@ De belangrijkste data-flow. Verwacht-gedrag per scenario:
 
 | #   | Scenario                          | Input                                 | Verwacht resultaat                                                                                       |
 | --- | --------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| F1  | Geldige submit                    | alle velden geldig                    | POST → redirect naar `/bedankt.html` + tekst "Bedankt uw bericht is ontvangen"                           |
+| F1  | Geldige submit                    | alle velden geldig                    | POST → redirect naar `/bedankt.html` + tekst "Bedankt, uw bericht is ontvangen"                           |
 | F2  | Lege verplichte velden            | name/email/bericht leeg               | géén submit (native validatie), blijft op `contact.html`, validatiemelding                               |
 | F3  | Ongeldige e-mail                  | `ongeldig-email`                      | géén submit, e-mail-validatiemelding                                                                     |
 | F4  | Alleen optioneel veld ontbreekt   | `subject` leeg                        | WEL geldige submit (subject is niet `required`)                                                          |

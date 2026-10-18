@@ -67,7 +67,7 @@ export class ContactPage extends BasePage {
   async expectRedirectToThankYouPage(): Promise<void> {
     await expect(this.page).toHaveURL(/bedankt\.html/);
     await expect(
-      this.page.getByText("Bedankt uw bericht is ontvangen"),
+      this.page.getByText("Bedankt, uw bericht is ontvangen"),
     ).toBeVisible();
   }
 

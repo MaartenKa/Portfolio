@@ -224,7 +224,7 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
 
 - Home title regex: `/Maarten Kamps/`
 - Contact title regex: `/Contact/`
-- Thank-you tekst: `"Bedankt uw bericht is ontvangen"`
+- Thank-you tekst: `"Bedankt, uw bericht is ontvangen"`
 - Formward URL: `https://forms.formward.eu/f/269c7657-9b51-4404-b3c8-0f3acd13c0d7`
 - Bedankt-pagina: `bedankt.html`
 - Privacy-link: `privacy.html`
