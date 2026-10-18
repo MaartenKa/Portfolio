@@ -131,10 +131,6 @@ a {
    LAYOUT
    ========================================================= */
 
-/* .tabel {
-  margin-left: 30px;
-} */
-
 .container {
   width: min(95%, var(--max-width));
   margin-inline: auto;
@@ -177,7 +173,7 @@ a {
 }
 
 .notice {
-  color: var(--primary-active) !important;
+  color: var(--primary-active);
 }
 
 h1,
@@ -292,10 +288,10 @@ p {
   justify-content: space-between;
 }
 
-.logo {
-  width: 50px !important;
-  height: auto !important;
-  max-width: 100px !important;
+.logo img {
+  width: 50px;
+  height: auto;
+  max-width: 100px;
   display: block;
 }
 
@@ -415,7 +411,6 @@ p {
 }
 
 .hero-description {
-  max-width: 1000px;
   font-size: 1.08rem;
   line-height: 1.8;
 }
