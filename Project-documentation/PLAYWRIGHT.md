@@ -94,8 +94,12 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   `style="display:none"`) als spamfilter.
 - **Site-JS** (`src/ts/main.ts` → gebouwd naar `docs/js/ts/main.js` via
    `tsconfig.site.json`):
-   togt de mobiele navigatie (`#menu-toggle` ↔ `#nav-links` classe `open`,
-   beheert `aria-expanded`).
+   beheert de mobiele navigatie. De toggle zet `#nav-links` classe `open`,
+   `aria-expanded` (`true` / `false`) en `aria-label` (`Open navigatie` /
+   `Sluit navigatie`). Bij openen gaat focus naar de eerste nav-link; bij
+   sluiten via de toggle, `Escape`, klik buiten het menu of een nav-link-klik
+   sluit het menu. Bij `Escape` en klik buiten het menu gaat focus terug naar
+   `#menu-toggle`; bij een nav-link-klik navigeert de browser naar de link.
 - **Statusbadge (`automation.html`):** toont de status van de laatste
   Playwright CI-run (workflow `playwright.yml`, draait op schedule) via een
   shields.io badge, gelinkt naar de GitHub Actions runs. De badge is in
@@ -129,6 +133,16 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   placeholder (voorkomt impliciete `/favicon.ico`-request).
 - **Logo:** `<img src="images/logoipsum-407.png">` is een placeholder-bestand;
   de `alt` is overal identiek: `Logo van Maarten Kamps (terug naar homepage)`.
+- **Toegankelijkheid (P2-fixes):** alle 10 pagina's hebben een skip-link
+  `<a href="#hoofdinhoud" class="skip-link">Ga naar hoofdinhoud</a>` vóór de
+  header, met `main id="hoofdinhoud"` als doel. De 44 decoratieve
+  `.card-icon`-emoji’s en decoratieve pijl-`span`-elementen zijn
+  `aria-hidden="true"`. Section-`aria-label`s zijn ver-Nederlands (o.a.
+  `Intro`, `Meer weten`, `Naar GitHub`, `Naar projecten`, `Contact`,
+  `Volgende stap`, `Vaardigheden`; `Testresultaten` blijft zoals het is).
+  Placeholder-tekst in het contactformulier heeft contrastkleur `#94a3b8`, en
+  `.hero h1 span` heeft een `forced-colors` fallback met `CanvasText` zodat
+  high-contrastmodus de gradient-tekst niet verliest.
 
 ## 5. Testautomatisering (`playwright/`)
 
@@ -161,6 +175,9 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    - `contact-functional.spec.ts`: pagina-structuur + formulier-inzending
      (mockt Formward; valide submit → redirect naar `bedankt.html`;
      ongeldige/lege submit → géén redirect dankzij native validatie).
+   - `mobile-menu-functional.spec.ts`: mobiele menu-toggle opent/sluit het
+     menu, assert `aria-expanded`, navigeert via nav-links en checkt desktop
+     (toggle verborgen, nav inline).
 
 ### Config (playwright.config.ts)
 
@@ -198,6 +215,13 @@ npm run test:headed         # met zichtbare browser
 npm run test:ui             # interactieve UI
 npm run build               # TS: site-JS → docs/js/ts, al het rest type-checken (noEmit)
 ```
+
+> **Standaard-Playwright-run:** `npm test` gebruikt `baseURL`
+> `https://maartenka.github.io/Portfolio/` en dus de live GitHub Pages-site.
+> Voor verifiëring van lokale `docs/`-wijzigingen kan ad-hoc een tijdelijke
+> Playwright-config met `baseURL: "http://127.0.0.1:3123"` en
+> `webServer: "npx http-server docs -p 3123 -s"` worden gebruikt; de
+> geverifieerde ad-hoc menu-a11y-tests zijn niet als vaste suite-committed.
 
 ## 8. Belangrijke conventies & aandachtspunten
 
@@ -273,6 +297,12 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   `playwright.config.ts` af voor IDE type-checking. `tsconfig.site.json`
   `extends` dit config en **only** dekt `src/ts/` (emit naar `docs/js/ts`).
 
+- **Toegankelijkheidsconventies:** de skip-link staat als eerste focusbaar
+  element in `<body>` en verwijst naar `#hoofdinhoud`; decoratieve emoji’s en
+  pijlen krijgen `aria-hidden="true"`; bruikbare section-`aria-label`s blijven
+  in het Nederlands; `#menu-toggle` houdt `aria-expanded` en `aria-label`
+  synchroon met de menu-status; focusbeheer in `src/ts/main.ts` houdt de
+  toetsenbordfocus bij openen/sluiten van het mobiele menu voorspelbaar.
 - **Externe badge (shields.io):** `automation.html` laadt een externe
   badge-afbeelding van `img.shields.io` (status van workflow `playwright.yml`).
   Het endpoint gebruikt de **bestandsnaam** (`playwright.yml`), niet de
@@ -297,5 +327,7 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
 - Sitemap: `https://maartenka.github.io/Portfolio/sitemap.xml` (8 pagina's)
 - OG/Twitter image: `https://maartenka.github.io/Portfolio/images/logoipsum-407.png`
 - Logo-`alt`: `Logo van Maarten Kamps (terug naar homepage)`
+- Skip-link: `Ga naar hoofdinhoud` → `#hoofdinhoud` (10 pagina's)
+- Decoratieve icons: `aria-hidden="true"` (44 `.card-icon`-emoji’s + pijlen)
 - HTML-validering: `npx html-validate "docs/*.html"`
 - Indexatie: `noindex, nofollow` (alle pagina's) + `docs/robots.txt`

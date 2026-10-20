@@ -23,9 +23,13 @@ kwaliteitsrisico's liggen daarom op vier vlakken:
 
 De huidige suite dekt (1), (2) **én (3)** — de mobiele menu-toggle is reeds
 geautomatiseerd in `mobile-menu-functional.spec.ts` (incl. ARIA-asserts en
-state-transities). De resterende gaten liggen op vlak **(4)**: responsive,
-accessibility, SEO, visual-regression, performance ontbreken nog als
-geautomatiseerde tests, evenals een CI/CD-pipeline.
+state-transities). De site bevat inmiddels P2-accessibility fixes (skip-link,
+decoratieve `aria-hidden`-iconen, Nederlandse section-labels, placeholder-
+contrast en `forced-colors` fallback), maar deze zijn nog niet als structurele
+Playwright-suite gedekt. De resterende gaten liggen op vlak **(4)**:
+responsive, geautomatiseerde accessibility-checks, SEO, visual-regression en
+performance ontbreken nog als geautomatiseerde tests, evenals een
+CI/CD-pipeline.
 
 Deze strategie sluit die gaten op met een gestructureerde, gefaseerde aanpak
 (zie §10 Roadmap) zodat het portfolio een professioneel, compleet testprofiel
@@ -41,7 +45,7 @@ kader gebruikt om de scope te bepalen en prioriteiten te onderbouwen.
 | G1  | Alle pagina's laden zonder kritieke fouten (HTTP 200, geen JS/console errors) | Functioneel / Smoke                 |
 | G2  | Navigatie (navbar, footer, CTA's, cards) leidt naar de juiste pagina          | Functioneel                         |
 | G3  | Contactformulier valideert correct en stuurt alleen geldige berichten         | Functioneel                         |
-| G4  | Mobiele menu-toggle opent/sluit de navigatie en zet `aria-expanded` correct   | Functioneel                         |
+| G4  | Mobiele menu-toggle opent/sluit de navigatie, zet `aria-expanded`/`aria-label` correct en beheert focus/Escape/klik-buiten | Functioneel                         |
 | G5  | Website is responsive op desktop, tablet en mobiel                            | Non-functieel (responsive)          |
 | G6  | Website is toegankelijk (WCAG 2.1 AA, keyboard-navigatie, ARIA)               | Non-functieel (a11y)                |
 | G7  | SEO-basis is correct (titel, meta, lang, robots, unieke headings)             | Non-functieel (SEO)                 |
@@ -57,17 +61,19 @@ kader gebruikt om de scope te bepalen en prioriteiten te onderbouwen.
 
 ### 3.1 In scope
 
-- Alle 9 product-pagina's:
+- Alle 10 site-pagina's:
   `index.html`, `curriculum.html`, `testing.html`, `automation.html`,
   `projects.html`, `personal.html`, `contact.html`, `privacy.html`,
   `bedankt.html`, plus de `404.html`-fallback.
 - Navigatie-elementen met `data-testid` (`nav-*`, `cta-*`, `card-link-*`, `footer-*`,
   `menu-toggle`).
 - Contactformulier (`contact.html`) incl. honeypot, native validatie, Formward-submit.
-- Client-side JS: `main.js` (menu-toggle).
+- Client-side JS: `main.js` (menu-toggle, focusbeheer, `Escape`-sluiten en
+  klik-buiten-het-menu).
 - Externe links (GitHub, LinkedIn, e-mail/`mailto`, Formforward-referenties in privacy).
 - Responsive gedrag (viewport media-queries: ≥850px, ≤850px, ≤500px).
-- Accessibility (focus, keyboard, `aria-*`, contrast, semantiek, img `alt`).
+- Accessibility (focus, keyboard, skip-link, `aria-*`, Nederlandse
+  section-labels, contrast, semantiek, img `alt`, `forced-colors`).
 - SEO-basis en content-integriteit (links/afbeeldingen).
 - SEO-meta per pagina: unieke `<title>`, meta description, canonical,
   Open Graph/Twitter cards; `docs/sitemap.xml` (8 content-pagina's).
@@ -144,13 +150,18 @@ risico-profiel van een statische portfolio-site.
 - **Navigatie:** elke `nav-*`-link, CTA en card-link opent de juiste URL. _(bestaand, uitbreiden)_
 - **Formulier:** zie §7 (validatie, honeypot, submit, redirect).
 - **Menu-toggle (MOBIEEL — bestaand, stabiliseren/uitbreiden):** zie TC-MENU
-  in §8.3 (`mobile-menu-functional.spec.ts`).
+  in §8.3 (`mobile-menu-functional.spec.ts`). De site-code bevat naast
+  open/sluiten ook focusbeheer, `Escape`-sluiten en klik-buiten-het-menu;
+  deze gedragingen zijn ad-hoc lokaal geverifieerd en moeten nog als
+  structurele Playwright-cases worden opgenomen.
 
 ### 5.2 Non-functioneel
 
 - **Responsive:** vaststellen correct layout + menu per breakpoint.
-- **Accessibility:** keyboard-reikbare navigatie, focus-ordening, `aria-expanded`,
-  contrast, labels, `lang`, afbeelding-`alt`.
+- **Accessibility:** keyboard-reikbare navigatie, focus-ordening, skip-link,
+  `aria-expanded`, `aria-label`, decoratieve iconen met `aria-hidden`,
+  Nederlandse section-labels, contrast, `lang`, afbeelding-`alt` en
+  `forced-colors` fallback.
 - **SEO:** unieke `<title>`, `meta description`, `lang="nl"`, `robots`-tag,
   één `h1` per pagina, geen duplicaat `id`.
 - **Content-integriteit:** geen gebroken interne/externe links, geen 404-afbeeldingen,
@@ -223,6 +234,11 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
   (live GitHub Pages). De `webServer`-blokken (`http-server` op `127.0.0.1:3000`)
   staan in `playwright.config.ts` gecommenteerd als fallback voor lokaal testen
   tegen de `docs/`-build.
+- **Ad-hoc lokale verificatie:** voor wijzigingen in `docs/` is tijdelijk een
+  Playwright-config met `baseURL: "http://127.0.0.1:3123"` en
+  `webServer: "npx http-server docs -p 3123 -s"` gebruikt om de nieuwe
+  menu-accessibility-gedragingen te controleren; deze ad-hoc config/spec is
+  niet als vaste suite-committed.
 - **Aanbeveling (fase 6 CI):** schakel in CI over naar de lokale `webServer`
   (`http-server docs -p 3000`) zodat tests deterministisch zijn en niet afhangen
   van de live-deploy; de live-URL blijft als handmatige smoke-omgeving.
@@ -311,6 +327,10 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 | MENU-04 | State-transition closed → open → closed (herhaald) | toestand wisselt correct, geen stale class                 |
 | MENU-05 | Navigatie via geopend menu werkt                   | nav-link klikt + juiste URL                                |
 | MENU-06 | Op desktop (≥850px) is toggle niet nodig/zichtbaar | menu inline zichtbaar zonder toggle                        |
+| MENU-07 | `Escape` sluit geopend menu                          | geen `.open`, `aria-expanded="false"`, focus terug naar toggle |
+| MENU-08 | Klik buiten geopend menu sluit het menu              | geen `.open`, `aria-expanded="false"`, focus terug naar toggle |
+| MENU-09 | Focus na openen gaat naar eerste nav-link            | eerste nav-link is gefocust                                  |
+| MENU-10 | `Escape` op gesloten menu steelde geen focus         | focus blijft op huidige actieve locator                      |
 
 ### 8.4 Non-functioneel (G5–G10) — nieuwe spec-bestanden _(fase 2–4)_
 
@@ -319,6 +339,8 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 | RESP-01 | Responsive          | Layout per breakpoint (desktop/tablet/mobiel)                   | juiste nav-stijl, geen horizontale scroll                                                                                                                                             |
 | A11Y-01 | Accessibility       | Keyboard-only navigatie + focus-visible                         | alle interactieve elementen toetsbaar bereikbaar                                                                                                                                      |
 | A11Y-02 | Accessibility       | `aria-expanded` / labels / `lang="nl"` / img `alt`              | attributen aanwezig en correct                                                                                                                                                        |
+| A11Y-03 | Accessibility       | Skip-link, decoratieve iconen en section-labels                 | skip-link → `#hoofdinhoud`; decoratieve emoji/pijlen `aria-hidden="true"`; bruikbare section-labels in het Nederlands                                                                |
+| A11Y-04 | Accessibility       | Placeholder-contrast en `forced-colors` fallback                | `input::placeholder` / `textarea::placeholder` = `#94a3b8`; `.hero h1 span` → `CanvasText` + geen gradient-clip in forced-colors mode                                                 |
 | SEO-01  | SEO                 | unieke `<title>` + meta description per pagina                  | geen duplicaten, NL-taal                                                                                                                                                              |
 | SEO-02  | SEO                 | één `h1` per pagina, geen duplicaat `id`, robots.txt            | structuur correct                                                                                                                                                                     |
 | SEO-03  | SEO                 | canonical + Open Graph/Twitter cards per pagina                 | canonical = eigen absolute URL; `og:title`/`og:url` = eigen `<title>`/URL; `og:image` absolute; `twitter:card=summary`                                                                |
@@ -340,7 +362,7 @@ Mitigaties zijn bewust verweven in BestPractices (determinisme, mocking, isolati
 | #   | Risico                                                                                             | Impact | Waarschijnlijkheid | Mitigatie                                                                                                             |
 | --- | -------------------------------------------------------------------------------------------------- | :----: | :----------------: | --------------------------------------------------------------------------------------------------------------------- |
 | R1  | Formward-down/vertraagd → flaky suite                                                              |  Hoog  |       Middel       | Altijd `page.route(...)` mock in CI; géén echte POST's (BestPractices §10, §22)                                       |
-| R2  | Menu-regressie na CSS/JS-wijziging                                                                 |  Hoog  |       Middel       | TC MENU-01…06 reeds geautomatiseerd; suite groen houden in CI (fase 2: stabiliseren + uitbreiden met extra viewports) |
+| R2  | Menu-regressie na CSS/JS-wijziging                                                                 |  Hoog  |       Middel       | TC MENU-01…10; bestaande suite groen houden en nieuwe focus/Escape/klik-buiten-cases automatiseren in fase 2 |
 | R3  | Flaky tests door timing/external deps                                                              |  Hoog  |       Middel       | Auto-wait + web-first asserts; geen `waitForTimeout`; retries alleen als vangnet (BestPractices §13)                  |
 | R4  | Gebroken link/afbeelding na wijziging                                                              | Middel |       Middel       | LINK-01 / IMG-01 in regression-set                                                                                    |
 | R5  | Design-regressie (CSS) onopgemerkt                                                                 | Middel |       Middel       | Visual baseline VIS-01 (fase 4), kleine tolerantie                                                                    |
@@ -362,9 +384,9 @@ impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish
 | Fase | Scope                                                                               | Levert / exit-criterium                                                                                     |
 | :--: | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 |  1   | Bestaande suite stabiliseren (smoke + navigatie + contact)                          | Alle huidige tests groen, deterministisch, gemockt; geen flaky                                              |
-|  2   | **Mobiele menu-toggle stabiliseren & uitbreiden** (TC MENU-01…06, bestaand)         | Suite groen + deterministisch; extra viewports (850×1024, 360×640) toegevoegd; ARIA state-transition gedekt |
+|  2   | **Mobiele menu-toggle stabiliseren & uitbreiden** (TC MENU-01…10, bestaand + nieuwe focus/Escape/klik-buiten-cases) | Suite groen + deterministisch; extra viewports (850×1024, 360×640) toegevoegd; ARIA state-transition, focusbeheer, `Escape`-sluiten en klik-buiten-het-menu gedekt |
 |  3   | Testdata centraliseren (`utils/test-data.ts`) + boundary/special-char cases (F6/F7) | Formulier-testdataset centraal; F-matrix compleet gedekt                                                    |
-|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks                            | RESP/A11Y/SEO/LINK/IMG groen op alle 9 pagina's                                                             |
+|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks                            | RESP/A11Y/SEO/LINK/IMG groen op alle 10 pagina's                                                             |
 |  5   | Visual regression + Lighthouse-drempels                                             | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                     |
 |  6   | CI/CD-pipeline (GitHub Actions): install → typecheck → lint → test → artifacts      | Elke PR auto gevalideerd; HTML report + trace als artifact                                                  |
 |  7   | Optioneel: cross-browser (Firefox/WebKit) + exploratoire device-sessies             | Browser-coverage & handmatige findings geformaliseerd                                                       |
@@ -397,8 +419,8 @@ steps:
 ### Exit criteria (acceptatie van een release)
 
 1. **Smoke 100%** — alle pagina's laden, geen console/page errors (SM-01…03).
-2. **Functioneel** — navigatie (NAV-\*) én formulier-matrix F1–F10 groen; menu-toggle MENU-01…06 groen.
-3. **Non-functioneel** — RESPONSIVE/A11Y/SEO/LINK/IMG checks groen op alle 9 pagina's; SEO-01…SEO-04 en HTML-01 (html-validate) groen.
+2. **Functioneel** — navigatie (NAV-\*) én formulier-matrix F1–F10 groen; menu-toggle MENU-01…10 groen.
+3. **Non-functioneel** — RESPONSIVE/A11Y/SEO/LINK/IMG checks groen op alle 10 pagina's; SEO-01…SEO-04 en HTML-01 (html-validate) groen.
 4. **Geen blokkerende defects**; bekende niet-blokerende issues gedocumenteerd.
 5. **Determinisme** — suite lokaal herhaaldelijk én in CI (parallel) reproduceerbaar groen; géén flaky tests.
 
@@ -480,9 +502,9 @@ Een testcase is klaar wanneer (BestPractices §31, samengevat):
 | G1   | SM-01, SM-02, SM-03                          |
 | G2   | NAV-01…NAV-04                                |
 | G3   | F1–F10                                       |
-| G4   | MENU-01…MENU-06                              |
+| G4   | MENU-01…MENU-10                              |
 | G5   | RESP-01                                      |
-| G6   | A11Y-01, A11Y-02                             |
+| G6   | A11Y-01, A11Y-02, A11Y-03, A11Y-04                           |
 | G7   | SEO-01, SEO-02, SEO-03, SEO-04               |
 | G8   | LINK-01, LINK-02, IMG-01, HTML-01            |
 | G9   | VIS-01                                       |

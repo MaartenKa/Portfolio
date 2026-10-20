@@ -753,7 +753,7 @@ textarea {
 
 input::placeholder,
 textarea::placeholder {
-  color: #566176;
+  color: #94a3b8;
 }
 
 input:hover,
@@ -816,6 +816,25 @@ textarea {
   outline-offset: 3px;
 }
 
+/* Skip-link: verborgen tot hij met het toetsenbord wordt gefocust */
+.skip-link {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2000;
+  padding: 10px 16px;
+  background: var(--primary-dark);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  transform: translateY(-200%);
+  transition: transform var(--transition-fast);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -826,6 +845,18 @@ textarea {
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+  }
+}
+
+/* Fallback voor high-contrast / forced-colors mode (o.a. Windows High Contrast):
+   de gradient-tekst gebruikt color: transparent + background-clip: text en valt
+   daardoor volledig weg. Herstel een leesbare systeemkleur. */
+@media (forced-colors: active) {
+  .hero h1 span {
+    color: CanvasText;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    background-image: none;
   }
 }
 

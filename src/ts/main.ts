@@ -11,23 +11,64 @@ const menuToggle = document.querySelector<HTMLButtonElement>("#menu-toggle");
 const navLinks = document.querySelector<HTMLUListElement>("#nav-links");
 
 if (menuToggle && navLinks) {
-  menuToggle.addEventListener("click", () => {
-    const isOpen = navLinks.classList.toggle("open");
+  const isOpen = () => navLinks.classList.contains("open");
 
-    menuToggle.setAttribute("aria-expanded", String(isOpen));
+  const setOpen = (open: boolean) => {
+    navLinks.classList.toggle("open", open);
+
+    menuToggle.setAttribute("aria-expanded", String(open));
+
     menuToggle.setAttribute(
       "aria-label",
-      isOpen ? "Sluit navigatie" : "Open navigatie",
+      open ? "Sluit navigatie" : "Open navigatie",
     );
+  };
+
+  const closeMenu = (returnFocus: boolean) => {
+    if (!isOpen()) return;
+
+    setOpen(false);
+
+    if (returnFocus) menuToggle.focus();
+  };
+
+  menuToggle.addEventListener("click", () => {
+    const open = !isOpen();
+
+    setOpen(open);
+
+    // Focus management: bij openen naar de eerste link, bij sluiten terug
+    // naar de menuknop, zodat toetsenbordgebruikers niet de draad kwijtraken.
+    if (open) {
+      const firstLink = navLinks.querySelector<HTMLAnchorElement>("a");
+
+      firstLink?.focus();
+    } else {
+      menuToggle.focus();
+    }
   });
 
   navLinks.querySelectorAll("a").forEach((link) => {
     link.addEventListener("click", () => {
-      navLinks.classList.remove("open");
-
-      menuToggle.setAttribute("aria-expanded", "false");
-
-      menuToggle.setAttribute("aria-label", "Open navigatie");
+      setOpen(false);
     });
+  });
+
+  // Sluit het menu met de Escape-toets en geef de focus terug aan de knop.
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeMenu(true);
+  });
+
+  // Sluit het menu bij een klik buiten het menu (buiten de lijst en de knop).
+  document.addEventListener("click", (event) => {
+    if (!isOpen()) return;
+
+    const target = event.target as Node | null;
+
+    if (target && (navLinks.contains(target) || menuToggle.contains(target))) {
+      return;
+    }
+
+    closeMenu(true);
   });
 }

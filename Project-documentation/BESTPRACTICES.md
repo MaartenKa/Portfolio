@@ -711,3 +711,84 @@ manual sleep
 implementation-detail assertion
 ↓
 shared state
+
+34. Accessibility & keyboard testing
+
+Test accessibility als gebruikersgedrag, niet als puur CSS/DOM-detail.
+
+Goede Playwright-dekking:
+
+- menu openen/sluiten via `getByRole('button', ...)`;
+- focus verplaatsen met `Tab`, `Escape` en klik-buiten-het-menu;
+- skip-link triggeren met toetsenbordfocus;
+- `aria-expanded`, `aria-label`, `aria-hidden` en zichtbaarheid combineren;
+- focus assertions met `toBeFocused()`.
+
+Voorbeelden:
+
+```ts
+const toggle = page.getByRole('button', { name: 'Open navigatie' });
+const menu = page.locator('#nav-links');
+
+await toggle.click();
+
+await expect(menu).toHaveClass(/open/);
+await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+await expect(menu.getByRole('link').first()).toBeFocused();
+
+await page.keyboard.press('Escape');
+
+await expect(menu).not.toHaveClass(/open/);
+await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+await expect(toggle).toBeFocused();
+```
+
+Voor skip-links:
+
+```ts
+await page.keyboard.press('Tab');
+await expect(page.getByRole('link', { name: 'Ga naar hoofdinhoud' })).toBeFocused();
+await page.keyboard.press('Enter');
+await expect(page.locator('#hoofdinhoud')).toHaveCount(1);
+```
+
+Voor decoratieve iconen:
+
+```ts
+await expect(page.locator('.card-icon')).toHaveAttribute('aria-hidden', 'true');
+```
+
+Voor contrast, high contrast, forced-colors en screenreader-gedrag: gebruik
+aanvullend axe-core, Lighthouse, CSS-analyse en handmatige controles;
+Playwright kan alleen het DOM-/interactiegedrag bewijzen dat via de browser
+toegankelijk is.
+
+35. Local docs verification
+
+Wanneer de Playwright-suite standaard tegen een live URL draait, zijn lokale
+`docs/`-wijzigingen niet direct gedekt door `npx playwright test`.
+
+Gebruik voor lokale verificatie een expliciete config met een lokale `baseURL`
+en `webServer`:
+
+```ts
+use: {
+  baseURL: 'http://127.0.0.1:3123',
+},
+
+webServer: {
+  command: 'npx http-server docs -p 3123 -s',
+  url: 'http://127.0.0.1:3123',
+  reuseExistingServer: !process.env.CI,
+},
+```
+
+Start de tests met:
+
+```bash
+npx playwright test -c playwright.menu.config.ts
+```
+
+Maak ad-hoc configs en tijdelijke specs alleen voor verifiëring, verwijder ze
+daarna, en verplaats bewezen gedrag naar de normale suite in
+`playwright/tests/`.
