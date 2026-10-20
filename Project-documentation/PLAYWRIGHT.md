@@ -18,15 +18,15 @@ network mocking, CI-ready configuratie).
 
 ## 2. Tech stack
 
-| Onderdeel              | Technologie                                           |
-| ---------------------- | ----------------------------------------------------- |
-| Testframework          | Playwright (`@playwright/test` v1.62.x)               |
-| Taal (tests + site-JS) | TypeScript (strict mode)                              |
-| Website                | Statisch HTML/CSS + klein TS-module                   |
+| Onderdeel              | Technologie                                                  |
+| ---------------------- | ------------------------------------------------------------ |
+| Testframework          | Playwright (`@playwright/test` v1.62.x)                      |
+| Taal (tests + site-JS) | TypeScript (strict mode)                                     |
+| Website                | Statisch HTML/CSS + klein TS-module                          |
 | Testomgeving           | Live GitHub Pages (`https://maartenka.github.io/Portfolio/`) |
-| Reporter               | Playwright HTML reporter                              |
-| Browser                | Chromium (Desktop Chrome)                             |
-| Statusbadge (site)     | shields.io — GitHub Actions workflow-status           |
+| Reporter               | Playwright HTML reporter                                     |
+| Browser                | Chromium (Desktop Chrome)                                    |
+| Statusbadge (site)     | shields.io — GitHub Actions workflow-status                  |
 
 ## 3. Projectstructuur
 
@@ -59,7 +59,7 @@ network mocking, CI-ready configuratie).
 │   │   ├── home.page.ts      # HomePage
 │   │   ├── contact.page.ts   # ContactPage (incl. Formward-mock)
 │   │   ├── mobile.page.ts    # NavigationPage (mobiele menu-toggle)
-│   │   
+│   │
 │   ├── fixtures/
 │   │   └── test-fixtures.ts  # Custom Playwright fixtures (test.extend)
 │   ├── utils/
@@ -88,18 +88,26 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   `card-link-scrum`,
   `footer-contact`, `footer-github`, `footer-linkedin`, `footer-privacy`,
   `menu-toggle`.
+- **Actieve navigatie-link:** de nav-link van de huidige pagina in de header
+  draagt `class="active"` (stijl `.nav-links a.active`: kleur
+  `--primary-active`, accent-background en underline-balk). In de footer draagt
+  de link naar de pagina zelf `class="active"`: `footer-contact` op
+  `contact.html` en `footer-privacy` op `privacy.html`; op de overige pagina's
+  heeft de footer géén actieve link (Contact/Privacy zijn daar niet de huidige
+  pagina). Footer-stijl: `.footer-links a.active` (kleur `--primary-active` =
+  `#86efac`).
 - **Contactformulier** (`contact.html`) post naar **Formward**:
   `https://forms.formward.eu/f/269c7657-9b51-4404-b3c8-0f3acd13c0d7`.
   Heeft een verborgen **honeypot**-veld (`data-testid="field-honeypot"`,
   `style="display:none"`) als spamfilter.
 - **Site-JS** (`src/ts/main.ts` → gebouwd naar `docs/js/ts/main.js` via
-   `tsconfig.site.json`):
-   beheert de mobiele navigatie. De toggle zet `#nav-links` classe `open`,
-   `aria-expanded` (`true` / `false`) en `aria-label` (`Open navigatie` /
-   `Sluit navigatie`). Bij openen gaat focus naar de eerste nav-link; bij
-   sluiten via de toggle, `Escape`, klik buiten het menu of een nav-link-klik
-   sluit het menu. Bij `Escape` en klik buiten het menu gaat focus terug naar
-   `#menu-toggle`; bij een nav-link-klik navigeert de browser naar de link.
+  `tsconfig.site.json`):
+  beheert de mobiele navigatie. De toggle zet `#nav-links` classe `open`,
+  `aria-expanded` (`true` / `false`) en `aria-label` (`Open navigatie` /
+  `Sluit navigatie`). Bij openen gaat focus naar de eerste nav-link; bij
+  sluiten via de toggle, `Escape`, klik buiten het menu of een nav-link-klik
+  sluit het menu. Bij `Escape` en klik buiten het menu gaat focus terug naar
+  `#menu-toggle`; bij een nav-link-klik navigeert de browser naar de link.
 - **Statusbadge (`automation.html`):** toont de status van de laatste
   Playwright CI-run (workflow `playwright.yml`, draait op schedule) via een
   shields.io badge, gelinkt naar de GitHub Actions runs. De badge is in
@@ -193,18 +201,18 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 
 ## 6. npm scripts
 
-| Script                    | Doel                                        |
-| ------------------------- | ------------------------------------------- |
+| Script                    | Doel                                                      |
+| ------------------------- | --------------------------------------------------------- |
 | `npm run build`           | site-TS → `docs/js/ts` **&&** type-check alle TS (noEmit) |
-| `npm test`                | `playwright test` (alle tests)              |
-| `npm run test:ui`         | Playwright UI mode                          |
-| `npm run test:headed`     | Headed browser                              |
-| `npm run testChromium`    | Alleen chromium project                     |
-| `npm run test_homepage`   | `homepage.spec.ts`                          |
-| `npm run test_smoke`      | `smoke.spec.ts`                             |
-| `npm run test_debug`      | Debug mode                                  |
-| `npm run test_list_tests` | `--list` (tests opsommen)                   |
-| `npm run test_codegen`    | `playwright codegen`                        |
+| `npm test`                | `playwright test` (alle tests)                            |
+| `npm run test:ui`         | Playwright UI mode                                        |
+| `npm run test:headed`     | Headed browser                                            |
+| `npm run testChromium`    | Alleen chromium project                                   |
+| `npm run test_homepage`   | `homepage.spec.ts`                                        |
+| `npm run test_smoke`      | `smoke.spec.ts`                                           |
+| `npm run test_debug`      | Debug mode                                                |
+| `npm run test_list_tests` | `--list` (tests opsommen)                                 |
+| `npm run test_codegen`    | `playwright codegen`                                      |
 
 ## 7. Hoe starten & testen
 

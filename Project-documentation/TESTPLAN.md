@@ -40,20 +40,20 @@ kader gebruikt om de scope te bepalen en prioriteiten te onderbouwen.
 
 ## 2. Testdoelstellingen
 
-| #   | Doelstelling                                                                  | Type                                |
-| --- | ----------------------------------------------------------------------------- | ----------------------------------- |
-| G1  | Alle pagina's laden zonder kritieke fouten (HTTP 200, geen JS/console errors) | Functioneel / Smoke                 |
-| G2  | Navigatie (navbar, footer, CTA's, cards) leidt naar de juiste pagina          | Functioneel                         |
-| G3  | Contactformulier valideert correct en stuurt alleen geldige berichten         | Functioneel                         |
+| #   | Doelstelling                                                                                                               | Type                                |
+| --- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| G1  | Alle pagina's laden zonder kritieke fouten (HTTP 200, geen JS/console errors)                                              | Functioneel / Smoke                 |
+| G2  | Navigatie (navbar, footer, CTA's, cards) leidt naar de juiste pagina                                                       | Functioneel                         |
+| G3  | Contactformulier valideert correct en stuurt alleen geldige berichten                                                      | Functioneel                         |
 | G4  | Mobiele menu-toggle opent/sluit de navigatie, zet `aria-expanded`/`aria-label` correct en beheert focus/Escape/klik-buiten | Functioneel                         |
-| G5  | Website is responsive op desktop, tablet en mobiel                            | Non-functieel (responsive)          |
-| G6  | Website is toegankelijk (WCAG 2.1 AA, keyboard-navigatie, ARIA)               | Non-functieel (a11y)                |
-| G7  | SEO-basis is correct (titel, meta, lang, robots, unieke headings)             | Non-functieel (SEO)                 |
-| G8  | Geen gebroken links of afbeeldingen (intern + extern)                         | Non-functieel (content-integriteit) |
-| G9  | Visueel stabiel (geen onbedoelde design-regressies)                           | Non-functieel (visual)              |
-| G10 | Prestaties blijven binnen acceptabele marges (static site)                    | Non-functieel (performance)         |
-| G11 | Tests draaien deterministisch, in parallel en in CI                           | Proces                              |
-| G12 | Elke release wordt geautomatiseerd gevalideerd voorafgaand aan deploy         | Proces (CI/CD)                      |
+| G5  | Website is responsive op desktop, tablet en mobiel                                                                         | Non-functieel (responsive)          |
+| G6  | Website is toegankelijk (WCAG 2.1 AA, keyboard-navigatie, ARIA)                                                            | Non-functieel (a11y)                |
+| G7  | SEO-basis is correct (titel, meta, lang, robots, unieke headings)                                                          | Non-functieel (SEO)                 |
+| G8  | Geen gebroken links of afbeeldingen (intern + extern)                                                                      | Non-functieel (content-integriteit) |
+| G9  | Visueel stabiel (geen onbedoelde design-regressies)                                                                        | Non-functieel (visual)              |
+| G10 | Prestaties blijven binnen acceptabele marges (static site)                                                                 | Non-functieel (performance)         |
+| G11 | Tests draaien deterministisch, in parallel en in CI                                                                        | Proces                              |
+| G12 | Elke release wordt geautomatiseerd gevalideerd voorafgaand aan deploy                                                      | Proces (CI/CD)                      |
 
 ---
 
@@ -310,27 +310,28 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 
 ### 8.2 Navigatie (G2) — `homepage-functional.spec.ts` _(bestaand, uitbreiden)_
 
-| ID     | Testcase                                             | Verwacht resultaat                                           |
-| ------ | ---------------------------------------------------- | ------------------------------------------------------------ |
-| NAV-01 | Elke `nav-*` link opent de juiste pagina             | URL matcht `NAV_ITEM_URLS[testId]`                           |
-| NAV-02 | CTA's (`cta-projects`, `cta-curriculum`) navigeren   | correcte bestemming                                          |
-| NAV-03 | Card-links (`card-link-testing/automation/projects`) | correcte bestemming                                          |
-| NAV-04 | Footer-links (contact, github, linkedin, privacy)    | interne → juiste URL; externe → juiste `href`/`target`/`rel` |
+| ID     | Testcase                                             | Verwacht resultaat                                                                                                                                     |
+| ------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| NAV-01 | Elke `nav-*` link opent de juiste pagina             | URL matcht `NAV_ITEM_URLS[testId]`                                                                                                                     |
+| NAV-02 | CTA's (`cta-projects`, `cta-curriculum`) navigeren   | correcte bestemming                                                                                                                                    |
+| NAV-03 | Card-links (`card-link-testing/automation/projects`) | correcte bestemming                                                                                                                                    |
+| NAV-04 | Footer-links (contact, github, linkedin, privacy)    | interne → juiste URL; externe → juiste `href`/`target`/`rel`                                                                                           |
+| NAV-05 | Actieve footer-link op eigen pagina                  | `footer-contact` (contact) en `footer-privacy` (privacy): `class="active"` + kleur `rgb(134, 239, 172)`; overige pagina's: géén `.active` in de footer |
 
 ### 8.3 Mobiele menu-toggle (G4) — `mobile-menu-functional.spec.ts` _(bestaand, hoogste prioriteit)_
 
-| ID      | Testcase                                           | Verwacht resultaat                                         |
-| ------- | -------------------------------------------------- | ---------------------------------------------------------- |
-| MENU-01 | Initiale toestand (mobiel ≤850px)                  | menu closed, `aria-expanded="false"`                       |
-| MENU-02 | Toggle openen                                      | `.open` + alle nav-items zichtbaar, `aria-expanded="true"` |
-| MENU-03 | Toggle sluiten                                     | geen `.open`, `aria-expanded="false"`                      |
-| MENU-04 | State-transition closed → open → closed (herhaald) | toestand wisselt correct, geen stale class                 |
-| MENU-05 | Navigatie via geopend menu werkt                   | nav-link klikt + juiste URL                                |
-| MENU-06 | Op desktop (≥850px) is toggle niet nodig/zichtbaar | menu inline zichtbaar zonder toggle                        |
-| MENU-07 | `Escape` sluit geopend menu                          | geen `.open`, `aria-expanded="false"`, focus terug naar toggle |
-| MENU-08 | Klik buiten geopend menu sluit het menu              | geen `.open`, `aria-expanded="false"`, focus terug naar toggle |
-| MENU-09 | Focus na openen gaat naar eerste nav-link            | eerste nav-link is gefocust                                  |
-| MENU-10 | `Escape` op gesloten menu steelde geen focus         | focus blijft op huidige actieve locator                      |
+| ID      | Testcase                                           | Verwacht resultaat                                             |
+| ------- | -------------------------------------------------- | -------------------------------------------------------------- |
+| MENU-01 | Initiale toestand (mobiel ≤850px)                  | menu closed, `aria-expanded="false"`                           |
+| MENU-02 | Toggle openen                                      | `.open` + alle nav-items zichtbaar, `aria-expanded="true"`     |
+| MENU-03 | Toggle sluiten                                     | geen `.open`, `aria-expanded="false"`                          |
+| MENU-04 | State-transition closed → open → closed (herhaald) | toestand wisselt correct, geen stale class                     |
+| MENU-05 | Navigatie via geopend menu werkt                   | nav-link klikt + juiste URL                                    |
+| MENU-06 | Op desktop (≥850px) is toggle niet nodig/zichtbaar | menu inline zichtbaar zonder toggle                            |
+| MENU-07 | `Escape` sluit geopend menu                        | geen `.open`, `aria-expanded="false"`, focus terug naar toggle |
+| MENU-08 | Klik buiten geopend menu sluit het menu            | geen `.open`, `aria-expanded="false"`, focus terug naar toggle |
+| MENU-09 | Focus na openen gaat naar eerste nav-link          | eerste nav-link is gefocust                                    |
+| MENU-10 | `Escape` op gesloten menu steelde geen focus       | focus blijft op huidige actieve locator                        |
 
 ### 8.4 Non-functioneel (G5–G10) — nieuwe spec-bestanden _(fase 2–4)_
 
@@ -339,7 +340,7 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 | RESP-01 | Responsive          | Layout per breakpoint (desktop/tablet/mobiel)                   | juiste nav-stijl, geen horizontale scroll                                                                                                                                             |
 | A11Y-01 | Accessibility       | Keyboard-only navigatie + focus-visible                         | alle interactieve elementen toetsbaar bereikbaar                                                                                                                                      |
 | A11Y-02 | Accessibility       | `aria-expanded` / labels / `lang="nl"` / img `alt`              | attributen aanwezig en correct                                                                                                                                                        |
-| A11Y-03 | Accessibility       | Skip-link, decoratieve iconen en section-labels                 | skip-link → `#hoofdinhoud`; decoratieve emoji/pijlen `aria-hidden="true"`; bruikbare section-labels in het Nederlands                                                                |
+| A11Y-03 | Accessibility       | Skip-link, decoratieve iconen en section-labels                 | skip-link → `#hoofdinhoud`; decoratieve emoji/pijlen `aria-hidden="true"`; bruikbare section-labels in het Nederlands                                                                 |
 | A11Y-04 | Accessibility       | Placeholder-contrast en `forced-colors` fallback                | `input::placeholder` / `textarea::placeholder` = `#94a3b8`; `.hero h1 span` → `CanvasText` + geen gradient-clip in forced-colors mode                                                 |
 | SEO-01  | SEO                 | unieke `<title>` + meta description per pagina                  | geen duplicaten, NL-taal                                                                                                                                                              |
 | SEO-02  | SEO                 | één `h1` per pagina, geen duplicaat `id`, robots.txt            | structuur correct                                                                                                                                                                     |
@@ -359,20 +360,20 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 Risico's gerangschikt op impact × waarschijnlijkheid voor een statische site.
 Mitigaties zijn bewust verweven in BestPractices (determinisme, mocking, isolation).
 
-| #   | Risico                                                                                             | Impact | Waarschijnlijkheid | Mitigatie                                                                                                             |
-| --- | -------------------------------------------------------------------------------------------------- | :----: | :----------------: | --------------------------------------------------------------------------------------------------------------------- |
-| R1  | Formward-down/vertraagd → flaky suite                                                              |  Hoog  |       Middel       | Altijd `page.route(...)` mock in CI; géén echte POST's (BestPractices §10, §22)                                       |
-| R2  | Menu-regressie na CSS/JS-wijziging                                                                 |  Hoog  |       Middel       | TC MENU-01…10; bestaande suite groen houden en nieuwe focus/Escape/klik-buiten-cases automatiseren in fase 2 |
-| R3  | Flaky tests door timing/external deps                                                              |  Hoog  |       Middel       | Auto-wait + web-first asserts; geen `waitForTimeout`; retries alleen als vangnet (BestPractices §13)                  |
-| R4  | Gebroken link/afbeelding na wijziging                                                              | Middel |       Middel       | LINK-01 / IMG-01 in regression-set                                                                                    |
-| R5  | Design-regressie (CSS) onopgemerkt                                                                 | Middel |       Middel       | Visual baseline VIS-01 (fase 4), kleine tolerantie                                                                    |
-| R6  | Externe links (GitHub/LinkedIn) flaky in CI                                                        |  Laag  |        Hoog        | In CI alleen link-structuur checken, niet bereikbaarheid (§6.2)                                                       |
-| R7  | a11y/SEO-regressie                                                                                 | Middel |    Laag-Middel     | A11Y/SEO-asserts (fase 3); optioneel axe-core                                                                         |
-| R8  | Performance-degradatie                                                                             |  Laag  |        Laag        | Lighthouse-drempels PERF-01, apart van E2E                                                                            |
-| R9  | Legacy-mappen (`old/`) onbedoeld aangepakt                                                         | Middel |        Laag        | Uit scope (§3.2); niet in `testDir` / config                                                                          |
-| R10 | SEO-meta/canonical/sitemap raken inconsistent na nieuwe pagina                                     | Middel |       Middel       | SEO-03/SEO-04 asserts; sitemap en canonical-explicitie per pagina (PLAYWRIGHT §4)                                     |
-| R11 | HTML-structuurdefecten (onafgesloten `<p>`, `</P>`, raw `&`) blijven onopgemerkt in statische HTML | Middel |       Middel       | HTML-01 `html-validate` als poort vóór de E2E-suite (browser repareert impliciet, dus E2E detecteert dit niet)        |
-| R12 | Lege placeholder-content (CI-kaarten, logo, favicon) wekt onvolledige indruk                       |  Laag  |       Middel       | Kaarten uitcommentarieerd met TODO; placeholders expliciet gedocumenteerd (§3.2)                                      |
+| #   | Risico                                                                                             | Impact | Waarschijnlijkheid | Mitigatie                                                                                                      |
+| --- | -------------------------------------------------------------------------------------------------- | :----: | :----------------: | -------------------------------------------------------------------------------------------------------------- |
+| R1  | Formward-down/vertraagd → flaky suite                                                              |  Hoog  |       Middel       | Altijd `page.route(...)` mock in CI; géén echte POST's (BestPractices §10, §22)                                |
+| R2  | Menu-regressie na CSS/JS-wijziging                                                                 |  Hoog  |       Middel       | TC MENU-01…10; bestaande suite groen houden en nieuwe focus/Escape/klik-buiten-cases automatiseren in fase 2   |
+| R3  | Flaky tests door timing/external deps                                                              |  Hoog  |       Middel       | Auto-wait + web-first asserts; geen `waitForTimeout`; retries alleen als vangnet (BestPractices §13)           |
+| R4  | Gebroken link/afbeelding na wijziging                                                              | Middel |       Middel       | LINK-01 / IMG-01 in regression-set                                                                             |
+| R5  | Design-regressie (CSS) onopgemerkt                                                                 | Middel |       Middel       | Visual baseline VIS-01 (fase 4), kleine tolerantie                                                             |
+| R6  | Externe links (GitHub/LinkedIn) flaky in CI                                                        |  Laag  |        Hoog        | In CI alleen link-structuur checken, niet bereikbaarheid (§6.2)                                                |
+| R7  | a11y/SEO-regressie                                                                                 | Middel |    Laag-Middel     | A11Y/SEO-asserts (fase 3); optioneel axe-core                                                                  |
+| R8  | Performance-degradatie                                                                             |  Laag  |        Laag        | Lighthouse-drempels PERF-01, apart van E2E                                                                     |
+| R9  | Legacy-mappen (`old/`) onbedoeld aangepakt                                                         | Middel |        Laag        | Uit scope (§3.2); niet in `testDir` / config                                                                   |
+| R10 | SEO-meta/canonical/sitemap raken inconsistent na nieuwe pagina                                     | Middel |       Middel       | SEO-03/SEO-04 asserts; sitemap en canonical-explicitie per pagina (PLAYWRIGHT §4)                              |
+| R11 | HTML-structuurdefecten (onafgesloten `<p>`, `</P>`, raw `&`) blijven onopgemerkt in statische HTML | Middel |       Middel       | HTML-01 `html-validate` als poort vóór de E2E-suite (browser repareert impliciet, dus E2E detecteert dit niet) |
+| R12 | Lege placeholder-content (CI-kaarten, logo, favicon) wekt onvolledige indruk                       |  Laag  |       Middel       | Kaarten uitcommentarieerd met TODO; placeholders expliciet gedocumenteerd (§3.2)                               |
 
 ---
 
@@ -381,15 +382,15 @@ Mitigaties zijn bewust verweven in BestPractices (determinisme, mocking, isolati
 Elke fase is self-contained en draait al na afloop groen in CI. Volgorde volgt
 impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish/CI.
 
-| Fase | Scope                                                                               | Levert / exit-criterium                                                                                     |
-| :--: | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-|  1   | Bestaande suite stabiliseren (smoke + navigatie + contact)                          | Alle huidige tests groen, deterministisch, gemockt; geen flaky                                              |
+| Fase | Scope                                                                                                               | Levert / exit-criterium                                                                                                                                            |
+| :--: | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|  1   | Bestaande suite stabiliseren (smoke + navigatie + contact)                                                          | Alle huidige tests groen, deterministisch, gemockt; geen flaky                                                                                                     |
 |  2   | **Mobiele menu-toggle stabiliseren & uitbreiden** (TC MENU-01…10, bestaand + nieuwe focus/Escape/klik-buiten-cases) | Suite groen + deterministisch; extra viewports (850×1024, 360×640) toegevoegd; ARIA state-transition, focusbeheer, `Escape`-sluiten en klik-buiten-het-menu gedekt |
-|  3   | Testdata centraliseren (`utils/test-data.ts`) + boundary/special-char cases (F6/F7) | Formulier-testdataset centraal; F-matrix compleet gedekt                                                    |
-|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks                            | RESP/A11Y/SEO/LINK/IMG groen op alle 10 pagina's                                                             |
-|  5   | Visual regression + Lighthouse-drempels                                             | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                     |
-|  6   | CI/CD-pipeline (GitHub Actions): install → typecheck → lint → test → artifacts      | Elke PR auto gevalideerd; HTML report + trace als artifact                                                  |
-|  7   | Optioneel: cross-browser (Firefox/WebKit) + exploratoire device-sessies             | Browser-coverage & handmatige findings geformaliseerd                                                       |
+|  3   | Testdata centraliseren (`utils/test-data.ts`) + boundary/special-char cases (F6/F7)                                 | Formulier-testdataset centraal; F-matrix compleet gedekt                                                                                                           |
+|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks                                                            | RESP/A11Y/SEO/LINK/IMG groen op alle 10 pagina's                                                                                                                   |
+|  5   | Visual regression + Lighthouse-drempels                                                                             | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                                                                            |
+|  6   | CI/CD-pipeline (GitHub Actions): install → typecheck → lint → test → artifacts                                      | Elke PR auto gevalideerd; HTML report + trace als artifact                                                                                                         |
+|  7   | Optioneel: cross-browser (Firefox/WebKit) + exploratoire device-sessies                                             | Browser-coverage & handmatige findings geformaliseerd                                                                                                              |
 
 ### CI-pipeline (fase 6, in lijn met BestPractices §18)
 
@@ -504,7 +505,7 @@ Een testcase is klaar wanneer (BestPractices §31, samengevat):
 | G3   | F1–F10                                       |
 | G4   | MENU-01…MENU-10                              |
 | G5   | RESP-01                                      |
-| G6   | A11Y-01, A11Y-02, A11Y-03, A11Y-04                           |
+| G6   | A11Y-01, A11Y-02, A11Y-03, A11Y-04           |
 | G7   | SEO-01, SEO-02, SEO-03, SEO-04               |
 | G8   | LINK-01, LINK-02, IMG-01, HTML-01            |
 | G9   | VIS-01                                       |

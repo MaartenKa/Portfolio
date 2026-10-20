@@ -1,10 +1,8 @@
 const copyrightYear = String(new Date().getFullYear());
 
-document
-  .querySelectorAll<HTMLElement>(".copyright-year")
-  .forEach((el) => {
-    el.textContent = copyrightYear;
-  });
+document.querySelectorAll<HTMLElement>(".copyright-year").forEach((el) => {
+  el.textContent = copyrightYear;
+});
 
 const menuToggle = document.querySelector<HTMLButtonElement>("#menu-toggle");
 
