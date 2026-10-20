@@ -137,6 +137,12 @@ a {
   margin-inline: auto;
 }
 
+/* Ruimte tussen opeenvolgende containers binnen een sectie
+   (vervangt handmatige <br /><br />-vulling, o.a. in contact/testing) */
+.section > .container + .container {
+  margin-top: 56px;
+}
+
 .section {
   position: relative;
   padding: 80px 0;
@@ -266,6 +272,11 @@ p {
 .table {
   padding-left: 30px;
   list-style-type: disc;
+}
+
+/* Afstand tussen privacy-secties (vervangt <br />-vulling in privacy.html) */
+.privacy-policy h3 {
+  margin-top: 28px;
 }
 
 /* =========================================================
@@ -412,6 +423,7 @@ p {
 }
 
 .hero-description {
+  margin-top: 24px;
   font-size: 1.08rem;
   line-height: 1.8;
 }

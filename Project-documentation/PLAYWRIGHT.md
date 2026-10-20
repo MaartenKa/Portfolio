@@ -82,7 +82,10 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   `nav-home`, `nav-curriculum`, `nav-testing`, `nav-automation`,
   `nav-projects`, `nav-personal`, `nav-contact`,
   `cta-projects`, `cta-curriculum`, `cta-projects-bottom`,
+  `cta-automation-bottom`, `cta-github-bottom`, `cta-contact-bottom`,
+  `cta-github-social`, `cta-linkedin-social`,
   `card-link-testing`, `card-link-automation`, `card-link-projects`,
+  `card-link-scrum`,
   `footer-contact`, `footer-github`, `footer-linkedin`, `footer-privacy`,
   `menu-toggle`.
 - **Contactformulier** (`contact.html`) post naar **Formward**:

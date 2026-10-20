@@ -1,4 +1,10 @@
 "use strict";
+const copyrightYear = String(new Date().getFullYear());
+document
+    .querySelectorAll(".copyright-year")
+    .forEach((el) => {
+    el.textContent = copyrightYear;
+});
 const menuToggle = document.querySelector("#menu-toggle");
 const navLinks = document.querySelector("#nav-links");
 if (menuToggle && navLinks) {
