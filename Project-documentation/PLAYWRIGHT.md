@@ -100,10 +100,32 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   (aansluitend bij `--card`) binnen een omlijst kaart-element
   (`.automation-status-badge`) met `CI STATUS`-eyebrow, lazy-loaded. De badge
   geeft uitsluitend de run-status (passing/failing), geen testcijfers. De
-  placeholder-kaarten (`[Aantal]`, `[Percentage]`, `[Status]`) zijn nog niet
-  gevuld (geplande uitbouw: cijfers via JSON-reporter + CI-commit).
+  placeholder-kaarten (`[Aantal]`, `[Percentage]`, `[Status]`) staan in een
+  HTML-comment met TODO (geplande uitbouw: cijfers via JSON-reporter +
+  CI-commit); ze tonen dus géén lege kaarten bij bezoekers. De
+  `[IN PROGRESS]`-toelichting en de badge blijven wél zichtbaar.
 - **Links (extern):** GitHub `MaartenKa/Portfolio`,
   LinkedIn `maarten-kamps-a6909527`, e-mail `Maarten.kamps.bee@outlook.com`.
+- **Meta & SEO (per pagina, in `<head>` vóór `<title>`):**
+  - `meta[name="description"]` en `link[rel="canonical"]` (absolute URL,
+    `https://maartenka.github.io/Portfolio/<pagina>.html`).
+  - Open Graph: `og:title`, `og:description`, `og:type=website`,
+    `og:locale=nl_NL`, `og:site_name`, `og:url`, `og:image` (+ `width` 400,
+    `height` 326, `alt`), Twitter: `twitter:card=summary`, `twitter:title`,
+    `twitter:description`, `twitter:image`.
+  - `og:image`/`twitter:image` wijzen op `images/logoipsum-407.png` —
+    placeholder-logo (bewust, zie §8).
+  - `meta[name="robots"]` = `noindex, nofollow` op álle pagina's: de site is
+    nog indexatie-afgeschermd. OG/Twitter cards werken wél (social sharing),
+    canonical/sitemap zijn nu effectloos maar onschadelijk (zie §8).
+  - `docs/sitemap.xml`: 8 content-pagina's (`index`, `curriculum`, `testing`,
+    `automation`, `projects`, `personal`, `contact`, `privacy`); `404.html` en
+    `bedankt.html` bewust uitgesloten. Gepubliceerd op
+    `https://maartenka.github.io/Portfolio/sitemap.xml`.
+- **Favicon:** `link[rel="icon"] href="data:,"` — lege data-URI, bewust als
+  placeholder (voorkomt impliciete `/favicon.ico`-request).
+- **Logo:** `<img src="images/logoipsum-407.png">` is een placeholder-bestand;
+  de `alt` is overal identiek: `Logo van Maarten Kamps (terug naar homepage)`.
 
 ## 5. Testautomatisering (`playwright/`)
 
@@ -205,6 +227,44 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
     `https://maartenka.github.io/Portfolio/`. Een leading `/` zou dan naar
     `https://maartenka.github.io/curriculum.html` navigeren (404).
 
+- **`_redirect` in het Formward-formulier is bewust relatief:**
+  `<input type="hidden" name="_redirect" value="bedankt.html" />`
+  (`contact.html`). Formward resolve de redirect ten opzichte van de
+  verzendende URL, dus een relatieve waarde is subpath-safe
+  (`/Portfolio/bedankt.html`); een absolute `https://.../Portfolio/bedankt.html`
+  kan de subpath verliezen. Let op: de Playwright-mock
+  (`ContactPage.mockFormSubmit`) simuleert de redirect zélf met een absolute
+  `Location`-header en asserts die mock-waarde — de echte Formward-redirect is
+  dus via de suite níét gedekt (alleen handmatig/live verifiëren).
+
+- **Externe links:** elke link naar een andere domein heeft
+  `target="_blank" rel="noopener noreferrer"` (footers, socials-knoppen op
+  `contact.html`, project-cardlinks op `projects.html`). Conventie:
+  `rel` steeds in diezelfde volgorde; interne pagina-links blijven zonder
+  `target`.
+
+- **Logo-`alt`:** op alle 10 pagina's exact dezelfde tekst
+  `Logo van Maarten Kamps (terug naar homepage)` — beschrijvend én
+  functie-beschrijvend (de logo-link gaat naar `index.html`).
+
+- **HTML-validiteit:** structuur van de site-pagina's valideren met
+  `npx html-validate "docs/*.html"` (config `.htmlvalidate.json` op repo-root,
+  wordt automatisch opgepakt). Actief als defectregel: `no-implicit-close`
+  (expliciet sluiten van `<p>`/`<li>`/…), `close-order` (geneste tags in de
+  juiste volgorde sluiten), `element-case` (tags in kleine letters),
+  `no-raw-characters` (`&` → `&amp;`) en `no-utf8-bom` (bestanden BOM-vrij
+  saves; een BOM vóór `<!DOCTYPE>` kan de quirks-mode triggeren). Bewust
+  **uit** gezet in de config (stijl van deze site, geen defects):
+  `doctype-style`, `void-style` (`<br/>`-self-closing) en
+  `no-implicit-button-type`. Stand van zaken: **0 errors** over alle 10
+  pagina's.
+
+- **Indexatie-besluit (open):** `noindex, nofollow` + `docs/robots.txt`
+  (`Disallow: /`) staan bewust; op GitHub Pages wordt `robots.txt` op
+  domein-root gepubliceerd (`https://maartenka.github.io/robots.txt`), niet
+  onder `/Portfolio/`. Bij later indexeren: robots-meta per pagina opzetten en
+  `robots.txt` op domein-root richting `/Portfolio/` laten wijzen.
+
 - **`tsconfig.json` include:** dekt `src/`, `playwright/tests/`,
   `playwright/pages/`, `playwright/utils/`, `playwright/fixtures/` en
   `playwright.config.ts` af voor IDE type-checking. `tsconfig.site.json`
@@ -231,3 +291,8 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
 - E-mail: `mailto:Maarten.kamps.bee@outlook.com`
 - GitHub: `https://github.com/MaartenKa/Portfolio`
 - LinkedIn: `https://www.linkedin.com/in/maarten-kamps-a6909527/`
+- Sitemap: `https://maartenka.github.io/Portfolio/sitemap.xml` (8 pagina's)
+- OG/Twitter image: `https://maartenka.github.io/Portfolio/images/logoipsum-407.png`
+- Logo-`alt`: `Logo van Maarten Kamps (terug naar homepage)`
+- HTML-validering: `npx html-validate "docs/*.html"`
+- Indexatie: `noindex, nofollow` (alle pagina's) + `docs/robots.txt`

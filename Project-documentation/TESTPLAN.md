@@ -67,8 +67,10 @@ kader gebruikt om de scope te bepalen en prioriteiten te onderbouwen.
 - Client-side JS: `main.js` (menu-toggle).
 - Externe links (GitHub, LinkedIn, e-mail/`mailto`, Formforward-referenties in privacy).
 - Responsive gedrag (viewport media-queries: ≥850px, ≤850px, ≤500px).
-- Accessibility (focus, keyboard, `aria-*`, contrast, semantiek).
+- Accessibility (focus, keyboard, `aria-*`, contrast, semantiek, img `alt`).
 - SEO-basis en content-integriteit (links/afbeeldingen).
+- SEO-meta per pagina: unieke `<title>`, meta description, canonical,
+  Open Graph/Twitter cards; `docs/sitemap.xml` (8 content-pagina's).
 - Visual regression en performance (als kwaliteitseisen, zie §10 Roadmap).
 
 ### 3.2 Uit scope (bewust)
@@ -81,6 +83,13 @@ kader gebruikt om de scope te bepalen en prioriteiten te onderbouwen.
   lokaal simuleren).
 - i18n/vertaling (website is monolingual Nederlands).
 - Security-penetratie (static site, geen auth/backend; wél basis: HTTPS + honeypot-check).
+- Het indexatie-besluit zelf: `noindex, nofollow` en `docs/robots.txt`
+  (`Disallow: /`) staan bewust en blijven zo; canonical/sitemap zijn daardoor
+  nu effectloos (worden wél getest op aanwezigheid/consistentie, niet op
+  indexatie-effect).
+- Invullen van placeholders: logo-bestand (`images/logoipsum-407.png`), lege
+  favicon (`href="data:,"`) en de CI-statistiek-kaarten op `automation.html`
+  (uitcommentarieerd met TODO) — content-work, geen testcases.
 
 ---
 
@@ -241,24 +250,32 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
 
 De belangrijkste data-flow. Verwacht-gedrag per scenario:
 
-| #   | Scenario                          | Input                                 | Verwacht resultaat                                                                                       |
-| --- | --------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| F1  | Geldige submit                    | alle velden geldig                    | POST → redirect naar `/bedankt.html` + tekst "Bedankt, uw bericht is ontvangen"                           |
-| F2  | Lege verplichte velden            | name/email/bericht leeg               | géén submit (native validatie), blijft op `contact.html`, validatiemelding                               |
-| F3  | Ongeldige e-mail                  | `ongeldig-email`                      | géén submit, e-mail-validatiemelding                                                                     |
-| F4  | Alleen optioneel veld ontbreekt   | `subject` leeg                        | WEL geldige submit (subject is niet `required`)                                                          |
-| F5  | Honeypot ingevuld (bot)           | `_gotcha` gevuld                      | spamfilter: géén geldig bericht (Formward verwijdert; lokaal: assert veld blijft hidden + tabindex -1)   |
-| F6  | Boundary: minimale/ extreme tekst | naam = 1 teken, bericht = 500+ tekens | WEL geldige submit; geen fouten/truncatie in UI (boundary value analysis)                                |
-| F7  | Speciale tekens / unicode         | emoji, quotes, accents                | WEL geldige submit; tekst wordt veilig gerenderd (geen HTML-injectie op static page)                     |
-| F8  | Dubbel submit                     | snel dubbel klikken op verstuurknop   | Maximaal één POST naar Formward; redirect blijft idempotent                                              |
-| F9  | Redirect-target is correct        | geldige submit                        | eind-URL = `bedankt.html` + bedankt-tekst zichtbaar (geen lege/pagina-not-found)                         |
-| F10 | Terugnavigatie na redirect        | geldige submit → back                 | browser back werkt naar `contact.html` zonder crash; formulier is gereset/leeg (nieuwe context per test) |
+| #   | Scenario                          | Input                                 | Verwacht resultaat                                                                                                |
+| --- | --------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| F1  | Geldige submit                    | alle velden geldig                    | POST → redirect naar `bedankt.html` + tekst "Bedankt, uw bericht is ontvangen"                                    |
+| F2  | Lege verplichte velden            | name/email/bericht leeg               | géén submit (native validatie), blijft op `contact.html`, validatiemelding                                        |
+| F3  | Ongeldige e-mail                  | `ongeldig-email`                      | géén submit, e-mail-validatiemelding                                                                              |
+| F4  | Alleen optioneel veld ontbreekt   | `subject` leeg                        | WEL geldige submit (subject is niet `required`)                                                                   |
+| F5  | Honeypot ingevuld (bot)           | `_gotcha` gevuld                      | spamfilter: géén geldig bericht (Formward verwijdert; lokaal: assert veld blijft hidden + tabindex -1)            |
+| F6  | Boundary: minimale/ extreme tekst | naam = 1 teken, bericht = 500+ tekens | WEL geldige submit; geen fouten/truncatie in UI (boundary value analysis)                                         |
+| F7  | Speciale tekens / unicode         | emoji, quotes, accents                | WEL geldige submit; tekst wordt veilig gerenderd (geen HTML-injectie op static page)                              |
+| F8  | Dubbel submit                     | snel dubbel klikken op verstuurknop   | Maximaal één POST naar Formward; redirect blijft idempotent                                                       |
+| F9  | Redirect-target is correct        | geldige submit                        | eind-URL = `bedankt.html` (subpath `/Portfolio/` behouden) + bedankt-tekst zichtbaar (geen lege/pagina-not-found) |
+| F10 | Terugnavigatie na redirect        | geldige submit → back                 | browser back werkt naar `contact.html` zonder crash; formulier is gereset/leeg (nieuwe context per test)          |
 
 > **Testdata-koppeling:** de datasets uit §6.1 (`valid`, `missingRequired`,
 > `invalidEmail`, `boundary`, `specialChars`, `honeypotFilled`) mappen 1-op-1 op
 > F1–F7. De Formward-mock (`ContactPage.mockFormSubmit`) garandeert dat er nooit
 > een echt POST/mailtje weggaat; tests die native validatie controleren roepen
 > zelf `clearFormMock()` aan (bestaand patroon in `contact-functional.spec.ts`).
+>
+> **Aandachtspunt redirect (`_redirect`):** `contact.html` verstuurt
+> `value="bedankt.html"` (bewust **relatief**, zodat Formward de redirect ten
+> opzichte van de verzendende URL resolve en de `/Portfolio/`-subpath behouden
+> blijft). De mock in F1/F9 asserts de door de mock zelf gezette absolute
+> `Location`-header, dus F1/F9 bewijzen de _afhandeling_ van de redirect, niet
+> de waarde van `_redirect` bij de echte Formward-redirect. Dekking daarvan:
+> handmatige live-check na deploy (zie ook PLAYWRIGHT §8).
 
 ---
 
@@ -297,17 +314,21 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 
 ### 8.4 Non-functioneel (G5–G10) — nieuwe spec-bestanden _(fase 2–4)_
 
-| ID      | Categorie           | Testcase                                             | Verwacht resultaat                               |
-| ------- | ------------------- | ---------------------------------------------------- | ------------------------------------------------ |
-| RESP-01 | Responsive          | Layout per breakpoint (desktop/tablet/mobiel)        | juiste nav-stijl, geen horizontale scroll        |
-| A11Y-01 | Accessibility       | Keyboard-only navigatie + focus-visible              | alle interactieve elementen toetsbaar bereikbaar |
-| A11Y-02 | Accessibility       | `aria-expanded` / labels / `lang="nl"` / img `alt`   | attributen aanwezig en correct                   |
-| SEO-01  | SEO                 | unieke `<title>` + meta description per pagina       | geen duplicaten, NL-taal                         |
-| SEO-02  | SEO                 | één `h1` per pagina, geen duplicaat `id`, robots.txt | structuur correct                                |
-| LINK-01 | Content-integriteit | interne links op alle pagina's                       | geen gebroken interne links                      |
-| IMG-01  | Content-integriteit | afbeeldingen laden                                   | geen 404/bron-fouten                             |
-| VIS-01  | Visual (fase 4)     | screenshot-baseline per pagina × breakpoint          | geen onbedoelde regressies (tolerantie % klein)  |
-| PERF-01 | Performance         | Lighthouse (Perf/A11y/BestPractices/SEO) ≥ drempel   | scores binnen marges; snelle static-load         |
+| ID      | Categorie           | Testcase                                                        | Verwacht resultaat                                                                                                                                                                    |
+| ------- | ------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RESP-01 | Responsive          | Layout per breakpoint (desktop/tablet/mobiel)                   | juiste nav-stijl, geen horizontale scroll                                                                                                                                             |
+| A11Y-01 | Accessibility       | Keyboard-only navigatie + focus-visible                         | alle interactieve elementen toetsbaar bereikbaar                                                                                                                                      |
+| A11Y-02 | Accessibility       | `aria-expanded` / labels / `lang="nl"` / img `alt`              | attributen aanwezig en correct                                                                                                                                                        |
+| SEO-01  | SEO                 | unieke `<title>` + meta description per pagina                  | geen duplicaten, NL-taal                                                                                                                                                              |
+| SEO-02  | SEO                 | één `h1` per pagina, geen duplicaat `id`, robots.txt            | structuur correct                                                                                                                                                                     |
+| SEO-03  | SEO                 | canonical + Open Graph/Twitter cards per pagina                 | canonical = eigen absolute URL; `og:title`/`og:url` = eigen `<title>`/URL; `og:image` absolute; `twitter:card=summary`                                                                |
+| SEO-04  | SEO                 | `docs/sitemap.xml`                                              | geldige XML, 8 content-pagina's, `404`/`bedankt` uitgesloten, alle locaties = bestaande bestanden                                                                                     |
+| HTML-01 | Content-integriteit | `npx html-validate "docs/*.html"` (config `.htmlvalidate.json`) | 0 errors (o.a. `no-implicit-close`, `close-order`, `element-case`, `no-raw-characters`, `no-utf8-bom`; stijlstijlen `doctype-style`/`void-style`/`no-implicit-button-type` staan uit) |
+| LINK-01 | Content-integriteit | interne links op alle pagina's                                  | geen gebroken interne links                                                                                                                                                           |
+| LINK-02 | Content-integriteit | externe links (`href^="https://"`)                              | elke externe link heeft `target="_blank"` + `rel="noopener noreferrer"`                                                                                                               |
+| IMG-01  | Content-integriteit | afbeeldingen laden                                              | geen 404/bron-fouten; alle `<img>` hebben niet-lege `alt`                                                                                                                             |
+| VIS-01  | Visual (fase 4)     | screenshot-baseline per pagina × breakpoint                     | geen onbedoelde regressies (tolerantie % klein)                                                                                                                                       |
+| PERF-01 | Performance         | Lighthouse (Perf/A11y/BestPractices/SEO) ≥ drempel              | scores binnen marges; snelle static-load                                                                                                                                              |
 
 ---
 
@@ -316,17 +337,20 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 Risico's gerangschikt op impact × waarschijnlijkheid voor een statische site.
 Mitigaties zijn bewust verweven in BestPractices (determinisme, mocking, isolation).
 
-| #   | Risico                                      | Impact | Waarschijnlijkheid | Mitigatie                                                                                            |
-| --- | ------------------------------------------- | :----: | :----------------: | ---------------------------------------------------------------------------------------------------- |
-| R1  | Formward-down/vertraagd → flaky suite       |  Hoog  |       Middel       | Altijd `page.route(...)` mock in CI; géén echte POST's (BestPractices §10, §22)                      |
-| R2  | Menu-regressie na CSS/JS-wijziging          |  Hoog  |       Middel       | TC MENU-01…06 reeds geautomatiseerd; suite groen houden in CI (fase 2: stabiliseren + uitbreiden met extra viewports) |
-| R3  | Flaky tests door timing/external deps       |  Hoog  |       Middel       | Auto-wait + web-first asserts; geen `waitForTimeout`; retries alleen als vangnet (BestPractices §13) |
-| R4  | Gebroken link/afbeelding na wijziging       | Middel |       Middel       | LINK-01 / IMG-01 in regression-set                                                                   |
-| R5  | Design-regressie (CSS) onopgemerkt          | Middel |       Middel       | Visual baseline VIS-01 (fase 4), kleine tolerantie                                                   |
-| R6  | Externe links (GitHub/LinkedIn) flaky in CI |  Laag  |        Hoog        | In CI alleen link-structuur checken, niet bereikbaarheid (§6.2)                                      |
-| R7  | a11y/SEO-regressie                          | Middel |    Laag-Middel     | A11Y/SEO-asserts (fase 3); optioneel axe-core                                                        |
-| R8  | Performance-degradatie                      |  Laag  |        Laag        | Lighthouse-drempels PERF-01, apart van E2E                                                           |
-| R9  | Legacy-mappen (`old/`) onbedoeld aangepakt  | Middel |        Laag        | Uit scope (§3.2); niet in `testDir` / config                                                         |
+| #   | Risico                                                                                             | Impact | Waarschijnlijkheid | Mitigatie                                                                                                             |
+| --- | -------------------------------------------------------------------------------------------------- | :----: | :----------------: | --------------------------------------------------------------------------------------------------------------------- |
+| R1  | Formward-down/vertraagd → flaky suite                                                              |  Hoog  |       Middel       | Altijd `page.route(...)` mock in CI; géén echte POST's (BestPractices §10, §22)                                       |
+| R2  | Menu-regressie na CSS/JS-wijziging                                                                 |  Hoog  |       Middel       | TC MENU-01…06 reeds geautomatiseerd; suite groen houden in CI (fase 2: stabiliseren + uitbreiden met extra viewports) |
+| R3  | Flaky tests door timing/external deps                                                              |  Hoog  |       Middel       | Auto-wait + web-first asserts; geen `waitForTimeout`; retries alleen als vangnet (BestPractices §13)                  |
+| R4  | Gebroken link/afbeelding na wijziging                                                              | Middel |       Middel       | LINK-01 / IMG-01 in regression-set                                                                                    |
+| R5  | Design-regressie (CSS) onopgemerkt                                                                 | Middel |       Middel       | Visual baseline VIS-01 (fase 4), kleine tolerantie                                                                    |
+| R6  | Externe links (GitHub/LinkedIn) flaky in CI                                                        |  Laag  |        Hoog        | In CI alleen link-structuur checken, niet bereikbaarheid (§6.2)                                                       |
+| R7  | a11y/SEO-regressie                                                                                 | Middel |    Laag-Middel     | A11Y/SEO-asserts (fase 3); optioneel axe-core                                                                         |
+| R8  | Performance-degradatie                                                                             |  Laag  |        Laag        | Lighthouse-drempels PERF-01, apart van E2E                                                                            |
+| R9  | Legacy-mappen (`old/`) onbedoeld aangepakt                                                         | Middel |        Laag        | Uit scope (§3.2); niet in `testDir` / config                                                                          |
+| R10 | SEO-meta/canonical/sitemap raken inconsistent na nieuwe pagina                                     | Middel |       Middel       | SEO-03/SEO-04 asserts; sitemap en canonical-explicitie per pagina (PLAYWRIGHT §4)                                     |
+| R11 | HTML-structuurdefecten (onafgesloten `<p>`, `</P>`, raw `&`) blijven onopgemerkt in statische HTML | Middel |       Middel       | HTML-01 `html-validate` als poort vóór de E2E-suite (browser repareert impliciet, dus E2E detecteert dit niet)        |
+| R12 | Lege placeholder-content (CI-kaarten, logo, favicon) wekt onvolledige indruk                       |  Laag  |       Middel       | Kaarten uitcommentarieerd met TODO; placeholders expliciet gedocumenteerd (§3.2)                                      |
 
 ---
 
@@ -335,15 +359,15 @@ Mitigaties zijn bewust verweven in BestPractices (determinisme, mocking, isolati
 Elke fase is self-contained en draait al na afloop groen in CI. Volgorde volgt
 impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish/CI.
 
-| Fase | Scope                                                                               | Levert / exit-criterium                                        |
-| :--: | ----------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-|  1   | Bestaande suite stabiliseren (smoke + navigatie + contact)                          | Alle huidige tests groen, deterministisch, gemockt; geen flaky |
-|  2   | **Mobiele menu-toggle stabiliseren & uitbreiden** (TC MENU-01…06, bestaand)        | Suite groen + deterministisch; extra viewports (850×1024, 360×640) toegevoegd; ARIA state-transition gedekt |
-|  3   | Testdata centraliseren (`utils/test-data.ts`) + boundary/special-char cases (F6/F7) | Formulier-testdataset centraal; F-matrix compleet gedekt       |
-|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks                            | RESP/A11Y/SEO/LINK/IMG groen op alle 9 pagina's                |
-|  5   | Visual regression + Lighthouse-drempels                                             | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)        |
-|  6   | CI/CD-pipeline (GitHub Actions): install → typecheck → lint → test → artifacts      | Elke PR auto gevalideerd; HTML report + trace als artifact     |
-|  7   | Optioneel: cross-browser (Firefox/WebKit) + exploratoire device-sessies             | Browser-coverage & handmatige findings geformaliseerd          |
+| Fase | Scope                                                                               | Levert / exit-criterium                                                                                     |
+| :--: | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+|  1   | Bestaande suite stabiliseren (smoke + navigatie + contact)                          | Alle huidige tests groen, deterministisch, gemockt; geen flaky                                              |
+|  2   | **Mobiele menu-toggle stabiliseren & uitbreiden** (TC MENU-01…06, bestaand)         | Suite groen + deterministisch; extra viewports (850×1024, 360×640) toegevoegd; ARIA state-transition gedekt |
+|  3   | Testdata centraliseren (`utils/test-data.ts`) + boundary/special-char cases (F6/F7) | Formulier-testdataset centraal; F-matrix compleet gedekt                                                    |
+|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks                            | RESP/A11Y/SEO/LINK/IMG groen op alle 9 pagina's                                                             |
+|  5   | Visual regression + Lighthouse-drempels                                             | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                     |
+|  6   | CI/CD-pipeline (GitHub Actions): install → typecheck → lint → test → artifacts      | Elke PR auto gevalideerd; HTML report + trace als artifact                                                  |
+|  7   | Optioneel: cross-browser (Firefox/WebKit) + exploratoire device-sessies             | Browser-coverage & handmatige findings geformaliseerd                                                       |
 
 ### CI-pipeline (fase 6, in lijn met BestPractices §18)
 
@@ -354,6 +378,7 @@ steps:
   - run: npx playwright install --with-deps chromium
   - run: npx tsc --noEmit # typecheck
   - run: npx eslint . # lint (vergeten awaits, etc.)
+  - run: npx html-validate "docs/*.html" # HTML-01: structuur van de site-pagina's
   - run: npx playwright test # suite (1 worker in CI)
   - uses: actions/upload-artifact # HTML report + traces bij failure
 ```
@@ -366,24 +391,25 @@ steps:
 
 - Statische site lokaal/CI serveerbaar op de geconfigureerde `baseURL`.
 - TypeScript compileert zonder fouten (`tsc --noEmit`); lint schoon.
+- HTML-validiteit schoon: `npx html-validate "docs/*.html"` → 0 errors (HTML-01).
 - Geen openstaande blokkerende defects uit de vorige run.
 
 ### Exit criteria (acceptatie van een release)
 
 1. **Smoke 100%** — alle pagina's laden, geen console/page errors (SM-01…03).
 2. **Functioneel** — navigatie (NAV-\*) én formulier-matrix F1–F10 groen; menu-toggle MENU-01…06 groen.
-3. **Non-functioneel** — RESPONSIVE/A11Y/SEO/LINK checks groen op alle 9 pagina's.
- 4. **Geen blokkerende defects**; bekende niet-blokerende issues gedocumenteerd.
- 5. **Determinisme** — suite lokaal herhaaldelijk én in CI (parallel) reproduceerbaar groen; géén flaky tests.
+3. **Non-functioneel** — RESPONSIVE/A11Y/SEO/LINK/IMG checks groen op alle 9 pagina's; SEO-01…SEO-04 en HTML-01 (html-validate) groen.
+4. **Geen blokkerende defects**; bekende niet-blokerende issues gedocumenteerd.
+5. **Determinisme** — suite lokaal herhaaldelijk én in CI (parallel) reproduceerbaar groen; géén flaky tests.
 
 ### Meetbare exit-metrics
 
-| Metric                                          | Doel              | Bron                              |
-| ----------------------------------------------- | ----------------- | --------------------------------- |
-| Testcase-executie (G1–G8)                       | 100% uitgevoerd   | Playwright HTML-report            |
-| Vereisten-dekking (traceerbaarheid §15)         | 100% in-scope doelen → ≥1 testcase | Traceerbaarheidsmatrix |
-| Pass-fail ratio                                   | 100% pass, 0 fail | CI-run                            |
-| Flaky-test-aandeel                                | 0%                | 3 opeenvolgende groene runs       |
+| Metric                                  | Doel                               | Bron                        |
+| --------------------------------------- | ---------------------------------- | --------------------------- |
+| Testcase-executie (G1–G8)               | 100% uitgevoerd                    | Playwright HTML-report      |
+| Vereisten-dekking (traceerbaarheid §15) | 100% in-scope doelen → ≥1 testcase | Traceerbaarheidsmatrix      |
+| Pass-fail ratio                         | 100% pass, 0 fail                  | CI-run                      |
+| Flaky-test-aandeel                      | 0%                                 | 3 opeenvolgende groene runs |
 
 ---
 
@@ -391,12 +417,12 @@ steps:
 
 ### 12.1 Defectcategorieën & ernst (severity)
 
-| Ernst      | Definitie                                              | Voorbeeld                          |
-| ---------- | ------------------------------------------------------ | ---------------------------------- |
-| Blokkerend | site onbruikbaar / data-verlies                        | pagina laadt niet; formulier crasht|
-| Hoog       | kernfunctionaliteit defect, geen workaround            | navigatie-link naar verkeerde URL  |
-| Middel     | functioneel gebrekkig met workaround                   | focus-ordening verstoord           |
-| Laag       | kosmeetisch / typografisch                            | tyfo in tekst; kleine margin       |
+| Ernst      | Definitie                                   | Voorbeeld                           |
+| ---------- | ------------------------------------------- | ----------------------------------- |
+| Blokkerend | site onbruikbaar / data-verlies             | pagina laadt niet; formulier crasht |
+| Hoog       | kernfunctionaliteit defect, geen workaround | navigatie-link naar verkeerde URL   |
+| Middel     | functioneel gebrekkig met workaround        | focus-ordening verstoord            |
+| Laag       | kosmeetisch / typografisch                  | tyfo in tekst; kleine margin        |
 
 Defects worden gerapporteerd als issue (of notitie bij het portfolio) met:
 stappen tot reproduceren, verwacht vs. daadwerkelijk resultaat, viewport/browser,
@@ -457,8 +483,8 @@ Een testcase is klaar wanneer (BestPractices §31, samengevat):
 | G4   | MENU-01…MENU-06                              |
 | G5   | RESP-01                                      |
 | G6   | A11Y-01, A11Y-02                             |
-| G7   | SEO-01, SEO-02                               |
-| G8   | LINK-01, IMG-01                              |
+| G7   | SEO-01, SEO-02, SEO-03, SEO-04               |
+| G8   | LINK-01, LINK-02, IMG-01, HTML-01            |
 | G9   | VIS-01                                       |
 | G10  | PERF-01                                      |
 | G11  | CI-pipeline (fase 6) + determinisme-criteria |
@@ -474,4 +500,11 @@ Een testcase is klaar wanneer (BestPractices §31, samengevat):
 - **ARIA:** Accessible Rich Internet Applications (toegankelijkheids-attributen).
 - **WCAG 2.1 AA:** international accessibility-standaard (niveau AA).
 - **Playwright E2E:** end-to-end browser-tests via `@playwright/test`.
+- **Canonical:** `<link rel="canonical">` — de voorkeur-URL van een pagina.
+- **Open Graph / Twitter cards:** `og:*`- en `twitter:*`-metas voor previews bij
+  social sharing (onafhankelijk van indexatie).
+- **Sitemap:** `docs/sitemap.xml` — machine-leesbare lijst van indexeerbare
+  pagina's.
+- **html-validate:** statische HTML-structureel validator (regels zoals
+  `no-implicit-close`, `close-order`, `element-case`, `no-raw-characters`).
 - **Page Object Model (POM):** UI-interactie gecentraliseerd in page objects.

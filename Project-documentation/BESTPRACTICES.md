@@ -389,8 +389,6 @@ Aanbevolen controle in CI:
 tsc --noEmit
 npx eslint .
 
-Een vergeten await kan tot zeer verwarrend testgedrag leiden. 20. Debugging
-
 Vooral voor CI-failures en lokale debugging is de **Trace Viewer** de belangrijkste bron: timeline, DOM-snapshots per actie, network requests en console logs in één PWA.
 
 Lokale opties (in volgorde van aanbeveling):
@@ -512,9 +510,9 @@ Vermijd:
 
 await page.waitForTimeout(...)
 
-await page.$(...)          // deprecated; gebruik Locator
+await page.$(...) // deprecated; gebruik Locator
 
-await page.$eval(...)      // deprecated; gebruik Locator
+await page.$eval(...) // deprecated; gebruik Locator
 
 page.locator('div:nth-child(4)')
 
@@ -616,7 +614,7 @@ Element zoeken
 ├─ Duidelijke placeholder/tekst/alt/title?
 │ └─ getByPlaceholder/getByText/getByAltText/getByTitle
 │
-├─     Geen betrouwbare user-facing locator, of data-testid beschikbaar?
+├─ Geen betrouwbare user-facing locator, of data-testid beschikbaar?
 │ └─ getByTestId()
 │
 └─ Nog steeds niet mogelijk?
