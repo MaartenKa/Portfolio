@@ -1,14 +1,16 @@
 name: Playwright Tests
 
 on:
-  # 4 pogingen per dag, elke 6 uur, op :17.
+  # 1 poging per dag, om 06:17 UTC.
   #
-  # Waarom niet één tijdstip: GitHub's scheduler is best-effort en dropt jobs
-  # onder belasting, met name rond de top van het uur. Gemeten met een test-cron
-  # (4x per uur op :07/:22/:37/:52): 2 runs uit 42 verwachte triggers = ~5%
+  # GitHub's scheduler is best-effort en dropt jobs onder belasting, met name
+  # rond de top van het uur. Gemeten met een test-cron (4x per uur op
+  # :07/:22/:37/:52): 2 runs uit 42 verwachte triggers = ~5%. Met één dagelijkse
+  # run is een gemiste run dus goed mogelijk; gebruik workflow_dispatch om dat
+  # op te vangen.
 
   schedule:
-    - cron: "17 0,6,12,18 * * *"
+    - cron: "17 18 * * *"
 
   # Push-trigger staat UIT. Ik draai de tests zelf handmatig bij een push.
   #
