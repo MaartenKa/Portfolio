@@ -28,7 +28,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: playwright-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   test:
@@ -63,3 +67,39 @@ jobs:
           name: playwright-report
           path: playwright/playwright-report/
           retention-days: 30
+
+      - name: Generate Playwright history
+        if: ${{ !cancelled() }}
+        env:
+          CI_SUMMARY_STATUS: ${{ job.status }}
+        run: >
+          node scripts/ci-summary.mjs
+          --report=playwright/test-results/report.json
+          --history=docs/data/playwright-history.json
+          --max=30
+
+      - name: Upload Playwright JSON report
+        uses: actions/upload-artifact@v6
+        if: ${{ !cancelled() && hashFiles('playwright/test-results/report.json') != '' }}
+        with:
+          name: playwright-json-report
+          path: playwright/test-results/report.json
+          retention-days: 30
+
+      - name: Upload Playwright history
+        uses: actions/upload-artifact@v6
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-history
+          path: docs/data/playwright-history.json
+          retention-days: 30
+
+      - name: Commit Playwright history
+        if: ${{ !cancelled() && github.ref == 'refs/heads/main' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git pull --rebase --autostash origin ${{ github.ref }}
+          git add docs/data/playwright-history.json
+          git diff --cached --quiet || git commit -m "chore(ci): update Playwright history [skip ci]"
+          git push origin HEAD:${{ github.ref }}

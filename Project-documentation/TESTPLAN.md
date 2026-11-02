@@ -93,9 +93,11 @@ kader gebruikt om de scope te bepalen en prioriteiten te onderbouwen.
   (`Disallow: /`) staan bewust en blijven zo; canonical/sitemap zijn daardoor
   nu effectloos (worden wél getest op aanwezigheid/consistentie, niet op
   indexatie-effect).
-- Invullen van placeholders: logo-bestand (`images/logoipsum-407.png`), lege
-  favicon (`href="data:,"`) en de CI-statistiek-kaarten op `automation.html`
-  (uitcommentarieerd met TODO) — content-work, geen testcases.
+- Invullen van placeholders: logo-bestand (`images/logoipsum-407.png`) en lege
+  favicon (`href="data:,"`) — content-work, geen testcases. De
+  CI-statistiekkaarten en history-tabel op `automation.html` zijn niet langer
+  placeholders; ze worden gevuld uit `docs/data/playwright-history.json` en
+  gedocumenteerd in `CI-PLAYWRIGHT-HISTORY.md`.
 
 ---
 
@@ -373,7 +375,7 @@ Mitigaties zijn bewust verweven in BestPractices (determinisme, mocking, isolati
 | R9  | Legacy-mappen (`old/`) onbedoeld aangepakt                                                         | Middel |        Laag        | Uit scope (§3.2); niet in `testDir` / config                                                                   |
 | R10 | SEO-meta/canonical/sitemap raken inconsistent na nieuwe pagina                                     | Middel |       Middel       | SEO-03/SEO-04 asserts; sitemap en canonical-explicitie per pagina (PLAYWRIGHT §4)                              |
 | R11 | HTML-structuurdefecten (onafgesloten `<p>`, `</P>`, raw `&`) blijven onopgemerkt in statische HTML | Middel |       Middel       | HTML-01 `html-validate` als poort vóór de E2E-suite (browser repareert impliciet, dus E2E detecteert dit niet) |
-| R12 | Lege placeholder-content (CI-kaarten, logo, favicon) wekt onvolledige indruk                       |  Laag  |       Middel       | Kaarten uitcommentarieerd met TODO; placeholders expliciet gedocumenteerd (§3.2)                               |
+| R12 | Lege placeholder-content (logo, favicon) of lege CI-history wekt onvolledige indruk                |  Laag  |       Middel       | Logo/favicon gedocumenteerd (§3.2); CI-history start bewust leeg en vult zich na de eerste CI-run             |
 
 ---
 
@@ -389,7 +391,7 @@ impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish
 |  3   | Testdata centraliseren (`utils/test-data.ts`) + boundary/special-char cases (F6/F7)                                 | Formulier-testdataset centraal; F-matrix compleet gedekt                                                                                                           |
 |  4   | Non-functioneel: responsive, a11y, SEO, links/img checks                                                            | RESP/A11Y/SEO/LINK/IMG groen op alle 10 pagina's                                                                                                                   |
 |  5   | Visual regression + Lighthouse-drempels                                                                             | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                                                                            |
-|  6   | CI/CD-pipeline (GitHub Actions): install → typecheck → lint → test → artifacts                                      | Elke PR auto gevalideerd; HTML report + trace als artifact                                                                                                         |
+|  6   | CI/CD-pipeline (GitHub Actions): install → typecheck → lint → test → artifacts                                      | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` comitted                                                                         |
 |  7   | Optioneel: cross-browser (Firefox/WebKit) + exploratoire device-sessies                                             | Browser-coverage & handmatige findings geformaliseerd                                                                                                              |
 
 ### CI-pipeline (fase 6, in lijn met BestPractices §18)
@@ -403,7 +405,8 @@ steps:
   - run: npx eslint . # lint (vergeten awaits, etc.)
   - run: npx html-validate "docs/*.html" # HTML-01: structuur van de site-pagina's
   - run: npx playwright test # suite (1 worker in CI)
-  - uses: actions/upload-artifact # HTML report + traces bij failure
+  - run: node scripts/ci-summary.mjs # Playwright JSON-report → CI-history
+  - uses: actions/upload-artifact # HTML report + JSON report + CI-history
 ```
 
 ---
@@ -414,7 +417,9 @@ steps:
 
 - Statische site lokaal/CI serveerbaar op de geconfigureerde `baseURL`.
 - TypeScript compileert zonder fouten (`tsc --noEmit`); lint schoon.
-- HTML-validiteit schoon: `npx html-validate "docs/*.html"` → 0 errors (HTML-01).
+- HTML-validiteit schoon: `npx html-validate "docs/*.html"` → 0 errors (HTML-01);
+  de bekende raw `&` in `docs/curriculum.html` is een openstaand, gedocumenteerd
+  HTML-defect dat apart opgeruimd moet worden.
 - Geen openstaande blokkerende defects uit de vorige run.
 
 ### Exit criteria (acceptatie van een release)

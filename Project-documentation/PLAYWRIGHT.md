@@ -24,7 +24,7 @@ network mocking, CI-ready configuratie).
 | Taal (tests + site-JS) | TypeScript (strict mode)                                     |
 | Website                | Statisch HTML/CSS + klein TS-module                          |
 | Testomgeving           | Live GitHub Pages (`https://maartenka.github.io/Portfolio/`) |
-| Reporter               | Playwright HTML reporter                                     |
+| Reporter               | Playwright HTML + JSON reporters                             |
 | Browser                | Chromium (Desktop Chrome)                                    |
 | Statusbadge (site)     | shields.io — GitHub Actions workflow-status                  |
 
@@ -36,6 +36,9 @@ network mocking, CI-ready configuratie).
 ├── tsconfig.json             # TypeScript-config (strict, ES2020, noEmit → type-check only)
 ├── tsconfig.site.json        # extends tsconfig.json; site-JS → docs/js/ts (noEmit: false)
 ├── playwright.config.ts      # Playwright configuratie
+├── .htmlvalidate.json        # HTML-validation config voor de site-pagina's
+├── scripts/
+│   └── ci-summary.mjs        # Playwright JSON-report → CI-history JSON
 ├── docs/                   # STATISCHE WEBSITE (root van de site)
 │   ├── index.html            # Home pagina
 │   ├── curriculum.html
@@ -49,10 +52,11 @@ network mocking, CI-ready configuratie).
 │   ├── 404.html
 │   ├── robots.txt
 │   ├── css/style.css
+│   ├── data/playwright-history.json # CI-history data voor automation.html
 │   ├── images/
 │   └── js/ts/main.js         # gebouwd bestand (output van tsconfig.site.json, geladen door site)
 ├── src/
-│   └── ts/main.ts            # bron voor site-JS (menu-toggle), zie hieronder
+│   └── ts/main.ts            # bron voor site-JS (menu-toggle + CI-history), zie hieronder
 ├── playwright/               # TESTAUTOMATISERING
 │   ├── pages/                # Page Object Model (huidige versie)
 │   │   ├── base.page.ts      # BasePage: goto + console/page-error catch
@@ -69,7 +73,8 @@ network mocking, CI-ready configuratie).
 │       ├── functional/homepage-functional.spec.ts
 │       ├── functional/contact-functional.spec.ts
 │       └── functional/mobile-menu-functional.spec.ts
-│└── playwright-report/        # HTML rapport (ge-genereerd, in .gitignore)
+│   └── playwright-report/    # HTML rapport (ge-genereerd, in .gitignore)
+│   └── test-results/         # screenshots/traces/video's + JSON report (in .gitignore)
 ```
 
 ## 4. Website (`docs/`)
@@ -87,7 +92,9 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   `card-link-testing`, `card-link-automation`, `card-link-projects`,
   `card-link-scrum`,
   `footer-contact`, `footer-github`, `footer-linkedin`, `footer-privacy`,
-  `menu-toggle`.
+  `menu-toggle`, `ci-total-tests`, `ci-pass-rate`, `ci-status`, `ci-streak`,
+  `ci-average-pass-rate`, `ci-flaky-runs`, `ci-failed-runs`,
+  `ci-history-table`, `ci-history-body`.
 - **Actieve navigatie-link:** de nav-link van de huidige pagina in de header
   draagt `class="active"` (stijl `.nav-links a.active`: kleur
   `--primary-active`, accent-background en underline-balk). In de footer draagt
@@ -102,23 +109,21 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   `style="display:none"`) als spamfilter.
 - **Site-JS** (`src/ts/main.ts` → gebouwd naar `docs/js/ts/main.js` via
   `tsconfig.site.json`):
-  beheert de mobiele navigatie. De toggle zet `#nav-links` classe `open`,
-  `aria-expanded` (`true` / `false`) en `aria-label` (`Open navigatie` /
-  `Sluit navigatie`). Bij openen gaat focus naar de eerste nav-link; bij
-  sluiten via de toggle, `Escape`, klik buiten het menu of een nav-link-klik
-  sluit het menu. Bij `Escape` en klik buiten het menu gaat focus terug naar
-  `#menu-toggle`; bij een nav-link-klik navigeert de browser naar de link.
-- **Statusbadge (`automation.html`):** toont de status van de laatste
-  Playwright CI-run (workflow `playwright.yml`, draait op schedule) via een
-  shields.io badge, gelinkt naar de GitHub Actions runs. De badge is in
-  site-stijl geïntegreerd: `for-the-badge` met `labelColor=111827`
-  (aansluitend bij `--card`) binnen een omlijst kaart-element
-  (`.automation-status-badge`) met `CI STATUS`-eyebrow, lazy-loaded. De badge
-  geeft uitsluitend de run-status (passing/failing), geen testcijfers. De
-  placeholder-kaarten (`[Aantal]`, `[Percentage]`, `[Status]`) staan in een
-  HTML-comment met TODO (geplande uitbouw: cijfers via JSON-reporter +
-  CI-commit); ze tonen dus géén lege kaarten bij bezoekers. De
-  `[IN PROGRESS]`-toelichting en de badge blijven wél zichtbaar.
+  beheert de mobiele navigatie en de CI-history UI. De toggle zet `#nav-links`
+  classe `open`, `aria-expanded` (`true` / `false`) en `aria-label`
+  (`Open navigatie` / `Sluit navigatie`). Bij openen gaat focus naar de eerste
+  nav-link; bij sluiten via de toggle, `Escape`, klik buiten het menu of een
+  nav-link-klik sluit het menu. Bij `Escape` en klik buiten het menu gaat focus
+  terug naar `#menu-toggle`; bij een nav-link-klik navigeert de browser naar de
+  link. De CI-history code fetcht alleen op pagina's met
+  `data-testid="ci-history-body"`.
+- **CI-resultaten (`automation.html`):** de pagina toont een shields.io
+  statusbadge plus kaarten en een history-tabel voor de laatste Playwright
+  CI-run, QA-aggregaatcijfers en de laatste 10 CI-runs. De badge toont alleen
+  de workflow-status; de kaarten en tabel worden gevuld uit
+  `docs/data/playwright-history.json`, gegenereerd door de Playwright
+  JSON-reporter en `scripts/ci-summary.mjs`. Exacte werking staat in
+  `Project-documentation/CI-PLAYWRIGHT-HISTORY.md`.
 - **Links (extern):** GitHub `MaartenKa/Portfolio`,
   LinkedIn `maarten-kamps-a6909527`, e-mail `Maarten.kamps.bee@outlook.com`.
 - **Meta & SEO (per pagina, in `<head>` vóór `<title>`):**
@@ -194,7 +199,8 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   of lokaal: `http://127.0.0.1:3000` (handmatig omzetten in config)
 - `webServer`: `npx http-server docs -p 3000` — alleen actief wanneer
   de config op localhost staat (auto-start, `reuseExistingServer`)
-- Reporter: HTML → `./playwright/playwright-report`
+- Reporter: HTML → `./playwright/playwright-report`; JSON →
+  `./playwright/test-results/report.json`
 - Op failure: screenshot; op retry: trace; op failure: video (retained)
 - `fullyParallel: true`; CI: 2 retries + 1 worker + `forbidOnly`
 - Eén project: **chromium** (Desktop Chrome)
@@ -227,9 +233,10 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
 > **Standaard-Playwright-run:** `npm test` gebruikt `baseURL`
 > `https://maartenka.github.io/Portfolio/` en dus de live GitHub Pages-site.
 > Voor verifiëring van lokale `docs/`-wijzigingen kan ad-hoc een tijdelijke
-> Playwright-config met `baseURL: "http://127.0.0.1:3123"` en
-> `webServer: "npx http-server docs -p 3123 -s"` worden gebruikt; de
-> geverifieerde ad-hoc menu-a11y-tests zijn niet als vaste suite-committed.
+> Playwright-config met `baseURL: "http://127.0.0.1:3123/"` en
+> `webServer: "npx http-server docs -p 3123 -s"` worden gebruikt. De ad-hoc
+> config en ad-hoc UI-checkscripts zijn niet als vaste tooling/suite-committed;
+> de vaste Playwright-suite blijft standaard op de live GitHub Pages-site.
 
 ## 8. Belangrijke conventies & aandachtspunten
 
@@ -241,6 +248,10 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
 - **Determinisme:** externe netwerkaanroepen (Formward) worden gemockt via
   `page.route(...)` zodat tests offline en betrouwbaar draaien.
 - **Console/page errors** worden centraal gevangen in `BasePage` en geassert.
+- **CI-history UI:** `automation.html` fetcht alleen
+  `data/playwright-history.json`; die file moet in de repo bestaan om 404
+  console errors te voorkomen. De UI mag geen console errors loggen bij een
+  ontbrekende, ongeldige of lege history-response.
 - **TypeScript strict mode**; `noEmitOnError: true`; `noEmit: true` in
   `tsconfig.json` → de gezende `tsc`-run **type-checkt alleen** (no `dist/`
   output). `tsconfig.site.json` overrules met `noEmit: false` voor de site-JS.
@@ -289,10 +300,13 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   juiste volgorde sluiten), `element-case` (tags in kleine letters),
   `no-raw-characters` (`&` → `&amp;`) en `no-utf8-bom` (bestanden BOM-vrij
   saves; een BOM vóór `<!DOCTYPE>` kan de quirks-mode triggeren). Bewust
-  **uit** gezet in de config (stijl van deze site, geen defects):
-  `doctype-style`, `void-style` (`<br/>`-self-closing) en
-  `no-implicit-button-type`. Stand van zaken: **0 errors** over alle 10
-  pagina's.
+  aangepast in de config (stijl van deze site, geen defects):
+  `doctype-style` op `lowercase`, `void-style` op `selfclosing`
+  (`<br/>`-self-closing) en `no-implicit-button-type` op `off`.
+
+  Stand van zaken: `docs/automation.html` slaagt;
+  `docs/curriculum.html` bevat een pre-existing raw `&`-fout die apart
+  opgeruimd moet worden.
 
 - **Indexatie-besluit (open):** `noindex, nofollow` + `docs/robots.txt`
   (`Disallow: /`) staan bewust; op GitHub Pages wordt `robots.txt` op
@@ -338,4 +352,6 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
 - Skip-link: `Ga naar hoofdinhoud` → `#hoofdinhoud` (10 pagina's)
 - Decoratieve icons: `aria-hidden="true"` (44 `.card-icon`-emoji’s + pijlen)
 - HTML-validering: `npx html-validate "docs/*.html"`
+- CI-history documentatie: `Project-documentation/CI-PLAYWRIGHT-HISTORY.md`
+- CI-history data: `docs/data/playwright-history.json`
 - Indexatie: `noindex, nofollow` (alle pagina's) + `docs/robots.txt`
