@@ -1,6 +1,75 @@
 {
   "schemaVersion": 1,
   "workflow": "playwright.yml",
-  "updated": null,
-  "runs": []
+  "updated": "2026-11-03T23:25:25.260Z",
+  "runs": [
+    {
+      "runId": 41738784501,
+      "runNumber": 45,
+      "createdAt": "2026-11-03T23:25:25.260Z",
+      "event": "schedule",
+      "branch": "main",
+      "commit": "e52b085",
+      "conclusion": "success",
+      "total": 36,
+      "passed": 36,
+      "failed": 0,
+      "flaky": 0,
+      "skipped": 0,
+      "passRate": 100,
+      "durationMs": 34347,
+      "runUrl": "https://github.com/MaartenKa/Portfolio/actions/runs/41738784501"
+    },
+    {
+      "runId": 41556581228,
+      "runNumber": 44,
+      "createdAt": "2026-11-03T01:00:00.949Z",
+      "event": "schedule",
+      "branch": "main",
+      "commit": "e6531ca",
+      "conclusion": "success",
+      "total": 36,
+      "passed": 36,
+      "failed": 0,
+      "flaky": 0,
+      "skipped": 0,
+      "passRate": 100,
+      "durationMs": 37149,
+      "runUrl": "https://github.com/MaartenKa/Portfolio/actions/runs/41556581228"
+    },
+    {
+      "runId": 41427948398,
+      "runNumber": 43,
+      "createdAt": "2026-11-02T10:21:26.302Z",
+      "event": "workflow_dispatch",
+      "branch": "main",
+      "commit": "8566707",
+      "conclusion": "success",
+      "total": 36,
+      "passed": 36,
+      "failed": 0,
+      "flaky": 0,
+      "skipped": 0,
+      "passRate": 100,
+      "durationMs": 32713,
+      "runUrl": "https://github.com/MaartenKa/Portfolio/actions/runs/41427948398"
+    },
+    {
+      "runId": 41424673096,
+      "runNumber": 42,
+      "createdAt": "2026-11-02T09:57:42.951Z",
+      "event": "workflow_dispatch",
+      "branch": "main",
+      "commit": "b040868",
+      "conclusion": "success",
+      "total": 36,
+      "passed": 36,
+      "failed": 0,
+      "flaky": 0,
+      "skipped": 0,
+      "passRate": 100,
+      "durationMs": 34903,
+      "runUrl": "https://github.com/MaartenKa/Portfolio/actions/runs/41424673096"
+    }
+  ]
 }

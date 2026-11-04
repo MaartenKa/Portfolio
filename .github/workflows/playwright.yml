@@ -10,7 +10,7 @@ on:
   # op te vangen.
 
   schedule:
-    - cron: "40 10 * * *"
+    - cron: "17 18 * * *"
 
   # Push-trigger staat UIT. Ik draai de tests zelf handmatig bij een push.
   #
