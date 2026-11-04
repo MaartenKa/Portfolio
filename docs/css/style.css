@@ -270,7 +270,13 @@ p {
 }
 
 .automation-metrics-grid {
-  margin-bottom: 44px;
+  margin-bottom: 14px;
+}
+
+.automation-metrics-note {
+  margin: 0 0 44px;
+  color: var(--text-subtle);
+  font-size: 0.86rem;
 }
 
 .automation-history {

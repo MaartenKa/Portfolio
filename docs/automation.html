@@ -306,11 +306,13 @@
           <div class="section-heading">
             <p class="eyebrow">TESTRESULTATEN</p>
 
-            <h2>Deze website test zichzelf.</h2>
+            <h2>Deze website test zichzelf</h2>
             <p>
-              De laatste CI-run, teststatistieken en geschiedenis komen uit de
-              Playwright JSON-report van GitHub Actions. Screenshots, video's en
-              de volledige HTML-report volgen in een volgende stap.
+              De kaarten en de geschiedenis komen uit de Playwright JSON-report
+              van GitHub Actions. De bovenste kaarten gaan over de suite en de
+              laatste run, de onderste kaarten over de gelogde CI-runs.
+              Screenshots, video's en de volledige HTML-report volgen in een
+              volgende stap.
             </p>
           </div>
 
@@ -335,15 +337,27 @@
 
           <div class="card-grid automation-latest-grid">
             <article class="card">
+              <div class="card-icon" aria-hidden="true">🧪</div>
+              <h3 data-testid="ci-suite-size">—</h3>
+              <p>Suite omvang</p>
+            </article>
+
+            <article class="card">
+              <div class="card-icon" aria-hidden="true">🔁</div>
+              <h3 data-testid="ci-runs">—</h3>
+              <p>Testruns</p>
+            </article>
+
+            <article class="card">
               <div class="card-icon" aria-hidden="true">✅</div>
               <h3 data-testid="ci-total-tests">—</h3>
-              <p>Tests uitgevoerd</p>
+              <p>Tests uitgevoerd (laatste run)</p>
             </article>
 
             <article class="card">
               <div class="card-icon" aria-hidden="true">📊</div>
               <h3 data-testid="ci-pass-rate">—</h3>
-              <p>Tests geslaagd</p>
+              <p>Tests geslaagd (laatste run)</p>
             </article>
 
             <article class="card">
@@ -355,15 +369,27 @@
 
           <div class="card-grid automation-metrics-grid">
             <article class="card">
-              <div class="card-icon" aria-hidden="true">🔥</div>
-              <h3 data-testid="ci-streak">—</h3>
-              <p>Groene runs op rij</p>
+              <div class="card-icon" aria-hidden="true">🧮</div>
+              <h3 data-testid="ci-total-executed">—</h3>
+              <p>Totaal uitgevoerde tests</p>
+            </article>
+
+            <article class="card">
+              <div class="card-icon" aria-hidden="true">🎯</div>
+              <h3 data-testid="ci-total-passed">—</h3>
+              <p>Totaal geslaagd</p>
             </article>
 
             <article class="card">
               <div class="card-icon" aria-hidden="true">📈</div>
-              <h3 data-testid="ci-average-pass-rate">—</h3>
-              <p>Gemiddelde slagingsratio</p>
+              <h3 data-testid="ci-pass-ratio">—</h3>
+              <p>Geslaagde ratio</p>
+            </article>
+
+            <article class="card">
+              <div class="card-icon" aria-hidden="true">🔥</div>
+              <h3 data-testid="ci-streak">—</h3>
+              <p>Groene runs op rij</p>
             </article>
 
             <article class="card">
@@ -378,6 +404,11 @@
               <p>Gefaalde runs</p>
             </article>
           </div>
+
+          <p class="automation-metrics-note" data-testid="ci-metrics-note">
+            Ratio is Σ geslaagde tests gedeeld door Σ uitgevoerde tests over de
+            gelogde CI-runs.
+          </p>
 
           <div class="automation-history">
             <h3>Laatste CI-runs</h3>

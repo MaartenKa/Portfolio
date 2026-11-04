@@ -7,4 +7,5 @@ Revelante bestanden staan in de map "Project-documentation" van de portfolio fol
 - BESTPRACTICES.md : ISTQB en playwright test methodieken
 - CI-PLAYWRIGHT-HISTORY.md : technische CI-docu (Playwright history dataflow)
 - CI-OVERVIEW.md : CI/CD in gewoon taalgebruik + bestandsgids van het CI-proces
+- PLAN-CI-HISTORY-TESTS.md : plan voor de CI-history tests (testsoort, testplan-koppeling, roadmap)
 

@@ -83,6 +83,28 @@ type NormalizedRun = {
   runUrl: string;
 };
 
+/**
+ * Aggregated numbers over the full history window (the last 30 CI runs).
+ *
+ * `pooledPassRate` is Σ passed / Σ total: the ratio of the two totals. That is
+ * deliberately NOT the average of the per-run percentages, because averaging
+ * percentages gives every run the same weight, so a run of 5 tests counts as
+ * heavily as a run of 36 tests. Runs with `total === 0` (cancelled, no report)
+ * have no denominator and are excluded from the totals; `countedRuns` records
+ * how many runs were included.
+ */
+type Aggregate = {
+  runs: number;
+  countedRuns: number;
+  suiteSize: number;
+  totalTests: number;
+  totalPassed: number;
+  pooledPassRate: number | null;
+  streak: number;
+  flakyRuns: number;
+  failedRuns: number;
+};
+
 const allowedConclusions = new Set([
   "success",
   "failure",
@@ -112,8 +134,21 @@ const ciStatus = document.querySelector<HTMLElement>(
 const ciStreak = document.querySelector<HTMLElement>(
   "[data-testid='ci-streak']",
 );
-const ciAveragePassRate = document.querySelector<HTMLElement>(
-  "[data-testid='ci-average-pass-rate']",
+const ciSuiteSize = document.querySelector<HTMLElement>(
+  "[data-testid='ci-suite-size']",
+);
+const ciRuns = document.querySelector<HTMLElement>("[data-testid='ci-runs']");
+const ciTotalExecuted = document.querySelector<HTMLElement>(
+  "[data-testid='ci-total-executed']",
+);
+const ciTotalPassed = document.querySelector<HTMLElement>(
+  "[data-testid='ci-total-passed']",
+);
+const ciPassRatio = document.querySelector<HTMLElement>(
+  "[data-testid='ci-pass-ratio']",
+);
+const ciMetricsNote = document.querySelector<HTMLElement>(
+  "[data-testid='ci-metrics-note']",
 );
 const ciFlakyRuns = document.querySelector<HTMLElement>(
   "[data-testid='ci-flaky-runs']",
@@ -139,6 +174,8 @@ const isSafeRunUrl = (url: string) =>
   );
 
 const formatPassRate = (value: number) => `${numberFormatter.format(value)}%`;
+
+const formatCount = (value: number) => numberFormatter.format(value);
 
 const formatDate = (value: string) => {
   const date = new Date(value);
@@ -205,12 +242,30 @@ const calculateStreak = (runs: NormalizedRun[]) => {
   return streak;
 };
 
-const calculateAveragePassRate = (runs: NormalizedRun[]) => {
-  if (runs.length === 0) return null;
+/**
+ * Pools the history window into the totals shown on the QA aggregate cards.
+ */
+const calculateAggregate = (runs: NormalizedRun[]): Aggregate => {
+  const counted = runs.filter((run) => run.total > 0);
+  const totalTests = counted.reduce((sum, run) => sum + run.total, 0);
+  const totalPassed = counted.reduce((sum, run) => sum + run.passed, 0);
 
-  const sum = runs.reduce((total, run) => total + run.passRate, 0);
-
-  return Math.round((sum / runs.length) * 10) / 10;
+  return {
+    runs: runs.length,
+    countedRuns: counted.length,
+    suiteSize: runs.reduce((max, run) => Math.max(max, run.total), 0),
+    totalTests,
+    totalPassed,
+    pooledPassRate:
+      totalTests > 0
+        ? Math.round((totalPassed / totalTests) * 1000) / 10
+        : null,
+    streak: calculateStreak(runs),
+    flakyRuns: runs.filter((run) => run.flaky > 0).length,
+    failedRuns: runs.filter(
+      (run) => run.conclusion === "failure" || run.failed > 0,
+    ).length,
+  };
 };
 
 const setText = (element: HTMLElement | null, value: string) => {
@@ -223,29 +278,52 @@ const setLatestSummary = (latest: NormalizedRun | null) => {
   setText(ciStatus, latest ? statusLabel(latest.conclusion) : "—");
 };
 
-const setAggregateStats = (runs: NormalizedRun[]) => {
-  const averagePassRate = calculateAveragePassRate(runs);
+/**
+ * One-line explanation under the aggregate cards, so a reader can tell which
+ * runs were pooled and which were skipped for having no denominator.
+ */
+const buildMetricsNote = (aggregate: Aggregate) => {
+  if (aggregate.runs === 0) {
+    return "Ratio is Σ geslaagde tests gedeeld door Σ uitgevoerde tests over de gelogde CI-runs.";
+  }
 
-  setText(ciStreak, runs.length > 0 ? String(calculateStreak(runs)) : "—");
+  const window =
+    aggregate.countedRuns === aggregate.runs
+      ? `${formatCount(aggregate.runs)} CI-runs`
+      : `${formatCount(aggregate.countedRuns)} van ${formatCount(aggregate.runs)} CI-runs geteld`;
+
+  return `Over ${window} · ${formatCount(aggregate.totalPassed)} van ${formatCount(aggregate.totalTests)} tests geslaagd.`;
+};
+
+const setAggregateStats = (runs: NormalizedRun[]) => {
+  const aggregate = calculateAggregate(runs);
+  const empty = aggregate.runs === 0;
+
   setText(
-    ciAveragePassRate,
-    averagePassRate === null ? "—" : formatPassRate(averagePassRate),
+    ciSuiteSize,
+    empty ? "—" : `${formatCount(aggregate.suiteSize)} tests`,
+  );
+  setText(ciRuns, empty ? "—" : formatCount(aggregate.runs));
+  setText(ciStreak, empty ? "—" : formatCount(aggregate.streak));
+  setText(
+    ciTotalExecuted,
+    empty ? "—" : formatCount(aggregate.totalTests),
   );
   setText(
-    ciFlakyRuns,
-    runs.length > 0
-      ? String(runs.filter((run) => run.flaky > 0).length)
-      : "—",
+    ciTotalPassed,
+    empty
+      ? "—"
+      : `${formatCount(aggregate.totalPassed)} van ${formatCount(aggregate.totalTests)}`,
   );
   setText(
-    ciFailedRuns,
-    runs.length > 0
-      ? String(
-          runs.filter((run) => run.conclusion === "failure" || run.failed > 0)
-            .length,
-        )
-      : "—",
+    ciPassRatio,
+    empty || aggregate.pooledPassRate === null
+      ? "—"
+      : formatPassRate(aggregate.pooledPassRate),
   );
+  setText(ciFlakyRuns, empty ? "—" : formatCount(aggregate.flakyRuns));
+  setText(ciFailedRuns, empty ? "—" : formatCount(aggregate.failedRuns));
+  setText(ciMetricsNote, buildMetricsNote(aggregate));
 };
 
 const createTextCell = (text: string) => {

@@ -15,17 +15,24 @@
 Op `docs/automation.html` staat een sectie **TESTRESULTATEN** met:
 
 1. De bestaande shields.io statusbadge.
-2. Drie kaarten voor de laatste CI-run:
-   - `data-testid="ci-total-tests"` — aantal uitgevoerde tests.
+2. Vijf kaarten voor de suite en de laatste CI-run:
+   - `data-testid="ci-suite-size"` — suite-omvang (grootste `total` in de runs).
+   - `data-testid="ci-runs"` — aantal gelogde testruns.
+   - `data-testid="ci-total-tests"` — aantal uitgevoerde tests van de laatste run.
    - `data-testid="ci-pass-rate"` — slagingspercentage van de laatste run.
    - `data-testid="ci-status"` — status van de laatste run.
-3. Vier QA-aggregaatkaarten over de laatste 30 CI-runs:
+3. Zes QA-aggregaatkaarten over de gelogde CI-runs (max 30):
+   - `data-testid="ci-total-executed"` — Σ uitgevoerde tests.
+   - `data-testid="ci-total-passed"` — Σ geslaagde tests, als `X van Y`.
+   - `data-testid="ci-pass-ratio"` — Σ passed / Σ total (pooled ratio, geen
+     gemiddelde van percentages).
    - `data-testid="ci-streak"` — groene runs op rij.
-   - `data-testid="ci-average-pass-rate"` — gemiddelde slagingsratio.
    - `data-testid="ci-flaky-runs"` — aantal runs met minstens één flaky test.
    - `data-testid="ci-failed-runs"` — aantal runs met `conclusion="failure"`
      of `failed > 0`.
-4. Een history-tabel met de laatste 10 CI-runs:
+4. Een toelichtingsregel `data-testid="ci-metrics-note"` met het aantal
+   meegerekende runs en Σ geslaagd / Σ uitgevoerd.
+5. Een history-tabel met de laatste 10 CI-runs:
    - `data-testid="ci-history-table"` — de tabel zelf.
    - `data-testid="ci-history-body"` — de body van de tabel.
    - Kolommen: `Run`, `Datum`, `Status`, `Tests`, `Geslaagd`, `Flaky`.
@@ -88,6 +95,13 @@ passRate = (passed / total) * 100
 
 `skipped` wordt niet in de noemer van `passRate` meegenomen. Als `total` 0 is,
 wordt `passRate` 0.
+
+Die 0 is een vulwaarde, geen meting: een run met `total = 0` heeft geen noemer.
+De site-JS sluit zulke runs daarom uit van `ci-total-executed`,
+`ci-total-passed` en `ci-pass-ratio`, en `ci-metrics-note` toont hoeveel runs wél
+meetelden (bijvoorbeeld `2 van 3 CI-runs geteld`). Een gemiddelde van de losse
+run-percentages zou zo'n run als "0% geslaagd" in het gemiddelde halen; de gepoolde
+ratio (Σ `passed` / Σ `total`) doet dat niet.
 
 ## 4. CI-script: `scripts/ci-summary.mjs`
 
@@ -371,7 +385,8 @@ De nieuwe stijlen staan in `docs/css/style.css`:
 | Selector                             | Doel                                             |
 | ---------------------------------- | ------------------------------------------------ |
 | `.automation-latest-grid`          | Ruimte onder de laatste-run kaarten.             |
-| `.automation-metrics-grid`         | Ruimte onder de QA-aggregaatkaarten.             |
+| `.automation-metrics-grid`         | Ruimte onder de QA-aggregaatkaarten.     |
+| `.automation-metrics-note`         | Toelichtingsregel onder de aggregaatkaarten. |
 | `.automation-history`              | Ruimte en kop voor de history-sectie.            |
 | `.automation-history-table-wrap`   | Scrollbare, kaart-achtige omlijsting rond tabel. |
 | `.automation-history-table`        | Tabelstijl, minimaal 640px breed.                |
@@ -455,21 +470,27 @@ vóór deploy.
 
 Voor lokale verificatie is een ad-hoc Playwright-config gebruikt met
 `baseURL: "http://127.0.0.1:3123/"` en `webServer.command: "npx http-server docs
--p 3123 -s"`. Die config staat in een temp-map en is niet als vaste tooling
-committed.
+-p 3123 -s"`. Diezelfde config is inmiddels als vaste tooling in de repo opgenomen:
+`playwright.local.config.ts`. Dat is een `defineConfig` die `playwright.config.ts`
+overneemt en alleen `baseURL` vervangt door `http://127.0.0.1:8080/` (plus
+`reporter: [["list"]]`). De standaardconfig blijft de live site testen.
 
 Exacte commando's:
 
 ```bash
-npx playwright test -c "C:\Users\Laptop\AppData\Local\Temp\opencode\playwright.local.json"
-node scripts/ci-summary.mjs --report="C:\Users\Laptop\AppData\Local\Temp\opencode\playwright-local-report.json" --history="C:\Users\Laptop\AppData\Local\Temp\opencode\playwright-local-history.json" --max=30
+npx http-server docs -p 8080 -s
+npx playwright test ci-history-functional --config playwright.local.config.ts
+node scripts/ci-summary.mjs --report=playwright/test-results/report.json --history=playwright/test-results/local-history.json --max=30
 ```
 
-De ad-hoc lokale run gaf:
+De lokale run met de uitgebreide suite gaf:
 
 ```text
-36 passed
+41 passed
 ```
+
+(36 bestaande tests plus de 5 CI-history tests uit
+`playwright/tests/functional/ci-history-functional.spec.ts`.)
 
 Daarna genereerde `scripts/ci-summary.mjs` uit die lokale JSON-report een
 tijdelijke history-entry met:
@@ -489,26 +510,40 @@ conclusion: unknown
 
 ### 11.4 UI lokaal met dummy history
 
-Voor de UI is tijdelijk een dummy `docs/data/playwright-history.json` met 3 runs
-gezet en een ad-hoc Playwright UI-check gedraaid. Daarna is de dummy history
-teruggezet op de lege startstatus en het ad-hoc UI-checkscript verwijderd.
+De eerdere ad-hoc UI-check met een handmatig geplaatste dummy
+`docs/data/playwright-history.json` is vervangen door de speelfile
+`playwright/tests/functional/ci-history-functional.spec.ts`. Die mockt
+`data/playwright-history.json` via `page.route()`, dus de verwachte cijfers
+staan vast en hangen niet af van wat er toevallig in de CI is gedraaid. De
+dummy history zelf staat niet in de repo: `docs/data/playwright-history.json`
+blijft de lege startstatus tot de eerste CI-run een entry schrijft.
 
-De dummy history gaf in de UI:
+De mock met drie runs (40/40, 40/38 en 40/30) geeft in de UI:
 
 ```text
-ci-total-tests: 14
-ci-pass-rate: 92,9%
+ci-suite-size: 40 tests
+ci-runs: 3
+ci-total-tests: 40
+ci-pass-rate: 100%
 ci-status: Geslaagd
+ci-total-executed: 120
+ci-total-passed: 108 van 120
+ci-pass-ratio: 90%
 ci-streak: 1
-ci-average-pass-rate: 93,2%
 ci-flaky-runs: 1
 ci-failed-runs: 2
+ci-metrics-note: Over 3 CI-runs · 108 van 120 tests geslaagd.
 ci-history rows: 3
 console errors: []
 ```
 
 `ci-failed-runs` is daar `2` omdat de UI een run telt als gefaald wanneer
 `conclusion === "failure"` óf `failed > 0`.
+
+`ci-pass-ratio` is `90%` (108 / 120). Het gemiddelde van de losse percentages
+(100, 95 en 75) is hier toevallig ook `90,0%`, omdat de drie runs even groot
+zijn; bij runs van verschillende grootte lopen de twee getallen uiteen en is de
+pooled ratio de waarde die een bezoeker als "mijn suite slaagt voor X%" leest.
 
 ## 12. Live gedrag na deploy
 
@@ -549,5 +584,50 @@ echte CI-cijfers tonen.
   beschikbaar.
 - Als Playwright vroegtijdig wordt afgebroken, kan `report.json` ontbreken. De
   workflow schrijft dan een entry met nullen en de job-status.
-- GitHub Pages kan cache-effecten hebben; de fetch gebruikt `no-store`, maar de
-  Pages-deploy zelf blijft de bron van de gepubliceerde JSON.
+- Nieuwe cijfers zijn niet onmiddellijk live. Gemeten: de Pages-deploy duurt rond
+  de minuut; GitHub Pages serveert met `max-age=600`, dus JSON, site-JS en HTML
+  kunnen tot tien minuten oud zijn. `cache: "no-store"` omzeilt de browsercache,
+  niet de Pages-cache. Een harde reload na een deploy is verwacht gedrag.
+- De gepubliceerde HTML bevat altijd de placeholders; de cijfers ontstaan pas in
+  de DOM na de fetch. "Bron bekijken" is daarom nooit een bewijs van de cijfers.
+
+## 15. Bewezen in productie: de eerste volledige run
+
+De eerste run die de volledige keten draaide was run #42, gestart met
+`workflow_dispatch`. Per schakel:
+
+| Schakel | Bewijsbron | Waarde |
+| ------- | ---------- | ------ |
+| Tests | CI-log | `36 passed (34.9s)` |
+| HTML artifact | CI-log | `playwright-report`, 212.750 bytes |
+| JSON artifact | CI-log | `playwright-json-report`, 4.253 bytes |
+| History artifact | CI-log | `playwright-history`, 468 bytes |
+| `ci-summary.mjs` | CI-log | draait stil en groen |
+| Bot-commit | git-log | `8566707` door `github-actions[bot]`, tekst `chore(ci): update Playwright history [skip ci]`, push `b040868..8566707 HEAD -> main` |
+| Pages-deploy | Actions-log | `pages build and deployment #73` door `github-pages[bot]`, direct na de bot-commit |
+| JSON live | HTTP | `200`, één entry: `runNumber 42`, `conclusion success`, `total 36`, `passed 36`, `failed 0`, `flaky 0`, `passRate 100`, `durationMs 34903` |
+| Site | browser | kaarten en tabel gevuld, na een harde reload |
+
+Twee conclusies die de moeite waard zijn:
+
+1. **`[skip ci]` blokkeert de Pages-deploy niet.** `pages build and deployment`
+   draait door `github-pages[bot]` ná de commit. De commit-tekst is dus een veilig
+   tweede vangnet tegen de recursie-lus, en geen risico voor het publiceren.
+2. **Een `schedule`-run is geen betrouwbaar bewijs voor een nieuwe workflow.** Bij
+   een `schedule`-run gebruikt GitHub het workflow-bestand van het moment van
+   triggeren, dus een geplande run kort na een push kan nog het oude bestand
+   draaien. Herkenbaar aan één artifact in plaats van drie. Voor het verifiëren
+   van een workflow-wijziging dus `workflow_dispatch` gebruiken, en het aantal
+   artifacts als signaal lezen.
+
+## 16. Testsoort en vervolgplan
+
+De vijf tests in `playwright/tests/functional/ci-history-functional.spec.ts`
+testen de **weergavelaag**: `main.ts` zet een history-JSON om naar kaarten en
+tabel, met de endpoint gemockt via `page.route()` zodat de verwachting
+deterministisch is. De **datalaag** (`scripts/ci-summary.mjs`: report → entry) en
+de **CI-keten** zelf (commit → Pages → browser) hebben géén geautomatiseerde test;
+§15 is daarvan het handmatige bewijs.
+
+De indeling per laag, de voorgestelde testcase-IDs (CIH-01…CIH-08), de koppeling
+aan `TESTPLAN.md` en de roadmap staan in `PLAN-CI-HISTORY-TESTS.md`.

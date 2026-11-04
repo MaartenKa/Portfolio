@@ -36,6 +36,7 @@ network mocking, CI-ready configuratie).
 ├── tsconfig.json             # TypeScript-config (strict, ES2020, noEmit → type-check only)
 ├── tsconfig.site.json        # extends tsconfig.json; site-JS → docs/js/ts (noEmit: false)
 ├── playwright.config.ts      # Playwright configuratie
+├── playwright.local.config.ts  # lokale override: baseURL http://127.0.0.1:8080 (docs/)
 ├── .htmlvalidate.json        # HTML-validation config voor de site-pagina's
 ├── scripts/
 │   └── ci-summary.mjs        # Playwright JSON-report → CI-history JSON
@@ -92,8 +93,9 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   `card-link-testing`, `card-link-automation`, `card-link-projects`,
   `card-link-scrum`,
   `footer-contact`, `footer-github`, `footer-linkedin`, `footer-privacy`,
-  `menu-toggle`, `ci-total-tests`, `ci-pass-rate`, `ci-status`, `ci-streak`,
-  `ci-average-pass-rate`, `ci-flaky-runs`, `ci-failed-runs`,
+  `menu-toggle`, `ci-suite-size`, `ci-runs`, `ci-total-tests`, `ci-pass-rate`,
+  `ci-status`, `ci-total-executed`, `ci-total-passed`, `ci-pass-ratio`,
+  `ci-streak`, `ci-flaky-runs`, `ci-failed-runs`, `ci-metrics-note`,
   `ci-history-table`, `ci-history-body`.
 - **Actieve navigatie-link:** de nav-link van de huidige pagina in de header
   draagt `class="active"` (stijl `.nav-links a.active`: kleur
@@ -191,6 +193,12 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    - `mobile-menu-functional.spec.ts`: mobiele menu-toggle opent/sluit het
      menu, assert `aria-expanded`, navigeert via nav-links en checkt desktop
      (toggle verborgen, nav inline).
+   - `ci-history-functional.spec.ts`: de CI-resultatensectie op
+     `automation.html`. Mockt `data/playwright-history.json` via `page.route()`,
+     zodat de verwachte kaarncijfers vaststaan en niet afhangen van wat er in de
+     CI draaide: suite-omvang, testruns, laatste-run kaarten, Σ totalen, pooled
+     ratio, streak, flaky/failed, run-link in de tabel, runs zonder noemer en de
+     lege state. Page object: `pages/ci-history.page.ts`.
 
 ### Config (playwright.config.ts)
 
@@ -232,11 +240,20 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
 
 > **Standaard-Playwright-run:** `npm test` gebruikt `baseURL`
 > `https://maartenka.github.io/Portfolio/` en dus de live GitHub Pages-site.
-> Voor verifiëring van lokale `docs/`-wijzigingen kan ad-hoc een tijdelijke
-> Playwright-config met `baseURL: "http://127.0.0.1:3123/"` en
-> `webServer: "npx http-server docs -p 3123 -s"` worden gebruikt. De ad-hoc
-> config en ad-hoc UI-checkscripts zijn niet als vaste tooling/suite-committed;
-> de vaste Playwright-suite blijft standaard op de live GitHub Pages-site.
+> Voor verifiëring van lokale `docs/`-wijzigingen staat er een vaste hulpm-config
+> in de repo: `playwright.local.config.ts`. Die extends de gewone config en
+> zet `baseURL` op `http://127.0.0.1:8080/`. Gebruik:
+>
+> ```bash
+> npm run build                                        # site-JS bouwen
+> npx http-server docs -p 8080 -s                      # statische server
+> npx playwright test --config playwright.local.config.ts
+> ```
+>
+> Dit is de enige manier om nieuwe kaarten/markup lokaal te testen vóór deploy:
+> de standaard-suite draait tegen de live site, die de wijziging nog niet heeft.
+> De hulpm-config verandert niets aan de standaard-suite, die blijft op de live
+> GitHub Pages-site draaien.
 
 ## 8. Belangrijke conventies & aandachtspunten
 

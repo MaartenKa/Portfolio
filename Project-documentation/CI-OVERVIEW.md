@@ -24,6 +24,10 @@ QA-aggregaten en de history-tabel op `automation.html`.
 Zonder backend. Zonder database. Zonder API-token. De site rapporteert over haar
 eigen tests.
 
+Deze keten is in productie bewezen: één run, drie artifacts, een bot-commit met
+`[skip ci]`, direct daarna een Pages-deploy, en de kaarten gevuld in de browser.
+De cijfers per schakel staan in `CI-PLAYWRIGHT-HISTORY.md` §15.
+
 ## 2. De analogie: een winkel met een eigen kwaliteitscontroleur
 
 | In de winkel | In dit project |
@@ -91,6 +95,7 @@ Paden zijn relatief aan de repo-root (`Portfolio/`).
 | `tsconfig.site.json` | Bouwt uitsluitend `src/ts/` naar `docs/js/ts` | Dit is de build van de site-JS die de JSON rendert | `outDir` veranderen → `automation.html` mist zijn JS |
 | `.gitignore` | Negeert `playwright/playwright-report/`, `playwright/test-results/`, `node_modules/`, `dist/`, `.env*` | Houdt de rauwe rapporten uit de repo; `docs/data/` blijft wél getrackt | `docs/data/` per ongeluk negeren → de site krijgt een 404 op de fetch |
 | `.htmlvalidate.json` | HTML-regels (`html-validate:recommended`, lowercase doctype, selfclosing voids) | Bewaakt de HTML van `docs/*.html`, dus ook de `data-testid`-ankers van de CI-sectie | Regels versoepelen → kapotte HTML die de UI-tests niet vangen |
+| `playwright.local.config.ts` | Lokale override van de speelfile-config: neemt `playwright.config.ts` over en zet `baseURL` op `http://127.0.0.1:8080/` | Draait de suite tegen de lokale `docs/`-build, wanneer de live site de nieuwe markup nog niet bevat | In CI gebruiken: dan test je lokaal in plaats van live |
 | `AGENTS.md` | Wijsplaatje naar de relevante documentatie | Verwijst naar de docs in `Project-documentation/` | — |
 
 ### 5.2 De CI-kern: drie bestanden
@@ -157,8 +162,8 @@ tussen de CI en de site.
 
 | Bestand | Rol in één zin | Wat het met CI te maken heeft |
 | --- | --- | --- |
-| `docs/automation.html` | De pagina met de sectie **TESTRESULTATEN** | Bevat de shields.io-badge, drie laatste-run kaarten, vier QA-aggregaatkaarten en de history-tabel, met de `data-testid`-ankers `ci-total-tests`, `ci-pass-rate`, `ci-status`, `ci-streak`, `ci-average-pass-rate`, `ci-flaky-runs`, `ci-failed-runs`, `ci-history-table` en `ci-history-body` |
-| `src/ts/main.ts` | Bron-code van de site-JS | Fetch `data/playwright-history.json` met `cache: "no-store"`, normaliseert elke run, berekent streak / gemiddelde / flaky / failed, rendert de laatste 10 rijen. Werkt alleen op pagina's met `ci-history-body` |
+| `docs/automation.html` | De pagina met de sectie **TESTRESULTATEN** | Bevat de shields.io-badge, vijf kaarten voor suite en laatste run, zes QA-aggregaatkaarten, de toelichtingsregel en de history-tabel, met de `data-testid`-ankers `ci-suite-size`, `ci-runs`, `ci-total-tests`, `ci-pass-rate`, `ci-status`, `ci-total-executed`, `ci-total-passed`, `ci-pass-ratio`, `ci-streak`, `ci-flaky-runs`, `ci-failed-runs`, `ci-metrics-note`, `ci-history-table` en `ci-history-body` |
+| `src/ts/main.ts` | Bron-code van de site-JS | Fetch `data/playwright-history.json` met `cache: "no-store"`, normaliseert elke run, poolt de totalen (Σ `passed` / Σ `total`), berekent streak / flaky / failed, rendert de laatste 10 rijen. Werkt alleen op pagina's met `ci-history-body` |
 | `docs/js/ts/main.js` | Het **gebouwde** resultaat van `main.ts` (via `tsconfig.site.json`) | Dit is wat de browser op GitHub Pages echt draait; het staat in de repo, dus Pages hoeft niets te bouwen |
 | `docs/css/style.css` | Stijl van de site | `.automation-latest-grid`, `.automation-metrics-grid`, `.automation-history`, `.automation-history-table-wrap` (horizontaal scrollen op mobiel), `.automation-history-table` (minimaal 640px), `.sr-only` |
 | `docs/index.html` | Home en navigatie | Linkt naar `automation.html`; de smoke-suite controleert die navigatie |
@@ -188,6 +193,8 @@ Twee dingen die opvallen:
 | `playwright/tests/functional/homepage-functional.spec.ts` | CTA's en nav-links openen de juiste pagina's |
 | `playwright/tests/functional/contact-functional.spec.ts` | Paginastructuur en formulierinzending (Formward gemockt; valide submit redirect naar `bedankt.html`) |
 | `playwright/tests/functional/mobile-menu-functional.spec.ts` | Menu-toggle op desktop en mobiel, `aria-expanded`, focusbeheer, alle nav-links |
+| `playwright/pages/ci-history.page.ts` | Page object `CiHistoryPage`: mockt `data/playwright-history.json` via `page.route()`, navigeert naar `automation.html`, leest kaarten per `data-testid` en de rijen van de history-tabel |
+| `playwright/tests/functional/ci-history-functional.spec.ts` | Vijf tests over de CI-resultatensectie: laatste-run kaarten, gepoolde totalen en ratio, één rij per run met run-link, runs zonder noemer, en de lege staat. Testsoort en afbakening: `PLAN-CI-HISTORY-TESTS.md` |
 | `playwright/tests/accessibility/`, `compatibility/`, `e2e/`, `regression/` | Nu lege mappen: de plek waar de volgende testcategorieën komen |
 | `Project-documentation/` | `PLAYWRIGHT.md`, `TESTPLAN.md`, `BESTPRACTICES.md`, `CI-PLAYWRIGHT-HISTORY.md` en dit bestand |
 
@@ -240,14 +247,27 @@ begrijp mijn CI".
 
 | Element | Bron |
 | --- | --- |
-| `ci-total-tests` — Tests uitgevoerd | Laatste run: `total` |
-| `ci-pass-rate` — Tests geslaagd | Laatste run: `passRate` |
+| `ci-suite-size` — Suite omvang | Grootste `total` in de gelogde runs (proxy voor de suite-omvang) |
+| `ci-runs` — Testruns | Aantal runs in de history (max 30) |
+| `ci-total-tests` — Tests uitgevoerd (laatste run) | Laatste run: `total` |
+| `ci-pass-rate` — Tests geslaagd (laatste run) | Laatste run: `passRate` |
 | `ci-status` — Laatste test run | Laatste run: `conclusion` → Geslaagd / Gefaald / Geannuleerd / Geen rapport / Onbekend |
+| `ci-total-executed` — Totaal uitgevoerde tests | Σ `total` over de gelogde runs met `total > 0` |
+| `ci-total-passed` — Totaal geslaagd | Σ `passed`, getoond als `X van Y` |
+| `ci-pass-ratio` — Geslaagde ratio | Σ `passed` / Σ `total` — het percentage bij de twee kaarten ervoor |
 | `ci-streak` — Groene runs op rij | Aantal opeenvolgende `success` vanaf de nieuwste run |
-| `ci-average-pass-rate` — Gemiddelde slagingsratio | Gemiddelde `passRate` over de laatste 30 runs |
 | `ci-flaky-runs` — Flaky runs | Runs met minstens één flaky test |
 | `ci-failed-runs` — Gefaalde runs | Runs met `conclusion = "failure"` **of** `failed > 0` |
+| `ci-metrics-note` — Toelichting | Noemt het aantal meegerekende runs en Σ geslaagd / Σ uitgevoerd |
 | `ci-history-table` — Laatste CI-runs | Laatste 10 runs: Run, Datum, Status, Tests, Geslaagd, Flaky |
+
+`ci-pass-ratio` is bewust **geen** gemiddelde van de losse run-percentages. Een
+gemiddelde geeft elke run evenveel gewicht, dus een afgebroken run van 5 tests
+telt dan even zwaar als een volledige run van 36. De ratio hier is
+Σ `passed` / Σ `total`, dus het percentage dat bij de twee totaal-kaarten ervoor
+hoort. Runs met `total = 0` (geannuleerd, geen rapport) hebben geen noemer en
+worden uit de totalen weggelaten; de `ci-metrics-note` zegt dan hoeveel runs wél
+meetelden, bijvoorbeeld `2 van 3 CI-runs geteld`.
 
 Zonder CI-data tonen de kaarten `—` en de tabel één rij met
 `Geen CI-historie beschikbaar.`
@@ -338,8 +358,14 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
 - GitHub's scheduler is best-effort. De workflow-comment meldt een meting van 2 runs
   uit 42 verwachte triggers (4 per uur), dus ongeveer 5% verlies. Met één dagelijkse
   run is een gemiste dag dus goed mogelijk.
-- Pages kan cache-effecten hebben. `no-store` vermindert dat, maar de Pages-deploy
-  blijft de bron van de gepubliceerde JSON.
+- Nieuwe cijfers zijn pas na enkele minuten zichtbaar. Gemeten: de Pages-deploy
+  zelf duurt rond de minuut, en GitHub Pages serveert met `max-age=600`, dus de
+  JSON, de site-JS en de HTML kunnen tot tien minuten oud zijn. `cache: "no-store"`
+  omzeilt de browsercache, niet de Pages-cache. Een harde reload na een deploy is
+  dus normaal gedrag en geen bug.
+- De HTML op de server bevat altijd de placeholders (`—` en
+  `Geen CI-historie beschikbaar.`): de cijfers bestaan uitsluitend in de DOM nadat
+  de site-JS de fetch heeft verwerkt. "Bron bekijken" toont daarom nooit cijfers.
 
 ## 12. Aandachtspunten uit deze rondgang
 
@@ -356,6 +382,20 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
 4. **`docs/js/ts/main.js` is een gebouwd bestand in de repo.** Na een wijziging in
    `src/ts/main.ts` moet `npm run build` gedraaid worden en het resultaat gecommit;
    de CI bouwt het niet.
+5. **`ci-suite-size` is een proxy.** De kaart toont de grootste `total` uit de
+   gelogde runs, niet de werkelijke suite-omvang. Die proxy blijft te hoog als de
+   suite krimpt en te laag als de grootste run buiten de 30-run window valt. Plan:
+   een `suiteTests`-veld in schema v2, geteld uit de JSON-report zelf — zie
+   `PLAN-CI-HISTORY-TESTS.md` §7.
+6. **De producerende kant heeft geen eigen test.** `scripts/ci-summary.mjs` wordt
+   lokaal ad-hoc gecontroleerd; er draait geen geautomatiseerde test op de
+   report→history-vertaling. De weergavelaag is wél gedekt door
+   `ci-history-functional.spec.ts`. Plan: CIH-06 in `PLAN-CI-HISTORY-TESTS.md`.
+7. **De suite draait tegen de live site.** Nieuwe UI-tests slagen pas ná deploy plus
+   de cache-periode uit §11. Voor lokaal werk aan `docs/` staat er een vaste
+   hulpm-config in de repo: `playwright.local.config.ts`.
+
+
 
 ## 13. Landkaart van de documentatie
 
@@ -365,5 +405,6 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
 | `CI-PLAYWRIGHT-HISTORY.md` | Hoe zit het exact in elkaar: schema's, velden, CI-stappen, verificatie |
 | `PLAYWRIGHT.md` | Hoe is het testproject opgebouwd: structuur, POM, conventies, commando's |
 | `TESTPLAN.md` | Wat er getest moet worden, en wat er al is |
+| `PLAN-CI-HISTORY-TESTS.md` | Testsoort van de CI-history tests, de plaats ervan in `TESTPLAN.md` en de roadmap |
 | `BESTPRACTICES.md` | Hoe je goed test: ISTQB en Playwright methodiek |
 | `AGENTS.md` | Welke documentatie relevant is |
