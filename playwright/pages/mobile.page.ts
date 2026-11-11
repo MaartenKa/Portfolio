@@ -1,7 +1,7 @@
 import { Page, expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
-// Testable data-testid's van de nav-links in #nav-links (op elke pagina)
+// Testable data-testid's van de nav-links in de lijst data-testid="nav-links" (op elke pagina)
 export const NAV_ITEM_TEST_IDS = [
   "nav-home",
   "nav-curriculum",
@@ -25,8 +25,9 @@ export const NAV_ITEM_URLS: Record<string, RegExp> = {
 
 /**
  * NavigationPage hergebruikt de globale navigatiebalk (header) die op elk
- * onderdeel van de site dezelfde DOM/selectors draagt: #menu-toggle en
- * #nav-links. Het is dus niet pagina-specifiek, maar een gedeelde component.
+ * onderdeel van de site dezelfde DOM/selectors draagt: data-testid
+ * menu-toggle en data-testid nav-links. Het is dus niet pagina-specifiek,
+ * maar een gedeelde component.
  */
 
 export class NavigationPage extends BasePage {
@@ -40,7 +41,10 @@ export class NavigationPage extends BasePage {
   }
 
   get navLinks() {
-    return this.page.locator("#nav-links");
+    // De <ul> heeft geen accessible name (en role "list" is op de pagina niet
+    // uniek), dus de class-toggle-assert (.open) vraagt een eigen testid in de
+    // markup volgens het testid-contract (PLAYWRIGHT.md §8): data-testid="nav-links".
+    return this.page.getByTestId("nav-links");
   }
 
   /** Klik op de mobiele menu-toggle. */
@@ -50,8 +54,9 @@ export class NavigationPage extends BasePage {
 
   /**
    * Assert de toestand van het navigatiemenu.
-   * open=true  → #nav-links heeft .open, is zichtbaar én alle items zijn zichtbaar.
-   * open=false → #nav-links heeft géén .open (op mobiel hidden, op desktop inline visible).
+   * open=true  → de navLinks-lijst (data-testid="nav-links") heeft .open, is zichtbaar
+   *              én alle items zijn zichtbaar.
+   * open=false → de navLinks-lijst heeft géén .open (op mobiel hidden, op desktop inline visible).
    */
   async expectMenuState(open: boolean) {
     if (open) {

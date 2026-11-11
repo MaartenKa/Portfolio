@@ -1,7 +1,7 @@
 name: Playwright Tests
 
 on:
-  # 1 poging per dag, om 06:17 UTC.
+  # 1 poging per dag, om 18:17 UTC.
   #
   # GitHub's scheduler is best-effort en dropt jobs onder belasting, met name
   # rond de top van het uur. Gemeten met een test-cron (4x per uur op
@@ -53,6 +53,18 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      # Kwaliteitspoorten vóór de tests: een rode typecheck, lint of HTML-structuur
+      # moet de suite niet halen (TESTPLAN.md §11, entry-criteria). Ze draaien vóór
+      # de browserinstall, zodat een defect direct faalt zonder download-kosten.
+      - name: Type-check (tsc --noEmit)
+        run: npm run typecheck
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: HTML-validate (docs/**/*.html)
+        run: npm run validate:html
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps

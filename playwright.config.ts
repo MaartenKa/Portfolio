@@ -5,8 +5,8 @@ export default defineConfig({
 
   outputDir: "./playwright/test-results",
 
-  // In CI: Playwright stops the run itself instead of being killed by the runner,
-  // so dat de HTML report ont geeneret when the suite hangs.
+  // In CI: Playwright stopt de run zelf, in plaats van dat de runner de run afbreekt.
+  // Daardoor wordt het HTML-rapport wél gegenereerd als de suite hangt.
   globalTimeout: 10 * 60 * 1000,
 
   fullyParallel: true,

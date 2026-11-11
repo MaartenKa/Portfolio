@@ -22,6 +22,7 @@
     "playwright/pages/**/*.ts",
     "playwright/utils/**/*.ts",
     "playwright/fixtures/**/*.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "playwright.local.config.ts"
   ]
 }

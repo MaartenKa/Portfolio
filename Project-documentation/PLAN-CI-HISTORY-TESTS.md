@@ -94,7 +94,7 @@ doeleiding (SM, NAV, F, MENU, RESP, A11Y, SEO, LINK, IMG, VIS, PERF, HTML).
 | CIH-07 | Schema v2: `suiteTests` vult `ci-suite-size`; entries zonder veld vallen terug op `max(total)` | A+B | **conditioneel** (fase C) |
 | CIH-08 | a11y van de CI-sectie: `caption`, `scope="col"`, `aria-hidden` iconen, tabellezing | A | **te bouwen** (fase D) |
 
-## 6. Voorgestelde wijzigingen in TESTPLAN.md (nog niet doorgevoerd)
+## 6. Voorgestelde wijzigingen in TESTPLAN.md — **doorgevoerd** (nov 2026)
 
 | Paragraaf | Voorstel |
 | --- | --- |
@@ -145,15 +145,16 @@ poort zijn.
 
 ## 8. Openstaande kleine punten
 
-| # | Punt | Waar | Actie |
+| # | Punt | Waar | Status |
 | --- | --- | --- | --- |
-| 1 | Cron-comment zegt "om 06:17 UTC", cron is `17 18 * * *` | `.github/workflows/playwright.yml` regel 4 | Eén cijfer; zie `CI-OVERVIEW.md` §12.1 |
+| 1 | Cron-comment zei "om 06:17 UTC", cron is `17 18 * * *` | `.github/workflows/playwright.yml` regel 4 | **Opgelost** (comment zegt 18:17 UTC); zie `CI-OVERVIEW.md` §12.1 |
 | 2 | `ci-suite-size` is `max(total)`, dus een proxy | `src/ts/main.ts` | Fase C |
 | 3 | Geen test op `ci-summary.mjs` | `scripts/` | Fase B (CIH-06) |
 | 4 | Lege mappen `accessibility/`, `compatibility/`, `e2e/`, `regression/` | `playwright/tests/` | `TESTPLAN.md` fase 2–4 |
-| 5 | Typo in de config-comment ("ont geeneret") | `playwright.config.ts` regel 9 | Eén zin |
-| 6 | Raw `&` in `curriculum.html` | `docs/curriculum.html` | `TESTPLAN.md` HTML-01 |
+| 5 | Typo in de config-comment ("ont geeneret") | `playwright.config.ts` regel 9 | **Opgelost** (leesbare zin) |
+| 6 | Raw `&` in `curriculum.html` | `docs/curriculum.html` | **Opgelost** (`&amp;`); html-validate draait als CI-poort en is groen op alle 10 pagina's |
 | 7 | `docs/js/ts/main.js` moet handmatig gebouwd en gecommit worden | `npm run build` | Gedocumenteerd in `CI-OVERVIEW.md` §12.4 |
+| 8 | Drie kwaliteitspoorten (typecheck/lint/html-validate) draaien nu vóór de tests | `playwright.yml`, `package.json`, `eslint.config.mjs` | **Uitgevoerd**; lokaal draait `npm run check` dezelfde keten |
 
 ## 9. Verificatieprotocol na een deploy
 

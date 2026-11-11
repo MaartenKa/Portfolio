@@ -471,15 +471,16 @@ vóór deploy.
 Voor lokale verificatie is een ad-hoc Playwright-config gebruikt met
 `baseURL: "http://127.0.0.1:3123/"` en `webServer.command: "npx http-server docs
 -p 3123 -s"`. Diezelfde config is inmiddels als vaste tooling in de repo opgenomen:
-`playwright.local.config.ts`. Dat is een `defineConfig` die `playwright.config.ts`
-overneemt en alleen `baseURL` vervangt door `http://127.0.0.1:8080/` (plus
-`reporter: [["list"]]`). De standaardconfig blijft de live site testen.
+`playwright.local.config.ts`. Dat is een eigen `defineConfig` die `playwright.config.ts`
+overneemt (geen `extends`) en `baseURL` verwerkt naar `http://127.0.0.1:8080/`, plus
+eigen `webServer` op diezelfde poort, 1 worker, 0 retries en reporters `html` +
+`json` (report.json op hetzelfde pad als de standaardconfig) + `list`. De
+standaardconfig blijft de live site testen.
 
 Exacte commando's:
 
 ```bash
-npx http-server docs -p 8080 -s
-npx playwright test ci-history-functional --config playwright.local.config.ts
+npm run test:local   # = playwright test -c playwright.local.config.ts (webServer start automatisch)
 node scripts/ci-summary.mjs --report=playwright/test-results/report.json --history=playwright/test-results/local-history.json --max=30
 ```
 

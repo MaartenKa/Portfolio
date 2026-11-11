@@ -54,6 +54,7 @@ kader gebruikt om de scope te bepalen en prioriteiten te onderbouwen.
 | G10 | Prestaties blijven binnen acceptabele marges (static site)                                                                 | Non-functieel (performance)         |
 | G11 | Tests draaien deterministisch, in parallel en in CI                                                                        | Proces                              |
 | G12 | Elke release wordt geautomatiseerd gevalideerd voorafgaand aan deploy                                                      | Proces (CI/CD)                      |
+| G13 | CI-history van elke run is zichtbaar en volledig op `automation.html`                                          | Functioneel (dashboard)             |
 
 ---
 
@@ -78,6 +79,7 @@ kader gebruikt om de scope te bepalen en prioriteiten te onderbouwen.
 - SEO-meta per pagina: unieke `<title>`, meta description, canonical,
   Open Graph/Twitter cards; `docs/sitemap.xml` (8 content-pagina's).
 - Visual regression en performance (als kwaliteitseisen, zie §10 Roadmap).
+- De CI-history-sectie op `automation.html` (Recente runs kaarten + Geschiedenis-tabel): testcases CIH-01…05, zie §8.5.
 
 ### 3.2 Uit scope (bewust)
 
@@ -151,6 +153,7 @@ risico-profiel van een statische portfolio-site.
 - **Smoke / sanity:** elke pagina laadt (HTTP 200), geen console/page errors. _(bestaand)_
 - **Navigatie:** elke `nav-*`-link, CTA en card-link opent de juiste URL. _(bestaand, uitbreiden)_
 - **Formulier:** zie §7 (validatie, honeypot, submit, redirect).
+- **CI-history dashboard:** kaarten en Geschiedenis-tabel op `automation.html` — zie §8.5 _(bestaand, 8 tests)_.
 - **Menu-toggle (MOBIEEL — bestaand, stabiliseren/uitbreiden):** zie TC-MENU
   in §8.3 (`mobile-menu-functional.spec.ts`). De site-code bevat naast
   open/sluiten ook focusbeheer, `Escape`-sluiten en klik-buiten-het-menu;
@@ -202,7 +205,7 @@ _wanneer/waarom_ een test wordt uitgevoerd, niet _wat_ de test doet. Een functio
 
 De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
 
-- **Vereisten-gebaseerd** — uit de doelen G1–G12 en het formulier-gedrag (§7).
+- **Vereisten-gebaseerd** — uit de doelen G1–G13 en het formulier-gedrag (§7).
 - **Error guessing / exploratorisch** — handmatige sessies; reproduceerbare bugs
   worden geautomatiseerd.
 - **Boundary value analysis** — minimale (1 teken) en extreme (500+/1000+ tekens)
@@ -232,18 +235,18 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
 
 ### 6.2 Omgeving & determinisme
 
-- **Huidige configuratie:** `baseURL = https://maartenka.github.io/Portfolio/`
-  (live GitHub Pages). De `webServer`-blokken (`http-server` op `127.0.0.1:3000`)
-  staan in `playwright.config.ts` gecommenteerd als fallback voor lokaal testen
-  tegen de `docs/`-build.
-- **Ad-hoc lokale verificatie:** voor wijzigingen in `docs/` is tijdelijk een
-  Playwright-config met `baseURL: "http://127.0.0.1:3123"` en
-  `webServer: "npx http-server docs -p 3123 -s"` gebruikt om de nieuwe
-  menu-accessibility-gedragingen te controleren; deze ad-hoc config/spec is
-  niet als vaste suite-committed.
-- **Aanbeveling (fase 6 CI):** schakel in CI over naar de lokale `webServer`
-  (`http-server docs -p 3000`) zodat tests deterministisch zijn en niet afhangen
-  van de live-deploy; de live-URL blijft als handmatige smoke-omgeving.
+- **Huidige configuratie:** `baseURL = https://maartenka.github.io/Portfolio/` (live
+  GitHub Pages) in `playwright.config.ts`; de standaard-suite heeft géén `webServer`
+  en test dus de live-deploy. De `webServer`-code uit de vroegere lokale variant
+  staat niet meer in die config (conventie PLAYWRIGHT §5).
+- **Lokaal werk aan `docs/`:** de vaste hulpm-config `playwright.local.config.ts` in de
+  repo — `npm run test:local`, met `baseURL: "http://127.0.0.1:8080/"` en
+  `webServer: "npx http-server docs -p 8080 -s"` (`reuseExistingServer: !CI`, één
+  chromium-project, geen retries). Eén vaste lokale poort: de vroegere ad-hoc
+  3123-config en de `-p 3000`-variatie zijn daarmee vervangen (PLAYWRIGHT §7).
+- **Verwachte basis van de suite:** de live-nightly (`playwright.yml`) blijft de
+  functionele basis van de CI-history (max 30 runs, één writer op `main`);
+  `npm run test:local` bewijst nieuwe of aangepaste site-markup vóór de deploy.
 - **Externe netwerkaanroepen (Formward) worden gemockt** via `page.route(...)` zodat
   tests offline, snel en betrouwbaar draaien. **Geen** echte POST's in de suite.
 - **Externe links (GitHub/LinkedIn):** in CI alleen **link-structuur** checken
@@ -355,6 +358,25 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 | VIS-01  | Visual (fase 4)     | screenshot-baseline per pagina × breakpoint                     | geen onbedoelde regressies (tolerantie % klein)                                                                                                                                       |
 | PERF-01 | Performance         | Lighthouse (Perf/A11y/BestPractices/SEO) ≥ drempel              | scores binnen marges; snelle static-load                                                                                                                                              |
 
+### 8.5 CI-history & dashboard (G13) — `ci-history-functional.spec.ts` _(bestaand, 8 tests)_
+
+De Geschiedenis-tabel en de Recente runs kaarten die de nightly elke run bijvult.
+Deze sectie test het **eindpunt** van de CI-keten (bron-data: `ci-summary.mjs` →
+`docs/data/ci-history.json`, gerenderd door `src/ts/main.ts`), niet het mechanisme
+(zie `CI-PLAYWRIGHT-HISTORY.md`). Zie `PLAN-CI-HISTORY-TESTS.md` §3 voor de
+testtype-keuze en §4 voor de roadmap CIH-06…10.
+
+| ID     | Testcase                                     | Verwacht resultaat                                                                                      |
+| ------ | -------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| CIH-01 | `automation.html` laadt zonder console-fouten | HTTP 200, titel met "Test Automatisering", CI-sectie + table-body visibility, geen console/page errors    |
+| CIH-02 | JSON-contract (versie, total, percentage)     | `version === 1`, `total_tests` integer ≥ 0, `pass_percentage` 0–100 (schema v1)                            |
+| CIH-03 | Geschiedenis-tabel vult rijen uit de JSON     | ≥ 1 rij `[data-testid="ci-history-run"]`; per rij 5 cellen (`-run`, `-run-id`, `-branch`, `-commit`, `-datum`) |
+| CIH-04 | Recente runs toont volledige getallen         | `ci-tests-total` = heel getal; `ci-pass-percentage` = 1 decimaal; `ci-status` = "green" of "red"           |
+| CIH-05 | Fallback bij ontbrekende JSON                 | mock 404 op `data/ci-history.json` → placeholder in `[data-testid="ci-history-body"]` ("nog geen runs")   |
+
+> Uitgevoerd: 8 tests (de 5 hierboven + 3 varianten). Roadmap CIH-06…CIH-10 staat
+> in `PLAN-CI-HISTORY-TESTS.md` §4; CIH-06 vereist schema v2 en is daar gewaarschuwd.
+
 ---
 
 ## 9. Risico-analyse & mitigatie
@@ -376,6 +398,8 @@ Mitigaties zijn bewust verweven in BestPractices (determinisme, mocking, isolati
 | R10 | SEO-meta/canonical/sitemap raken inconsistent na nieuwe pagina                                     | Middel |       Middel       | SEO-03/SEO-04 asserts; sitemap en canonical-explicitie per pagina (PLAYWRIGHT §4)                              |
 | R11 | HTML-structuurdefecten (onafgesloten `<p>`, `</P>`, raw `&`) blijven onopgemerkt in statische HTML | Middel |       Middel       | HTML-01 `html-validate` als poort vóór de E2E-suite (browser repareert impliciet, dus E2E detecteert dit niet) |
 | R12 | Lege placeholder-content (logo, favicon) of lege CI-history wekt onvolledige indruk                |  Laag  |       Middel       | Logo/favicon gedocumenteerd (§3.2); CI-history start bewust leeg en vult zich na de eerste CI-run             |
+| R13 | De history-data is er, maar de weergave (kaarten/Geschiedenis-tabel) ontbreekt of is onvolledig → bezoeker ziet lege kaarten | Middel |    Laag-Middel     | CIH-01…05 in `ci-history-functional.spec.ts`; placeholder-fallback CIH-05; `data-testid`-contract in de HTML (PLAYWRIGHT §4) |
+| R14 | Één incidentele (niet-reproduceerbare) testmislukking in de suite: bij de eerste volledige lokale run na de kwaliteitspoorten viel de homepage-CTA-test weg, in isolatie en in een volledige heroostelling 41/41 groen. Determinisme is daarmee een gemeten risico, geen aanname | Middel | Laag | 3 opeenvolgende groene runs als exit-metric (§11); `retries: 2` in CI maar `0` lokaal (`playwright.local.config.ts`) zodat een lokale bevinding zichtbaar blijft; bij herhaling: trace/screenshot (`retain-on-failure`) analyseren |
 
 ---
 
@@ -391,23 +415,32 @@ impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish
 |  3   | Testdata centraliseren (`utils/test-data.ts`) + boundary/special-char cases (F6/F7)                                 | Formulier-testdataset centraal; F-matrix compleet gedekt                                                                                                           |
 |  4   | Non-functioneel: responsive, a11y, SEO, links/img checks                                                            | RESP/A11Y/SEO/LINK/IMG groen op alle 10 pagina's                                                                                                                   |
 |  5   | Visual regression + Lighthouse-drempels                                                                             | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                                                                            |
-|  6   | CI/CD-pipeline (GitHub Actions): install → typecheck → lint → test → artifacts                                      | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` comitted                                                                         |
+|  6   | CI/CD-pipeline (GitHub Actions, realtime: `playwright.yml`): npm ci → typecheck → lint → html-validate → test → artifacts → history                                      | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` comitted                                                                         |
 |  7   | Optioneel: cross-browser (Firefox/WebKit) + exploratoire device-sessies                                             | Browser-coverage & handmatige findings geformaliseerd                                                                                                              |
 
 ### CI-pipeline (fase 6, in lijn met BestPractices §18)
 
+**Uitgevoerd in `.github/workflows/playwright.yml`** (single source of truth; er is
+bewust géén tweede workflow). De poorten staan vóór de browserinstall:
+
 ```yaml
-# .github/workflows/ci.yml (concept)
+# .github/workflows/playwright.yml — de realiteit (trigger: nightly 18:17 UTC + dispatch)
 steps:
   - run: npm ci
-  - run: npx playwright install --with-deps chromium
-  - run: npx tsc --noEmit # typecheck
-  - run: npx eslint . # lint (vergeten awaits, etc.)
-  - run: npx html-validate "docs/*.html" # HTML-01: structuur van de site-pagina's
-  - run: npx playwright test # suite (1 worker in CI)
+  - run: npm run typecheck # tsc --noEmit
+  - run: npm run lint # ESLint 9, eslint-plugin-playwright
+  - run: npm run validate:html # HTML-01: structuur van de site-pagina's
+  - run: npx playwright install --with-deps
+  - run: npm run test # suite (1 worker in CI, 2 retries)
   - run: node scripts/ci-summary.mjs # Playwright JSON-report → CI-history
   - uses: actions/upload-artifact # HTML report + JSON report + CI-history
 ```
+
+Het vroegere _concept_ van een aparte `ci.yml` als push/PR-gate is **open
+beslispunt**: de push-trigger staat nu uit in `playwright.yml` (handmatig draaien
+bij een push). Een push-gate vraagt om een push-trigger op de poorten (geen tests),
+met een eigen concurrency-groep, zodat de nightly-history-keten (één writer op
+`main`) onaangeraakt blijft.
 
 ---
 
@@ -416,16 +449,20 @@ steps:
 ### Entry criteria (voordat een release getest mag worden)
 
 - Statische site lokaal/CI serveerbaar op de geconfigureerde `baseURL`.
-- TypeScript compileert zonder fouten (`tsc --noEmit`); lint schoon.
-- HTML-validiteit schoon: `npx html-validate "docs/*.html"` → 0 errors (HTML-01);
-  de bekende raw `&` in `docs/curriculum.html` is een openstaand, gedocumenteerd
-  HTML-defect dat apart opgeruimd moet worden.
+- Type-check en lint schoon via de CI-poorten: `npm run typecheck` (`tsc --noEmit`) en
+  `npm run lint` (`eslint . --max-warnings=4`): de poort faalt op errors én op meer dan
+  4 warnings. De vroegere vier `no-raw-locators`-warnings zijn opgelost — `home.page.ts`
+  asserts semantisch via `getByRole` en `mobile.page.ts` via `getByTestId("nav-links")`,
+  met `data-testid="nav-links"` in de navigatielijst van alle 10 pagina's (PLAYWRIGHT §8).
+- HTML-validiteit schoon: `npm run validate:html` → 0 errors op alle 10 pagina's (HTML-01).
+  De raw `&` in `docs/curriculum.html` is opgeruimd naar `&amp;` (het was een
+  openstaand, gedocumenteerd defect). De validering draait vóór de tests in `playwright.yml`.
 - Geen openstaande blokkerende defects uit de vorige run.
 
 ### Exit criteria (acceptatie van een release)
 
 1. **Smoke 100%** — alle pagina's laden, geen console/page errors (SM-01…03).
-2. **Functioneel** — navigatie (NAV-\*) én formulier-matrix F1–F10 groen; menu-toggle MENU-01…10 groen.
+2. **Functioneel** — navigatie (NAV-\*) én formulier-matrix F1–F10 groen; menu-toggle MENU-01…10 groen; CI-history CIH-01…05 groen (§8.5 / G13).
 3. **Non-functioneel** — RESPONSIVE/A11Y/SEO/LINK/IMG checks groen op alle 10 pagina's; SEO-01…SEO-04 en HTML-01 (html-validate) groen.
 4. **Geen blokkerende defects**; bekende niet-blokerende issues gedocumenteerd.
 5. **Determinisme** — suite lokaal herhaaldelijk én in CI (parallel) reproduceerbaar groen; géén flaky tests.
@@ -434,7 +471,7 @@ steps:
 
 | Metric                                  | Doel                               | Bron                        |
 | --------------------------------------- | ---------------------------------- | --------------------------- |
-| Testcase-executie (G1–G8)               | 100% uitgevoerd                    | Playwright HTML-report      |
+| Testcase-executie (G1–G13)            | 100% uitgevoerd                    | Playwright HTML-report      |
 | Vereisten-dekking (traceerbaarheid §15) | 100% in-scope doelen → ≥1 testcase | Traceerbaarheidsmatrix      |
 | Pass-fail ratio                         | 100% pass, 0 fail                  | CI-run                      |
 | Flaky-test-aandeel                      | 0%                                 | 3 opeenvolgende groene runs |
@@ -517,6 +554,7 @@ Een testcase is klaar wanneer (BestPractices §31, samengevat):
 | G10  | PERF-01                                      |
 | G11  | CI-pipeline (fase 6) + determinisme-criteria |
 | G12  | CI/CD exit-criterium §11                     |
+| G13  | CIH-01…CIH-05 (§8.5), plus CIH-06 zodra gebouwd (PLAN-CI-HISTORY-TESTS §4) |
 
 ---
 

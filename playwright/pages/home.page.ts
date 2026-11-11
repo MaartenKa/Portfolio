@@ -15,9 +15,13 @@ export class HomePage extends BasePage {
   }
 
   async expectStructureVisible() {
-    await expect(this.page.locator(".navbar")).toBeVisible();
-    await expect(this.page.locator(".hero")).toBeVisible();
-    await expect(this.page.locator(".footer")).toBeVisible();
+    // Semantische locators op basis van de bestaande accessible namen:
+    // <nav class="navbar" aria-label="Hoofdnavigatie">,
+    // <section class="hero" aria-label="Intro"> (section met naam => role region)
+    // en <footer class="footer"> (landmark contentinfo).
+    await expect(this.page.getByRole("navigation", { name: "Hoofdnavigatie" })).toBeVisible();
+    await expect(this.page.getByRole("region", { name: "Intro" })).toBeVisible();
+    await expect(this.page.getByRole("contentinfo")).toBeVisible();
   }
 
   // Functionele navigatie (gebruikersgedrag)

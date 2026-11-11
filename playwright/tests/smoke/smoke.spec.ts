@@ -15,6 +15,7 @@ test.describe("Smoke test – Index pagina (Deep Check)", () => {
     await home.expectNoConsoleErrors();
   });
 });
+
 // Test of de overige pagina's laden.
 // Gebruikt nu de test-data import
 test.describe("Smoke test – Overige pagina's (Lightweight Check)", () => {

@@ -728,7 +728,7 @@ Voorbeelden:
 
 ```ts
 const toggle = page.getByRole('button', { name: 'Open navigatie' });
-const menu = page.locator('#nav-links');
+const menu = page.getByTestId('nav-links');
 
 await toggle.click();
 
@@ -768,17 +768,17 @@ toegankelijk is.
 Wanneer de Playwright-suite standaard tegen een live URL draait, zijn lokale
 `docs/`-wijzigingen niet direct gedekt door `npx playwright test`.
 
-Gebruik voor lokale verificatie een expliciete config met een lokale `baseURL`
-en `webServer`:
+Gebruik de vaste hulpm-config in de repo, `playwright.local.config.ts` (eigen `baseURL`
+en eigen `webServer`), zodat de standaardconfig ongemoeid blijft:
 
 ```ts
 use: {
-  baseURL: 'http://127.0.0.1:3123',
+  baseURL: 'http://127.0.0.1:8080/',
 },
 
 webServer: {
-  command: 'npx http-server docs -p 3123 -s',
-  url: 'http://127.0.0.1:3123',
+  command: 'npx http-server docs -p 8080 -s',
+  url: 'http://127.0.0.1:8080',
   reuseExistingServer: !process.env.CI,
 },
 ```
@@ -786,9 +786,9 @@ webServer: {
 Start de tests met:
 
 ```bash
-npx playwright test -c playwright.menu.config.ts
+npm run test:local   # = npx playwright test -c playwright.local.config.ts
 ```
 
-Maak ad-hoc configs en tijdelijke specs alleen voor verifiëring, verwijder ze
-daarna, en verplaats bewezen gedrag naar de normale suite in
-`playwright/tests/`.
+Vermijd ad-hoc configs met eigen poorten (3000 en 3123 zijn historical; één vaste
+lokale poort houdt handleidingen en artifacts consistent). Tijdelijke specs zelf
+verwijderen na verifiëring, bewezen gedrag naar `playwright/tests/`.

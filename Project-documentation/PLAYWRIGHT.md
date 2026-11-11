@@ -63,6 +63,7 @@ network mocking, CI-ready configuratie).
 │   │   ├── base.page.ts      # BasePage: goto + console/page-error catch
 │   │   ├── home.page.ts      # HomePage
 │   │   ├── contact.page.ts   # ContactPage (incl. Formward-mock)
+│   │   ├── ci-history.page.ts # CiHistoryPage: mock + kaarten/tabel van automation.html
 │   │   ├── mobile.page.ts    # NavigationPage (mobiele menu-toggle)
 │   │
 │   ├── fixtures/
@@ -73,7 +74,12 @@ network mocking, CI-ready configuratie).
 │       ├── smoke/smoke.spec.ts          # smoke tests (huidig)
 │       ├── functional/homepage-functional.spec.ts
 │       ├── functional/contact-functional.spec.ts
-│       └── functional/mobile-menu-functional.spec.ts
+│       ├── functional/mobile-menu-functional.spec.ts
+│       ├── functional/ci-history-functional.spec.ts
+│       ├── accessibility/     # leeg — TESTPLAN fase 4 (A11Y-01…04)
+│       ├── compatibility/     # leeg — TESTPLAN fase 7 (Firefox/WebKit)
+│       ├── e2e/               # leeg — gebruikersflows
+│       └── regression/        # leeg — LINK/IMG/HTML-integriteit
 │   └── playwright-report/    # HTML rapport (ge-genereerd, in .gitignore)
 │   └── test-results/         # screenshots/traces/video's + JSON report (in .gitignore)
 ```
@@ -96,7 +102,8 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   `menu-toggle`, `ci-suite-size`, `ci-runs`, `ci-total-tests`, `ci-pass-rate`,
   `ci-status`, `ci-total-executed`, `ci-total-passed`, `ci-pass-ratio`,
   `ci-streak`, `ci-flaky-runs`, `ci-failed-runs`, `ci-metrics-note`,
-  `ci-history-table`, `ci-history-body`.
+  `ci-history-table`, `ci-history-body`, `nav-links` (de lijst zelf; het
+  bijbehorende `id="nav-links"` blijft nodig voor de site-JS in `src/ts/main.ts`).
 - **Actieve navigatie-link:** de nav-link van de huidige pagina in de header
   draagt `class="active"` (stijl `.nav-links a.active`: kleur
   `--primary-active`, accent-background en underline-balk). In de footer draagt
@@ -203,10 +210,13 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 ### Config (playwright.config.ts)
 
 - `testDir`: `./playwright/tests`
-  `baseURL`: `https://maartenka.github.io/Portfolio/` (standaard)
-  of lokaal: `http://127.0.0.1:3000` (handmatig omzetten in config)
-- `webServer`: `npx http-server docs -p 3000` — alleen actief wanneer
-  de config op localhost staat (auto-start, `reuseExistingServer`)
+  `baseURL`: `https://maartenka.github.io/Portfolio/` (standaard, live)
+- Lokaal werken aan `docs/`: **niet** de standaardconfig omzetten, maar
+  `playwright.local.config.ts` gebruiken (`npm run test:local`, `baseURL
+  http://127.0.0.1:8080/` + eigen `webServer`). De vaste help-config staat in
+  de repo; de standaardconfig blijft op live staan.
+- `webServer` (alleen in `playwright.local.config.ts`): `npx http-server docs
+  -p 8080 -s`, auto-start, `reuseExistingServer: !CI`
 - Reporter: HTML → `./playwright/playwright-report`; JSON →
   `./playwright/test-results/report.json`
 - Op failure: screenshot; op retry: trace; op failure: video (retained)
@@ -218,11 +228,17 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 | Script                    | Doel                                                      |
 | ------------------------- | --------------------------------------------------------- |
 | `npm run build`           | site-TS → `docs/js/ts` **&&** type-check alle TS (noEmit) |
-| `npm test`                | `playwright test` (alle tests)                            |
+| `npm run typecheck`       | `tsc --noEmit` — type-check zonder output                 |
+| `npm run lint`            | ESLint 9 (`eslint.config.mjs`), incl. playwright-plugin   |
+| `npm run lint:fix`        | ESLint met automatische fixes                             |
+| `npm run validate:html`   | `html-validate "docs/*.html"` (testcase HTML-01)          |
+| `npm run check`           | typecheck + lint + html-validate, in één keer             |
+| `npm test`                | `playwright test` (alle tests, live site)                 |
+| `npm run test:local`      | zelfde suite tegen `docs/` via `playwright.local.config.ts` |
 | `npm run test:ui`         | Playwright UI mode                                        |
 | `npm run test:headed`     | Headed browser                                            |
 | `npm run testChromium`    | Alleen chromium project                                   |
-| `npm run test_homepage`   | `homepage.spec.ts`                                        |
+| `npm run test_homepage`   | `homepage-functional.spec.ts`                             |
 | `npm run test_smoke`      | `smoke.spec.ts`                                           |
 | `npm run test_debug`      | Debug mode                                                |
 | `npm run test_list_tests` | `--list` (tests opsommen)                                 |
@@ -241,14 +257,20 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
 > **Standaard-Playwright-run:** `npm test` gebruikt `baseURL`
 > `https://maartenka.github.io/Portfolio/` en dus de live GitHub Pages-site.
 > Voor verifiëring van lokale `docs/`-wijzigingen staat er een vaste hulpm-config
-> in de repo: `playwright.local.config.ts`. Die extends de gewone config en
-> zet `baseURL` op `http://127.0.0.1:8080/`. Gebruik:
+> in de repo: `playwright.local.config.ts`. Dat is een eigen `defineConfig` die de
+> standaardconfig **overneemt** (geen `extends`) en `baseURL` verwerkt naar
+> `http://127.0.0.1:8080/`, plus eigen `webServer`, 1 worker en 0 retries. Gebruik:
 >
 > ```bash
-> npm run build                                        # site-JS bouwen
-> npx http-server docs -p 8080 -s                      # statische server
-> npx playwright test --config playwright.local.config.ts
+> npm run build                          # site-JS bouwen
+> npm run test:local                     # suite + auto-start van de webserver (8080)
 > ```
+>
+> `webServer` start de server zelf (`reuseExistingServer: !CI`); een handmatige
+> `npx http-server docs -p 8080 -s` is dus alleen nodig als je de server wil
+> hergebruiken tussen runs door. De config schrijft dezelfde reports als de
+> standaardconfig: HTML (`playwright/playwright-report/`) én JSON
+> (`playwright/test-results/report.json`), beide `gitignore`-gebied.
 >
 > Dit is de enige manier om nieuwe kaarten/markup lokaal te testen vóór deploy:
 > de standaard-suite draait tegen de live site, die de wijziging nog niet heeft.
@@ -311,8 +333,9 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   functie-beschrijvend (de logo-link gaat naar `index.html`).
 
 - **HTML-validiteit:** structuur van de site-pagina's valideren met
-  `npx html-validate "docs/*.html"` (config `.htmlvalidate.json` op repo-root,
-  wordt automatisch opgepakt). Actief als defectregel: `no-implicit-close`
+  `npm run validate:html` (`html-validate "docs/*.html"`; config
+  `.htmlvalidate.json` op repo-root, wordt automatisch opgepakt). Actief als
+  defectregel: `no-implicit-close`
   (expliciet sluiten van `<p>`/`<li>`/…), `close-order` (geneste tags in de
   juiste volgorde sluiten), `element-case` (tags in kleine letters),
   `no-raw-characters` (`&` → `&amp;`) en `no-utf8-bom` (bestanden BOM-vrij
@@ -321,9 +344,24 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   `doctype-style` op `lowercase`, `void-style` op `selfclosing`
   (`<br/>`-self-closing) en `no-implicit-button-type` op `off`.
 
-  Stand van zaken: `docs/automation.html` slaagt;
-  `docs/curriculum.html` bevat een pre-existing raw `&`-fout die apart
-  opgeruimd moet worden.
+  Stand van zaken: **alle 10 pagina's slagen** (`exit 0`). De raw `&` in
+  `docs/curriculum.html` (testcase HTML-01) is opgeruimd naar `&amp;`, en de
+  validering draait als poort vóór de tests in `playwright.yml`.
+
+- **Lint:** `npm run lint` (ESLint 9, flat config `eslint.config.mjs`). De
+  extensie `.mjs` is bewust: `package.json` heeft geen `"type": "module"`, dus
+  een `eslint.config.js` wordt door ESLint als CommonJS gelezen en de
+  `import`-regel dus een syntaxfout wordt. De config dekt
+  `src/`, `playwright/` en `scripts/`; `docs/**` blijft buiten de lint want
+  `docs/js/ts/main.js` is gebouwd resultaat. De Playwright-preset draait
+  volledig op `playwright/tests/**`; op page objects/fixtures/configs staan de
+  test-specifieke regels uit (asserts leven daar bewust, PLAYWRIGHT.md §4 en
+  §8). `no-raw-locators` staat op `error` voor page objects/fixtures/configs: de
+  eerdere raw locators zijn opgelost. `home.page.ts` asserts semantisch
+  (`getByRole` op `Hoofdnavigatie`, `Intro` en `contentinfo`) en `mobile.page.ts`
+  gebruikt `getByTestId("nav-links")`, ondersteund door `data-testid="nav-links"`
+  in de navigatielijst van alle 10 pagina's. `npm run lint` draait met
+  `--max-warnings=4`: de poort faalt op errors én op meer dan 4 warnings.
 
 - **Indexatie-besluit (open):** `noindex, nofollow` + `docs/robots.txt`
   (`Disallow: /`) staan bewust; op GitHub Pages wordt `robots.txt` op
@@ -332,8 +370,9 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   `robots.txt` op domein-root richting `/Portfolio/` laten wijzen.
 
 - **`tsconfig.json` include:** dekt `src/`, `playwright/tests/`,
-  `playwright/pages/`, `playwright/utils/`, `playwright/fixtures/` en
-  `playwright.config.ts` af voor IDE type-checking. `tsconfig.site.json`
+  `playwright/pages/`, `playwright/utils/`, `playwright/fixtures/`,
+  `playwright.config.ts` en `playwright.local.config.ts` af voor IDE
+  type-checking. `tsconfig.site.json`
   `extends` dit config en **only** dekt `src/ts/` (emit naar `docs/js/ts`).
 
 - **Toegankelijkheidsconventies:** de skip-link staat als eerste focusbaar

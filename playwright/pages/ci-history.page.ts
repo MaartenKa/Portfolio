@@ -67,6 +67,6 @@ export class CiHistoryPage extends BasePage {
   }
 
   historyRows() {
-    return this.page.getByTestId("ci-history-body").locator("tr");
+    return this.page.getByTestId("ci-history-body").getByRole("row");
   }
 }

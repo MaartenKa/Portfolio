@@ -61,24 +61,33 @@ bijhouden" én "site publiceren".
 2. **Repo pakken** — `actions/checkout@v7`: een verse kopie op een lege machine.
 3. **Node.js neerzetten** — `actions/setup-node@v7` met `node-version: lts/*`.
 4. **Dependencies** — `npm ci`: exact uit `package-lock.json`, geen verrassingen.
-5. **Browser** — `npx playwright install --with-deps`: Chromium plus de
+5. **Type-check** — `npm run typecheck` (`tsc --noEmit`): tests én site-JS in één
+  poort, vóórdat er een browser wordt gedownload.
+6. **Lint** — `npm run lint` (ESLint 9, flat config `eslint.config.mjs`,
+   inclusief `eslint-plugin-playwright`, met `--max-warnings=4` als
+   warning-basislijn).
+7. **HTML-validate** — `npm run validate:html` (`docs/**/*.html`): de structuur
+   van alle 10 site-pagina's (testcase HTML-01).
+8. **Browser** — `npx playwright install --with-deps`: Chromium plus de
    Linux-bibliotheken die Chromium nodig heeft.
-6. **Tests** — `npm run test` → `playwright test`. De suite gaat naar
+9. **Tests** — `npm run test` → `playwright test`. De suite gaat naar
    `https://maartenka.github.io/Portfolio/`, dus de live site en niet lokaal.
-7. **Rapporten ontstaan** — `playwright/playwright-report/` (HTML) en
-   `playwright/test-results/report.json` (JSON).
-8. **Bewaren** — drie artifacts: `playwright-report`, `playwright-json-report` en
-   `playwright-history`, elk 30 dagen.
-9. **Dagboekje vullen** — `node scripts/ci-summary.mjs`, met
-   `CI_SUMMARY_STATUS: ${{ job.status }}` in de environment.
-10. **Terugsturen** — de bot commit `chore(ci): update Playwright history [skip ci]`
+10. **Rapporten ontstaan** — `playwright/playwright-report/` (HTML) en
+    `playwright/test-results/report.json` (JSON).
+11. **Bewaren** — drie artifacts: `playwright-report`, `playwright-json-report` en
+    `playwright-history`, elk 30 dagen.
+12. **Dagboekje vullen** — `node scripts/ci-summary.mjs`, met
+    `CI_SUMMARY_STATUS: ${{ job.status }}` in de environment.
+13. **Terugsturen** — de bot commit `chore(ci): update Playwright history [skip ci]`
     en pusht naar `main`.
-11. **Publiceren** — GitHub Pages bouwt `docs/` opnieuw, inclusief de nieuwe JSON.
-12. **Tonen** — de volgende bezoeker van `automation.html` ziet de nieuwe cijfers.
+14. **Publiceren** — GitHub Pages bouwt `docs/` opnieuw, inclusief de nieuwe JSON.
+15. **Tonen** — de volgende bezoeker van `automation.html` ziet de nieuwe cijfers.
 
-Stap 8 en 9 draaien ook **als de tests falen**, door `if: ${{ !cancelled() }}`. Een
-rode run verdwijnt dus niet, die wordt geregistreerd. Dat is de bedoeling: een
-dashboard dat ook de slechte dagen laat zien.
+Stap 5 t/m 7 (de poorten) staan bewust vóór stap 8: een rode poort kost geen
+browserdownload. Stap 11 en 12 draaien ook **als een eerdere stap faalt**, door
+`if: ${{ !cancelled() }}`. Een rode run verdwijnt dus niet, die wordt
+geregistreerd — ook een run die door de lint- of HTML-poort werd gestopt. Dat is
+de bedoeling: een dashboard dat ook de slechte dagen laat zien.
 
 ## 5. Bestandsgids: alles wat bij dit proces hoort
 
@@ -95,6 +104,7 @@ Paden zijn relatief aan de repo-root (`Portfolio/`).
 | `tsconfig.site.json` | Bouwt uitsluitend `src/ts/` naar `docs/js/ts` | Dit is de build van de site-JS die de JSON rendert | `outDir` veranderen → `automation.html` mist zijn JS |
 | `.gitignore` | Negeert `playwright/playwright-report/`, `playwright/test-results/`, `node_modules/`, `dist/`, `.env*` | Houdt de rauwe rapporten uit de repo; `docs/data/` blijft wél getrackt | `docs/data/` per ongeluk negeren → de site krijgt een 404 op de fetch |
 | `.htmlvalidate.json` | HTML-regels (`html-validate:recommended`, lowercase doctype, selfclosing voids) | Bewaakt de HTML van `docs/*.html`, dus ook de `data-testid`-ankers van de CI-sectie | Regels versoepelen → kapotte HTML die de UI-tests niet vangen |
+| `eslint.config.mjs` | ESLint 9 flat config: `src/`, `playwright/` en `scripts/`, met de Playwright-plugin op de testbestanden | `npm run lint` is een van de drie poorten vóór de tests in de workflow | Config weglaten of rules uitzetten → de lint-poort in CI faalt of maskeert defects |
 | `playwright.local.config.ts` | Lokale override van de speelfile-config: neemt `playwright.config.ts` over en zet `baseURL` op `http://127.0.0.1:8080/` | Draait de suite tegen de lokale `docs/`-build, wanneer de live site de nieuwe markup nog niet bevat | In CI gebruiken: dan test je lokaal in plaats van live |
 | `AGENTS.md` | Wijsplaatje naar de relevante documentatie | Verwijst naar de docs in `Project-documentation/` | — |
 
@@ -369,13 +379,12 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
 
 ## 12. Aandachtspunten uit deze rondgang
 
-1. **`playwright.yml` regel 4 zegt "om 06:17 UTC", terwijl de cron `"17 18 * * *"`
-   is, dus 18:17 UTC.** `CI-PLAYWRIGHT-HISTORY.md` §5.1 heeft het juiste uur, dus de
-   comment in de YAML is achtergebleven (de laatste commit heet "Updated CI run
-   time"). Eén cijfer aanpassen maakt de comment weer waar.
-2. **Typo in `playwright.config.ts` regel 9:** `"so dat de HTML report ont geeneret
-   when the suite hangs"`. Bedoeld is dat het HTML-rapport wél gegenereerd wordt als
-   de suite hangt.
+1. **Comment in `playwright.yml` en de cron zijn nu in lijn:** de comment zegt
+   `18:17 UTC` en de cron is `"17 18 * * *"`. (Het was een achtergebleven
+   `06:17 UTC`; `CI-PLAYWRIGHT-HISTORY.md` §5.1 had al het juiste uur.)
+2. **Comment in `playwright.config.ts` is hersteld:** de regel zegt nu dat het
+   HTML-rapport wél gegenereerd wordt als de suite hangt (het was een
+   onleesbare zin geworden).
 3. **`playwright/tests/accessibility/`, `compatibility/`, `e2e/` en `regression/` zijn
    lege mappen.** `TESTPLAN.md` beschrijft er al testcases voor, dus de CI-cijfers
    tonen nu alleen smoke en functioneel.
@@ -393,7 +402,13 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    `ci-history-functional.spec.ts`. Plan: CIH-06 in `PLAN-CI-HISTORY-TESTS.md`.
 7. **De suite draait tegen de live site.** Nieuwe UI-tests slagen pas ná deploy plus
    de cache-periode uit §11. Voor lokaal werk aan `docs/` staat er een vaste
-   hulpm-config in de repo: `playwright.local.config.ts`.
+   hulpm-config in de repo: `playwright.local.config.ts` (`npm run test:local`,
+   poort 8080).
+8. **Kwaliteitspoorten draaien vóór de tests in de workflow.** `npm run typecheck`
+   (`tsc --noEmit`), `npm run lint` (ESLint 9 met `eslint.config.mjs`) en
+   `npm run validate:html` (alle 10 pagina's slagen). Ze staan vóór de
+   browserinstall, zodat een rode poort de run direct en goedkoop stop.
+   Zie `TESTPLAN.md` §11 (entry-criteria) en §10 fase 6.
 
 
 
