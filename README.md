@@ -1,144 +1,148 @@
-# Portfolio — Maarten Kamps (QA Engineer / Software Tester)
+# Maarten Kamps — QA Engineer & Test Automation
 
-[![Playwright Tests](https://img.shields.io/github/actions/workflow/status/MaartenKa/Portfolio/playwright.yml?label=Playwright%20CI)](https://github.com/MaartenKa/Portfolio/actions/workflows/playwright.yml)
+[![Playwright CI](https://img.shields.io/github/actions/workflow/status/MaartenKa/Portfolio/playwright.yml?label=Playwright%20CI)](https://github.com/MaartenKa/Portfolio/actions/workflows/playwright.yml)
+[![Live site](https://img.shields.io/badge/website-live-2ea043)](https://maartenka.github.io/Portfolio/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)](https://www.typescriptlang.org/)
+[![Playwright](https://img.shields.io/badge/Playwright-1.65-2e8555)](https://playwright.dev/)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-Live-site: <https://maartenka.github.io/Portfolio/> · Repo: <https://github.com/MaartenKa/Portfolio>
+**Live:** [maartenka.github.io/Portfolio](https://maartenka.github.io/Portfolio/) · **Dashboard:** [automation.html](https://maartenka.github.io/Portfolio/automation.html)
 
-Dit project is een **statische portfolio-website** (geen backend, geen framework) met daar
-bij een **Playwright testautomatiseringssuite** die dezelfde site test. De site rapporteert
-daarna over haar eigen tests: `automation.html` toont de CI-resultaten uit de Playwright
-`JSON`-report die de GitHub Actions-run terugcommt naar de repo. Alles is Nederlands — de
-site, de testnamen en de documentatie.
+Een statische portfolio-website zonder backend of framework, met daarnaast een
+Playwright-suite die diezelfde site test. Wat dit project onderscheidt: de site
+**rapporteert over haar eigen tests**. Elke CI-run levert een JSON-rapport dat wordt
+samengevat tot een CI-history en op `automation.html` als dashboard wordt getoond —
+met pass-rate, groene streaks en de status van de laatste runs.
 
-## Stack
+## In één oogopslag
 
-| Onderdeel         | Technologie                                                        |
-| ----------------- | ------------------------------------------------------------------ |
-| Website           | Statisch HTML/CSS in `docs/` (10 pagina's), GitHub Pages           |
-| Site-JS           | TypeScript: `src/ts/main.ts` → gebouwd naar `docs/js/ts`           |
-| Testframework     | Playwright (`@playwright/test` v1.65) met Page Object Model        |
-| Taal tests        | TypeScript, strict mode                                            |
-| Browser           | Chromium (Desktop Chrome)                                          |
-| Testomgeving      | Standaard: live GitHub Pages; lokaal: `playwright.local.config.ts` |
-| CI                | GitHub Actions (`.github/workflows/playwright.yml`)                |
-| Kwaliteitspoorten | `tsc --noEmit`, ESLint, html-validate                              |
-| Rapportage        | Playwright HTML-report, JSON-report, CI-history JSON               |
+| Kenmerk                | Waarde                                              |
+| ---------------------- | --------------------------------------------------- |
+| Testsuite              | **41 tests** in 5 spec-bestanden                    |
+| Browser                | Chromium (Desktop Chrome)                           |
+| Laatste gelogde CI-run | **41/41 geslaagd** (100%)                           |
+| CI                     | GitHub Actions — dagelijks om 18:17 UTC + handmatig |
+| Kwaliteitspoorten      | `tsc --noEmit`, ESLint 10, html-validate            |
+| Stack                  | HTML/CSS, TypeScript, Playwright 1.65, GitHub Pages |
+| Licentie               | MIT                                                 |
 
-## Structuur
+## Wat dit project laat zien
 
-```
-package.json                 # scripts + devDependencies
-tsconfig.json                # TS-config (strict, noEmit → type-check only)
-tsconfig.site.json           # site-JS build → docs/js/ts
-playwright.config.ts         # standaard-suite: draait tegen de live site
-playwright.local.config.ts   # hulpm-config: zelfde suite tegen docs/ (poort 8080)
-eslint.config.mjs            # ESLint 10 flat config
-.htmlvalidate.json           # html-validate regels voor de site-pagina's
-docs/                        # de statische website (site-root op GitHub Pages)
-  data/playwright-history.json  # CI-history data voor automation.html
-  js/ts/main.js                 # gebouwd bestand: nooit met de hand aanpassen
-src/ts/main.ts               # bron site-JS: menu-toggle + CI-history UI
-scripts/ci-summary.mjs       # Playwright JSON-report → CI-history JSON
-playwright/
-  pages/                     # Page Objects (base, home, contact, mobile, ci-history)
-  fixtures/test-fixtures.ts  # eigen fixtures (nu lege placeholder)
-  utils/test-data.ts         # gedeelde constants en testdata
-  tests/smoke/               # smoke
-  tests/functional/          # homepage, contact, mobile-menu, ci-history
-  tests/accessibility/       # leeg — TESTPLAN fase 4 (A11Y-01…04)
-  tests/compatibility/       # leeg — TESTPLAN fase 7 (Firefox/WebKit)
-  tests/e2e/                 # leeg — gebruikersflows
-  tests/regression/          # leeg — LINK/IMG/HTML-integriteit
-Project-documentation/       # testplan, CI-docu, projectdoc, best practices
-AGENTS.md                    # welke documentatie relevant is
-```
+- **Testdesign** — positieve én negatieve paden, boundary-cases op formuliervelden,
+  en asserts op zichtbaarheid, attributen en URL's.
+- **Structuur** — Page Object Model met `base.page.ts` als basis, gedeelde testdata
+  en herbruikbare fixtures.
+- **CI/CD** — kwaliteitspoorten vóór de suite, daarna artifacts en een
+  geautomatiseerde history-update.
+- **Rapportage** — Playwright HTML- en JSON-reports, samengevat tot een CI-dashboard.
+- **Toegankelijke markup** — skip-link, `aria`-attributen en `data-testid`-haken,
+  bewaakt door een strikte HTML-validator.
 
-## Aan de slag
+## Het dashboard
 
-Vereist Node.js **>= 24.8** (zie `engines.node` in `package.json`); de CI gebruikt
-dezelfde grens via `node-version-file: package.json`.
+![CI-history dashboard op automation.html](assets/readme-automation.png)
+
+De pagina `automation.html` leest `docs/data/playwright-history.json` en toont de
+laatste 10 runs, plus gepoolde cijfers over de laatste 30 runs.
+
+## Quick start
+
+Vereist Node.js **>= 24.8 < 25** (zie `engines.node`; de CI leest dezelfde grens via
+`node-version-file: package.json`).
 
 ```bash
-npm ci                        # dependencies, exact uit package-lock.json
-npx playwright install        # browsers voor lokale runs
-npm run build                 # site-JS → docs/js/ts + type-check van al het TS
-npm test                      # standaard-suite: draait tegen de LIVE site
-npm run test:local            # zelfde suite tegen de lokale docs/ (http-server 8080)
-npm run test:ui               # interactieve Playwright UI-mode
-npm run test_list_tests       # tests opsommen
-npm run check                 # typecheck + lint + html-validate
+npm ci                    # dependencies, exact uit package-lock.json
+npx playwright install    # Chromium voor lokale runs
+npm run build             # site-JS → docs/js/ts + typecheck van alle TS
+npm run test:local        # suite tegen de lokale docs/ op poort 8080
+npm run test              # suite tegen de live GitHub Pages-site
+npm run check             # typecheck + lint + HTML-validatie
 ```
 
-Voor werk aan `docs/` is `npm run test:local` de enige manier om nieuwe markup vóór deploy
-te verifiëren: de standaard-suite draait tegen de live site, die de wijziging nog niet
-heeft.
+Werk je aan `docs/`? Gebruik `npm run test:local`. De standaardsuite draait tegen de
+live site, die je wijziging nog niet heeft.
+
+## Architectuur van de CI-history
+
+```mermaid
+flowchart LR
+  A["Playwright suite"] --> B["report.json"]
+  B --> C["scripts/ci-summary.mjs"]
+  C --> D["docs/data/playwright-history.json"]
+  D --> E["bot-commit (skip ci)"]
+  E --> F["GitHub Pages"]
+  F --> G["automation.html"]
+  G --> H["main.ts: kaarten + tabel"]
+```
+
+Geen backend, geen database, geen API-tokens — alleen een JSON-bestand in de repo.
+Details per schakel staan in [CI-PLAYWRIGHT-HISTORY.md](Project-documentation/CI-PLAYWRIGHT-HISTORY.md).
+
+## Projectstructuur
+
+```
+docs/                          # statische site, root van GitHub Pages (10 pagina's)
+  data/playwright-history.json   # CI-history die het dashboard leest
+  js/ts/main.js                  # gebouwd bestand — niet met de hand aanpassen
+src/ts/main.ts                 # bron van de site-JS (menu + CI-history UI)
+playwright/
+  pages/                       # Page Objects
+  tests/smoke|functional/      # de 41 tests
+  tests/accessibility|compatibility|e2e|regression/   # gereserveerd, nog leeg
+scripts/ci-summary.mjs         # JSON-report → CI-history
+Project-documentation/         # testplan, CI-documentatie, best practices
+```
+
+## Testsuite
+
+| Suite            | Spec-bestand                                                 |  Tests |
+| ---------------- | ------------------------------------------------------------ | -----: |
+| Smoke            | `playwright/tests/smoke/smoke.spec.ts`                       |      9 |
+| Homepage         | `playwright/tests/functional/homepage-functional.spec.ts`    |      5 |
+| Contactformulier | `playwright/tests/functional/contact-functional.spec.ts`     |     10 |
+| Mobiel menu      | `playwright/tests/functional/mobile-menu-functional.spec.ts` |     12 |
+| CI-history UI    | `playwright/tests/functional/ci-history-functional.spec.ts`  |      5 |
+| **Totaal**       | 5 spec-bestanden                                             | **41** |
 
 ## Kwaliteitspoorten
 
-| Commando                | Betekenis                                                       |
-| ----------------------- | ------------------------------------------------------------- |
-| `npm run typecheck`     | `tsc --noEmit` — TypeScript strict, zonder output             |
-| `npm run lint`          | `eslint . --max-warnings=0` — ESLint 10 incl. `eslint-plugin-playwright` |
-| `npm run validate:html` | `html-validate "docs/**/*.html"` (testcase HTML-01)           |
-| `npm run check`         | alle drie achter elkaar                                       |
+| Commando                | Wat het doet                                                       |
+| ----------------------- | ------------------------------------------------------------------ |
+| `npm run typecheck`     | `tsc --noEmit` — TypeScript strict                                 |
+| `npm run lint`          | ESLint 10 inclusief `eslint-plugin-playwright`, `--max-warnings=0` |
+| `npm run validate:html` | html-validate over `docs/**/*.html`                                |
+| `npm run check`         | alle drie achter elkaar                                            |
 
-Dezelfde drie poorten draaien in `playwright.yml` vóór de tests, zodat een rode typecheck,
-lint of HTML-structuur de suite niet haalt (`TESTPLAN.md` §11, entry-criteria).
-
-## CI/CD en de CI-history
-
-Elke nacht om **18:17 UTC** (en handmatig via `workflow_dispatch`) draait de suite op GitHub
-Actions: checkout → Node.js → `npm ci` → typecheck → lint → html-validate → browsers →
-tests → artifacts → `scripts/ci-summary.mjs` → bot-commit van de history-JSON met
-`[skip ci]` → GitHub Pages publiceert opnieuw.
-
-`automation.html` toont daarop de shields.io-badge, de laatste-run kaarten, zes
-QA-aggregaatcijfers (o.a. de gepoolde ratio = Σ geslaagd / Σ uitgevoerd) en de laatste 10
-CI-runs. Geen backend, geen database, geen API-token.
-
-```
-Playwright → report.json → ci-summary.mjs → playwright-history.json
-           → bot-commit → GitHub Pages → main.ts fetcht → kaarten + tabel
-```
-
-Schema's, velden en het productiebewijs per schakel:
-`Project-documentation/CI-PLAYWRIGHT-HISTORY.md` §15.
+Dezelfde drie poorten draaien in `playwright.yml` vóór de browserinstall en de tests:
+een rode poort stopt de suite.
 
 ## Documentatie
 
-| Bestand                                        | Beantwoordt |
-| ---------------------------------------------- | ----------- |
-| `Project-documentation/PLAYWRIGHT.md`          | Projectopbouw, Page Objects, conventies, commando's |
-| `Project-documentation/TESTPLAN.md`            | Teststrategie, testmatrix G1–G13, roadmap fase 1–7 |
-| `Project-documentation/BESTPRACTICES.md`       | ISTQB- en Playwright-methodiek |
-| `Project-documentation/CI-PLAYWRIGHT-HISTORY.md` | Technische CI-spec: schema's, CI-stappen, verificatie |
-| `Project-documentation/CI-OVERVIEW.md`         | CI/CD in gewoon taalgebruik + bestandsgids |
-| `Project-documentation/PLAN-CI-HISTORY-TESTS.md` | Testsoort van de CI-history tests + roadmap |
-| `Project-documentation/PLAN-DEPENDENCY-UPGRADES.md` | Welke versies verouderd zijn (bron van de CI-warnings) + upgrade-reeks |
-| `AGENTS.md`                                    | Welke documentatie relevant is bij een nieuwe taak |
+| Document                                                                         | Beantwoordt                                         |
+| -------------------------------------------------------------------------------- | --------------------------------------------------- |
+| [PLAYWRIGHT.md](Project-documentation/PLAYWRIGHT.md)                             | Projectopbouw, Page Objects, conventies, commando's |
+| [TESTPLAN.md](Project-documentation/TESTPLAN.md)                                 | Teststrategie, testmatrix G1–G13, roadmap           |
+| [BESTPRACTICES.md](Project-documentation/BESTPRACTICES.md)                       | ISTQB- en Playwright-methodiek                      |
+| [CI-OVERVIEW.md](Project-documentation/CI-OVERVIEW.md)                           | CI/CD in gewoon taalgebruik + bestandsgids          |
+| [CI-PLAYWRIGHT-HISTORY.md](Project-documentation/CI-PLAYWRIGHT-HISTORY.md)       | Technische CI-spec: schema's en verificatie         |
+| [PLAN-CI-HISTORY-TESTS.md](Project-documentation/PLAN-CI-HISTORY-TESTS.md)       | Testplan voor de CI-history tests                   |
+| [PLAN-DEPENDENCY-UPGRADES.md](Project-documentation/PLAN-DEPENDENCY-UPGRADES.md) | Versiebeleid en upgrade-reeks                       |
 
-## Bekende beperkingen (eerlijk benoemd)
+## Beperkingen (eerlijk benoemd)
 
-- De suite draait tegen de live site: nieuwe UI-tests slagen pas ná deploy plus de
-  Pages-cache (`max-age=600`, tot tien minuten). Een harde reload na een deploy is dus
-  normaal gedrag en geen bug.
-- `docs/js/ts/main.js` is een gebouwd bestand in de repo. Na een wijziging in
-  `src/ts/main.ts`: eerst `npm run build`, dan committen. De CI bouwt niet.
-- De kaart "Suite omvang" is nu `max(total)` uit de gelogde runs — een proxy. Plan voor
-  een echt `suiteTests`-veld: `PLAN-CI-HISTORY-TESTS.md` fase C.
-- De site is bewust `noindex, nofollow` met `docs/robots.txt` (`Disallow: /`). Canonical
-  en sitemap zijn er wél; die worden getest op aanwezigheid en consistentie, niet op
-  indexatie-effect.
-- De producerende kant (`scripts/ci-summary.mjs`) heeft nog geen eigen geautomatiseerde
-  test (CIH-06, fase B). De weergavelaag is wél gedekt door vijf UI-tests met gemockte
-  data.
-- `accessibility/`, `compatibility/`, `e2e/` en `regression/` zijn lege mappen: de
-  non-functionele suites (RESP / A11Y / SEO / LINK / IMG / VIS / PERF) staan als fase 4–5
-  in het testplan en zijn nog niet gebouwd.
+- **Live-site-afhankelijk.** De standaardsuite draait tegen GitHub Pages; nieuwe
+  UI-tests slagen pas na deploy en de Pages-cache (tot 10 minuten). Daarom bestaat
+  `npm run test:local`, dat tegen de lokale `docs/` draait.
+- **Non-functionele suites zijn nog niet gebouwd.** `accessibility/`, `compatibility/`,
+  `e2e/` en `regression/` zijn gereserveerd; A11Y-, SEO-, LINK- en
+  compatibiliteitstests staan als fase 4–7 in het testplan.
+- **De producerende kant is ongetest.** `scripts/ci-summary.mjs` heeft geen eigen
+  geautomatiseerde test; de weergavelaag is wél gedekt door vijf UI-tests met gemockte
+  data. De kaart "Suite omvang" is voorlopig een proxy (`max(total)`).
 
 ## Contact & licentie
 
 - E-mail: <Maarten.kamps.bee@outlook.com>
 - LinkedIn: <https://www.linkedin.com/in/maarten-kamps-a6909527/>
 - GitHub: <https://github.com/MaartenKa/Portfolio>
-- Licentie: zie `LICENSE`
+- Licentie: MIT — zie [LICENSE](LICENSE)

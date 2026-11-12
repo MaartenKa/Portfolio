@@ -411,3 +411,26 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
 - CI-history documentatie: `Project-documentation/CI-PLAYWRIGHT-HISTORY.md`
 - CI-history data: `docs/data/playwright-history.json`
 - Indexatie: `noindex, nofollow` (alle pagina's) + `docs/robots.txt`
+
+## 10. README onderhouden
+
+De `README.md` op de repo-root is een showcase, geen bron van waarheid. Elke
+cijfer of versie die erin staat, staat ook in de code. Werk de README bij **in
+dezelfde wijziging** als de oorzaak, niet later.
+
+| README-claim | Bron van waarheid | Bijwerken wanneer |
+| --- | --- | --- |
+| Aantal tests per suite + totaal (41) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
+| Playwright-versie (1.65) | `package.json` → `devDependencies` | versie-upgrade |
+| ESLint-versie (10) | `package.json` → `devDependencies.eslint` | versie-upgrade |
+| Node-grens (`>=24.8 <25`) | `package.json` → `engines.node` | Node-upgrade |
+| Cron-tijd (18:17 UTC) | `.github/workflows/playwright.yml` → `on.schedule` | wijziging van de cron |
+| Laatste CI-run en pass-rate | `docs/data/playwright-history.json` | **niet met de hand** — dit schrijft de CI zelf |
+| Aantal pagina's (10) | `docs/*.html` | nieuwe of verwijderde pagina |
+| Screenshot `assets/readme-automation.png` | `automation.html` | UI-wijziging van het dashboard |
+| Lijst met documenten | `Project-documentation/*` | nieuw of verplaatst document |
+
+De screenshot vernieuw je met een element-screenshot van
+`section[aria-label="Testresultaten"]` op `http://127.0.0.1:8080/automation.html`
+(2× resolutie), met `npx http-server docs -p 8080 -s` als lokale server. Laat de
+vaste site-header weg: die overlapt de kaarten in een element-screenshot.
