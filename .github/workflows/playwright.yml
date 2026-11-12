@@ -27,8 +27,25 @@ on:
   # Handmatig starten via GitHub Actions.
   workflow_dispatch:
 
+  # Dependabot-PR's (config: .github/dependabot.yml) moeten door dezelfde
+  # poorten: een dependency-upgrade die de suite breekt mag niet wegmergeen.
+  # Dependabot opent PR's als normaal pull_request-event.
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+  # Auto-merge op Dependabot-PR's. GitHub mergt zo'n PR pas wanneer de
+  # Dependabot-checks melden dat alle required checks slagen; dat is dit event.
+  dependabot:
+    pull_request:
+      types: [checked]
+
 permissions:
   contents: write
+  # upload-artifact v7 heeft het `actions`-scope nodig. Scopes die hier niet
+  # genoemd staan vallen op de stille default "read", en dan falen de
+  # upload-stappen. Vandaar deze regel expliciet.
+  actions: write
 
 concurrency:
   group: playwright-${{ github.ref }}
@@ -38,6 +55,10 @@ jobs:
   test:
     name: Run Playwright tests
     runs-on: ubuntu-latest
+
+    # Beschermt tegen een run die door een haperende browserdownload of een
+    # vastgelopen suite de 60-minutenlimiet van GitHub raakt.
+    timeout-minutes: 20
 
     env:
       CI: "1"
@@ -49,7 +70,13 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          node-version: lts/*
+          # De Node-tak komt uit package.json (engines.node) — één veld, twee
+          # consumenten: npm toetst het, setup-node lost het op. `lts/*` schuift
+          # mee met de runner-images en wijkt dus lokaal af van de CI.
+          # Zie PLAN-DEPENDENCY-UPGRADES.md §6.
+          node-version-file: package.json
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -73,7 +100,7 @@ jobs:
         run: npm run test
 
       - name: Upload Playwright HTML report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
@@ -91,7 +118,7 @@ jobs:
           --max=30
 
       - name: Upload Playwright JSON report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: ${{ !cancelled() && hashFiles('playwright/test-results/report.json') != '' }}
         with:
           name: playwright-json-report
@@ -99,7 +126,7 @@ jobs:
           retention-days: 30
 
       - name: Upload Playwright history
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: playwright-history

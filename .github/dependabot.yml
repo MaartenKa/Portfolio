@@ -1,0 +1,49 @@
+# Onderhoud van versies. Dit mechanisme zorgt dat verouderde dependencies en
+# CI-actions niet opnieuw oplopen tegen de deprecated-warns uit
+# PLAN-DEPENDENCY-UPGRADES.md §1. Zie plan §9.
+version: 2
+updates:
+  # De repo-root van deze git-repo is Portfolio/Portfolio: package.json en
+  # package-lock.json staan daar, dus "/" is de juiste directory.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Amsterdam"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+
+  # De action-majors (checkout, setup-node, upload-artifact) leven buiten
+  # package.json en vragen een eigen ecosysteem.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      timezone: "Europe/Amsterdam"
+    commit-message:
+      prefix: "chore(ci)"
+
+# Eén PR per ecosysteem in plaats van twaalf losse PR's; dat houdt de
+# reviewlast in een portfolio-repo klein.
+groups:
+  npm-productie:
+    patterns:
+      - "*"
+    apply: "all"
+  actions-productie:
+    patterns:
+      - "*"
+    apply: "all"
+
+# Waarom dit bestand hier staat en niet in playwright.yml: Dependabot is geen
+# Actions-workflow. GitHub leest deze config server-side op het vaste pad
+# `.github/dependabot.yml`, op de default branch. Een workflow in
+# `.github/workflows/` wordt tegen het workflow-schema getoetst (on/jobs/steps);
+# `version: 2` en `updates:` bestaan daar niet en de file wordt dan als kapot
+# workflow in de Actions-UI gezet. De band met de CI zit aan de andere kant:
+# playwright.yml triggert op `pull_request` en op `dependabot` (zie daar).
+

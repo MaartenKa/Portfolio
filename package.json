@@ -22,16 +22,19 @@
     "test_list_tests": "npx playwright test --list",
     "test_codegen": "playwright codegen"
   },
+  "engines": {
+    "node": ">=24.8.0 <25"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
-    "@playwright/test": "^1.62.1",
-    "@types/node": "^24.13.3",
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^24.19.2",
     "eslint": "^9.39.5",
     "eslint-plugin-playwright": "^2.12.2",
     "globals": "^17.14.0",
     "html-validate": "^10.0.0",
     "http-server": "^14.1.1",
     "typescript": "^5.9.0",
-    "typescript-eslint": "^8.72.1"
+    "typescript-eslint": "^8.72.2"
   }
 }

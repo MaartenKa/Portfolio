@@ -111,6 +111,7 @@ Schema's, velden en het productiebewijs per schakel:
 | `Project-documentation/CI-PLAYWRIGHT-HISTORY.md` | Technische CI-spec: schema's, CI-stappen, verificatie |
 | `Project-documentation/CI-OVERVIEW.md`         | CI/CD in gewoon taalgebruik + bestandsgids |
 | `Project-documentation/PLAN-CI-HISTORY-TESTS.md` | Testsoort van de CI-history tests + roadmap |
+| `Project-documentation/PLAN-DEPENDENCY-UPGRADES.md` | Welke versies verouderd zijn (bron van de CI-warnings) + upgrade-reeks |
 | `AGENTS.md`                                    | Welke documentatie relevant is bij een nieuwe taak |
 
 ## Bekende beperkingen (eerlijk benoemd)
