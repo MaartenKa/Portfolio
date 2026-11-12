@@ -16,7 +16,7 @@ site, de testnamen en de documentatie.
 | ----------------- | ------------------------------------------------------------------ |
 | Website           | Statisch HTML/CSS in `docs/` (10 pagina's), GitHub Pages           |
 | Site-JS           | TypeScript: `src/ts/main.ts` → gebouwd naar `docs/js/ts`           |
-| Testframework     | Playwright (`@playwright/test` v1.62) met Page Object Model        |
+| Testframework     | Playwright (`@playwright/test` v1.65) met Page Object Model        |
 | Taal tests        | TypeScript, strict mode                                            |
 | Browser           | Chromium (Desktop Chrome)                                          |
 | Testomgeving      | Standaard: live GitHub Pages; lokaal: `playwright.local.config.ts` |
@@ -32,7 +32,7 @@ tsconfig.json                # TS-config (strict, noEmit → type-check only)
 tsconfig.site.json           # site-JS build → docs/js/ts
 playwright.config.ts         # standaard-suite: draait tegen de live site
 playwright.local.config.ts   # hulpm-config: zelfde suite tegen docs/ (poort 8080)
-eslint.config.mjs            # ESLint 9 flat config
+eslint.config.mjs            # ESLint 10 flat config
 .htmlvalidate.json           # html-validate regels voor de site-pagina's
 docs/                        # de statische website (site-root op GitHub Pages)
   data/playwright-history.json  # CI-history data voor automation.html
@@ -55,6 +55,9 @@ AGENTS.md                    # welke documentatie relevant is
 
 ## Aan de slag
 
+Vereist Node.js **>= 24.8** (zie `engines.node` in `package.json`); de CI gebruikt
+dezelfde grens via `node-version-file: package.json`.
+
 ```bash
 npm ci                        # dependencies, exact uit package-lock.json
 npx playwright install        # browsers voor lokale runs
@@ -75,7 +78,7 @@ heeft.
 | Commando                | Betekenis                                                       |
 | ----------------------- | ------------------------------------------------------------- |
 | `npm run typecheck`     | `tsc --noEmit` — TypeScript strict, zonder output             |
-| `npm run lint`          | `eslint . --max-warnings=4` — ESLint 9 incl. `eslint-plugin-playwright` |
+| `npm run lint`          | `eslint . --max-warnings=0` — ESLint 10 incl. `eslint-plugin-playwright` |
 | `npm run validate:html` | `html-validate "docs/**/*.html"` (testcase HTML-01)           |
 | `npm run check`         | alle drie achter elkaar                                       |
 

@@ -20,7 +20,7 @@ network mocking, CI-ready configuratie).
 
 | Onderdeel              | Technologie                                                  |
 | ---------------------- | ------------------------------------------------------------ |
-| Testframework          | Playwright (`@playwright/test` v1.62.x)                      |
+| Testframework          | Playwright (`@playwright/test` v1.65.x)                      |
 | Taal (tests + site-JS) | TypeScript (strict mode)                                     |
 | Website                | Statisch HTML/CSS + klein TS-module                          |
 | Testomgeving           | Live GitHub Pages (`https://maartenka.github.io/Portfolio/`) |
@@ -229,7 +229,7 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 | ------------------------- | --------------------------------------------------------- |
 | `npm run build`           | site-TS → `docs/js/ts` **&&** type-check alle TS (noEmit) |
 | `npm run typecheck`       | `tsc --noEmit` — type-check zonder output                 |
-| `npm run lint`            | ESLint 9 (`eslint.config.mjs`), incl. playwright-plugin   |
+| `npm run lint`            | ESLint 10 (`eslint.config.mjs`), incl. playwright-plugin  |
 | `npm run lint:fix`        | ESLint met automatische fixes                             |
 | `npm run validate:html`   | `html-validate "docs/*.html"` (testcase HTML-01)          |
 | `npm run check`           | typecheck + lint + html-validate, in één keer             |
@@ -348,7 +348,7 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   `docs/curriculum.html` (testcase HTML-01) is opgeruimd naar `&amp;`, en de
   validering draait als poort vóór de tests in `playwright.yml`.
 
-- **Lint:** `npm run lint` (ESLint 9, flat config `eslint.config.mjs`). De
+- **Lint:** `npm run lint` (ESLint 10, flat config `eslint.config.mjs`). De
   extensie `.mjs` is bewust: `package.json` heeft geen `"type": "module"`, dus
   een `eslint.config.js` wordt door ESLint als CommonJS gelezen en de
   `import`-regel dus een syntaxfout wordt. De config dekt
@@ -361,7 +361,7 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   (`getByRole` op `Hoofdnavigatie`, `Intro` en `contentinfo`) en `mobile.page.ts`
   gebruikt `getByTestId("nav-links")`, ondersteund door `data-testid="nav-links"`
   in de navigatielijst van alle 10 pagina's. `npm run lint` draait met
-  `--max-warnings=4`: de poort faalt op errors én op meer dan 4 warnings.
+  `--max-warnings=0`: de poort faalt op errors én op elke warning.
 
 - **Indexatie-besluit (open):** `noindex, nofollow` + `docs/robots.txt`
   (`Disallow: /`) staan bewust; op GitHub Pages wordt `robots.txt` op

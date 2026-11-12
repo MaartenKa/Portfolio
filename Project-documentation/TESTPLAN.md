@@ -428,7 +428,7 @@ bewust géén tweede workflow). De poorten staan vóór de browserinstall:
 steps:
   - run: npm ci
   - run: npm run typecheck # tsc --noEmit
-  - run: npm run lint # ESLint 9, eslint-plugin-playwright
+  - run: npm run lint # ESLint 10, eslint-plugin-playwright
   - run: npm run validate:html # HTML-01: structuur van de site-pagina's
   - run: npx playwright install --with-deps
   - run: npm run test # suite (1 worker in CI, 2 retries)
@@ -450,8 +450,8 @@ met een eigen concurrency-groep, zodat de nightly-history-keten (één writer op
 
 - Statische site lokaal/CI serveerbaar op de geconfigureerde `baseURL`.
 - Type-check en lint schoon via de CI-poorten: `npm run typecheck` (`tsc --noEmit`) en
-  `npm run lint` (`eslint . --max-warnings=4`): de poort faalt op errors én op meer dan
-  4 warnings. De vroegere vier `no-raw-locators`-warnings zijn opgelost — `home.page.ts`
+  `npm run lint` (`eslint . --max-warnings=0`): de poort faalt op errors én op elke
+  warning. De vroegere vier `no-raw-locators`-warnings zijn opgelost — `home.page.ts`
   asserts semantisch via `getByRole` en `mobile.page.ts` via `getByTestId("nav-links")`,
   met `data-testid="nav-links"` in de navigatielijst van alle 10 pagina's (PLAYWRIGHT §8).
 - HTML-validiteit schoon: `npm run validate:html` → 0 errors op alle 10 pagina's (HTML-01).

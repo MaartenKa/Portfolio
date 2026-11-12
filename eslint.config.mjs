@@ -1,4 +1,4 @@
-// Portfolio / eslint.config.mjs — ESLint 9 flat config
+// Portfolio / eslint.config.mjs — ESLint 10 flat config
 //
 // Dekt: src/**, playwright/**, beide playwright-configs en scripts/**.
 // `docs/**` blijft buiten de lint: docs/js/ts/main.js is het gebouwde resultaat
@@ -97,8 +97,8 @@ export default tseslint.config(
       "playwright/no-hooks": "off",
       // Sinds de testid-markup (data-testid="nav-links") en de semantische
       // structuur-locators in home.page.ts zijn er geen raw locators meer in de
-      // page objects, dus de regel staat op error. De `--max-warnings=4`-drempel in
-      // `npm run lint` beschermt daarnaast de 0-warnings-basislijn.
+      // page objects, dus de regel staat op error. De `--max-warnings=0`-drempel in
+      // `npm run lint` maakt de 0-warnings-basislijn een harde poort.
       "playwright/no-raw-locators": "error",
     },
   },

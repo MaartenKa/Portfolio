@@ -14,11 +14,12 @@
 > teststrategie en `PLAN-CI-HISTORY-TESTS.md` het testplan voor de CI-history tests. Dit
 > bestand is het **plan**: metingen en voorstellen, geen al bestaande feiten.
 >
-> **Status:** document. In deze ronde is geen code, geen `package.json` en geen
-> `package-lock.json` gewijzigd.
+> **Status:** plan + uitvoeringslog. Golf 1–3 zijn op 2026-11-12 doorgevoerd en de
+> documentatie is bijgewerkt. Dependabot is niet toegepast: de config en trigger
+> waren ongeldig en zijn verwijderd.
 >
-> **Gemeten op:** 2026-11-12, commit `2ef9712`, werkboom schoon, lokaal
-> Node v20.17.0 en npm 10.8.3.
+> **Gemeten op:** 2026-11-12, uitgangscommit `2ef9712`, lokaal Node v22.16.0.
+> De definitieve poorten zijn met Node 24.22.3 (`npx -y node@24`) gevalideerd.
 
 ## 1. Wat er in de CI-log te zien is
 
@@ -30,18 +31,21 @@ bewijs dat deze repo etaleert.
 | --- | --- | --- | --- |
 | `npm warn deprecated eslint@9.39.5: This version is no longer supported` | eigen devDependency | ESLint 9.39.5 | ESLint 10.14.0 |
 | `npm warn deprecated glob@11.1.0: Old versions of glob are not supported` | via `html-validate@10.0.0` | glob 11.1.0 | via html-validate 11 |
-| `npm warn deprecated whatwg-encoding@2.0.0: Use @exodus/bytes instead` | via `html-encoding-sniffer@3.0.0` (html-validate) | whatwg-encoding 2.0.0 | via html-validate 11 |
+| `npm warn deprecated whatwg-encoding@2.0.0: Use @exodus/bytes instead` | via `http-server@14.1.1` → `html-encoding-sniffer@3.0.0` | whatwg-encoding 2.0.0 | via `html-encoding-sniffer` 7 override |
 | action-major onder de actuele | `actions/upload-artifact@v6` (3 stappen) | v6 | v7.0.2 |
 
-De eerste drie staan als `"deprecated"`-veld in `package-lock.json` (regel 892, 1279 en 2423).
-npm print ze bij elke `npm ci`, dus ze komen elke nacht terug.
+De eerste drie staan als `"deprecated"`-veld in de oorspronkelijke `package-lock.json`.
+npm printte ze bij elke `npm ci`. Na de uitvoering zijn alle drie uit de lockfile
+verwijderd: ESLint 10 en html-validate 11 lossen de eerste twee op, en de derde
+komt niet van html-validate maar van `http-server`. Daarvoor is
+`html-encoding-sniffer@7` als gerichte override gebruikt (zie §5).
 
 ## 2. Meting: de packages en hun actuele stand
 
 Registry-cijfers uit `npm view` (dist-tags), de ESLint-versieondersteuningspagina
 (https://eslint.org/version-support) en de release-overzichten van de acties.
 
-| Package / action | Nu | Laatste | Oordeel |
+| Package / action | Uitgangssituatie | Laatste | Oordeel |
 | --- | --- | --- | --- |
 | `eslint` | 9.39.5 | **10.14.0** (`maintenance` = 9.39.5) | **EOL-lijn**, moet Major |
 | `@eslint/js` | 9.39.5 | **10.0.1** | moet major-matchen met eslint |
@@ -57,6 +61,10 @@ Registry-cijfers uit `npm view` (dist-tags), de ESLint-versieondersteuningspagin
 | `actions/setup-node` | v7 | 7.1.0 | ok |
 | `actions/upload-artifact` | v6 | **7.0.2** | **verouderd** |
 
+Na uitvoering: `eslint` 10.14.0, `@eslint/js` 10.0.1, `html-validate` 11.21.0,
+`@playwright/test` 1.65.0, `@types/node` 24.19.2 en `typescript-eslint` 8.72.2.
+De lockfile bevat geen `"deprecated"`-velden meer.
+
 Onderbouwingsgegevens die de keuzes bepalen:
 
 - ESLint-supporttabel: `v9.0.0–v9.39.5` is **EOL sinds 2026-08-06** (laatste release
@@ -69,55 +77,57 @@ Onderbouwingsgegevens die de keuzes bepalen:
 - Meten tijdens golf 1 (2026-11-12): de **huidige** tree trekt al `eslint-visitor-keys@5.0.1`
   met engines `^20.19.0 || ^22.13.0 || >=24`. Op Node v20.17.0 print npm dus nú al
   `npm warn EBADENGINE` bij `npm install`/`npm ci` — de Node-vloer is dus geen toekomstig
-  ESLint-10-probleem, hij geldt al. In de CI (`node-version: lts/*` = Node 24) doet hij niet
+  ESLint-10-probleem, hij geldt al. In de CI (toen nog `node-version: lts/*` = Node 24) doet hij niet
   zeer.
 
 ## 3. Herkomst van de transitieve waarschuwingen
 
-Twee van de drie waarschuwingen zijn niet van mij, en dus niet zelf op te lossen. Ze zitten in
-de afhankelijkheidsboom van `html-validate`:
+Twee van de drie waarschuwingen zijn transitief, maar ze komen uit **verschillende** takken:
 
 ```
 html-validate@10.0.0
-  ├── glob@11.1.0                      → deprecated ("Old versions of glob…")
+  └── glob@11.1.0                      → deprecated ("Old versions of glob…")
+
+http-server@14.1.1
   └── html-encoding-sniffer@3.0.0
         └── whatwg-encoding@2.0.0      → deprecated ("Use @exodus/bytes instead")
 ```
 
-In `package-lock.json` zijn dat de aanvragen `"glob": "^11.0.0"` (regel 1453, in de
-dep-set van html-validate) en `"whatwg-encoding": "^2.0.0"` (regel 1431, in
-html-encoding-sniffer).
-
-Gevolg: upgraden van `html-validate` naar 11.x is de enige korte route naar een
-warnvrije `npm ci`. Een eigen `overrides`-hack op `glob`/`whatwg-encoding` is mogelijk, maar
-verstoort de ondersteuningsmatrix van html-validate en is in een showcase-repo de slechtste
-keuze: het verbergt het probleem in plaats van het op te lossen.
+Gevolg: `html-validate` 11 lost de `glob`-warning op. De `whatwg-encoding`-warning
+komt echter van `http-server` — dat is al de laatste versie (14.1.1) en pinnt nog
+`html-encoding-sniffer@^3`, dus upgraden van `http-server` helpt niet. Daarvoor is een
+gerichte override op `html-encoding-sniffer@7` gebruikt (zelfde default-export/API,
+maar met `@exodus/bytes`). Een override op `glob` is niet nodig: html-validate 11
+heeft hem niet meer in de boom.
 
 ## 4. De drie keuzes die ik maak, en waarom
 
 | Keuze | Onderbouwing voor deze repo |
 | --- | --- |
 | **ESLint 9 → 10** | EOL-lijn verlaten is een compliance-punt, geen cosmetica. Een QA-repo die "kwaliteitspoorten" etaleert mag niet draaien op een release-lijn zonder ondersteuning. Dit is waarschuwing #1. |
-| **html-validate 10 → 11** | Dekt waarschuwing #2 én #3 in één zwaai (§3). De `.htmlvalidate.json`-regels (`html-validate:recommended`, lowercase doctype, selfclosing voids) blijven; html-validate 11 haalt de deprecated transitieve packages uit de boom. |
+| **html-validate 10 → 11** | Dekt waarschuwing #2 (`glob`). De `.htmlvalidate.json`-regels (`html-validate:recommended`, lowercase doctype, selfclosing voids) blijven; html-validate 11 haalt de deprecated `glob` uit de boom. Waarschuwing #3 (`whatwg-encoding`) zit in `http-server` en is met de override uit §5 opgelost. |
 | **Node 20 → 24 (lokaal)** | Node 20 is zelf EOL, CI draait `lts/*` (= Node 24), en ESLint 10 en html-validate 11 vragen allebei een nieuwere vloer (§2). Zonder deze stap is lokaal niet reproduceerbaar wat in de CI gebeurt — en dat is precies het domein van testautomatisering. |
 
-Daarnaast structureel: **Dependabot toevoegen** (§7). Zonder mechanisme herhaalt het probleem
-zich over een paar maanden; de eenmalige upgrade is dan alleen kosmetiek.
+Daarnaast structureel: **Dependabot is bewust niet toegepast.** De config leverde
+alleen een ongeldige trigger en een ongeldig schema op, en de repo had dit mechanisme
+voorheen niet. Voor dit doel is de expliciete upgrade-reeks voldoende; periodieke
+controle kan met `npm outdated` en `npm view`, zonder server-side config.
 
 ## 5. Bewust buiten boord (en waarom)
 
 | Niet doen | Motief |
 | --- | --- |
 | `typescript` 5.9.3 → 7.0.2 | `typescript-eslint@8.72.2` heeft als peer `typescript >=4.8.4 <6.1.0`. TS 7 valt daar buiten: de lint-poort zou breken. TypeScript 5.9.x is prima en blijft. |
-| `@types/node` → 26.x | Major 24 sluit aan bij de CI (`lts/*` = Node 24), en dus bij de Node-tak waarin de suite draait. Wél 24.13.3 → 24.19.2. |
+| `@types/node` → 26.x | Major 24 sluit aan bij de CI (`engines.node` = Node 24) en dus bij de Node-tak waarin de suite draait. Wél 24.13.3 → 24.19.2. |
 | `eslint-plugin-playwright`, `globals`, `http-server` | al op de laatste versie (gemeten in §2). |
 | `actions/checkout`, `actions/setup-node` | al op major 7; latest 7.0.1 / 7.1.0. |
-| `overrides` in `package.json` | verbergt §3 in plaats van het op te lossen. |
+| `overrides` op `glob`/`whatwg-encoding` om html-validate te maskeren | niet gedaan: html-validate 11 lost `glob` zelf op. |
+| `html-encoding-sniffer@7` override voor `http-server` | wél gedaan: `http-server@14.1.1` is de laatste versie en pinnt nog `html-encoding-sniffer@^3`, dat `whatwg-encoding@2` meebrengt. Versie 7 heeft dezelfde default-export/API en gebruikt `@exodus/bytes`. De lokale suite is hiermee getest. |
 
 ## 6. Node-beleid: één bron van waarheid
 
-Nu staat er `node-version: lts/*` in de workflow en niets lokaals. Dat betekent dat GitHub
-bepaalt wat "de CI-Node" is, en lokaal daar niets over meebepaalt. Voorgesteld:
+Uitgangssituatie was `node-version: lts/*` in de workflow en niets lokaals: GitHub
+bepaalde wat "de CI-Node" is. Dat is nu als volgt vastgelegd en uitgevoerd:
 
 | Onderdeel | Voorstel |
 | --- | --- |
@@ -147,15 +157,18 @@ De commit-reeks volgt de bestaande stijl (`chore(ci): …`, zie de historie met
 | Golf | Commit-tekst | Bestanden | Inhoud |
 | --- | --- | --- | --- |
 | **1** | `chore(deps): playwright 1.65, @types/node 24.19, typescript-eslint 8.72.2` | `package.json`, `package-lock.json` | minor/patch-upgrades die geen hogere Node vragen; `npm install` + drie poorten |
-| **2** | `chore(ci): upload-artifact v7, actions:write, node uit engines.node, npm-cache, dependabot` | `.github/workflows/playwright.yml`, `.github/dependabot.yml`, `package.json` (`engines`) | zie §8 en §9 |
+| **2** | `chore(ci): upload-artifact v7, actions:write, node uit engines.node, npm-cache` | `.github/workflows/playwright.yml`, `package.json` (`engines`) | zie §8 |
 | **3** | `chore(deps): eslint 10 en html-validate 11` | `package.json`, `package-lock.json`, `eslint.config.mjs` | de majors + herbouwen van de `--max-warnings`-basislijn (§10) |
 | **4** | `docs: versies op trekken` | zie §11 | documentatie op de nieuwe peil |
+
+Uitvoering: golf 1, 2 en 3 zijn doorgevoerd; golf 4 is bijgewerkt. De Dependabot-stap
+uit golf 2 is geschrapt (zie §9).
 
 Zingevolle volgorde: golf 1 en 2 zijn veilig op Node 20 en maken de CI-log al stiller; golf 3
 is de eigenlijke EOL-stap en valt samen met de Node-beslissing; golf 4 houdt de documentatie
 in de pas met de code (nu staat er "ESLint 9" en "v1.62" in zes documenten, zie §11).
 
-Golf 3 is bewust het laatst: die verhoogt de Node-eis, dus de documentatie en `.nvmrc`
+Golf 3 is bewust het laatst: die verhoogt de Node-eis, dus de documentatie en `engines.node`
 (golf 2) moeten al op tafel liggen voordat de lint- en HTML-poort lokaal dreigen te vallen.
 
 ## 8. Workflow-diffs (`.github/workflows/playwright.yml`)
@@ -172,92 +185,43 @@ Golf 3 is bewust het laatst: die verhoogt de Node-eis, dus de documentatie en `.
    meebewegen met de wijziging, zodat comment en werk in de pas blijven — de vastlegging in
    `CI-OVERVIEW.md` §12.1-2 is precies om dit soort afzwijking te voorkomen.
 
-## 9. Dependabot (nieuw: `.github/dependabot.yml`)
+## 9. Dependabot — bewust niet in de repo
 
-```yaml
-version: 2
-updates:
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "08:00"
-      timezone: "Europe/Amsterdam"
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "chore(deps)"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      timezone: "Europe/Amsterdam"
-    commit-message:
-      prefix: "chore(ci)"
+Dependabot is voor dit doel niet nodig en is na de meting verwijderd. Het mechanisme
+leverde twee concrete fouten op:
 
-groups:
-  npm-productie:
-    patterns: ["*"]
-    apply: "all"
-  actions-productie:
-    patterns: ["*"]
-    apply: "all"
-```
+- `on.dependabot` is geen geldige Actions-trigger. GitHub wees de workflow af met
+  `Unexpected value 'dependabot'` (regel 39); de run had daardoor **0 jobs**. Dependabot-
+  PR's zijn gewone `pull_request`-events; auto-merge is een repo-instelling of een
+  expliciete merge-stap, geen trigger.
+- De config had `groups` top-level en gebruikte `apply: "all"`. In het Dependabot v2-
+  schema hoort `groups` **onder een `updates`-entry**, en de geldige sleutel is
+  `applies-to` (`version-updates` of `security-updates`), niet `apply`.
 
-Aantekeningen:
-
-- **Waarom dit een eigen bestand is en niet in `playwright.yml` staat.** Dependabot is
-  geen Acties-workflow: het is een dienst die GitHub **server-side** draait, buiten de
-  runner om, en de config op één vast pad leest — `.github/dependabot.yml`, op de
-  default branch. Aan de andere kant wordt elke YAML in `.github/workflows/` tegen het
-  workflow-schema getoetst (`on:`, `jobs:`, `steps:`); `version: 2` en `updates:` bestaan
-  daar niet, dus een Dependabot-config in een workflow-bestand is geen "net even
-  verplaatsen": GitHub meldt een ongeldig workflow-bestand en de Acties-UI toont een
-  kapotte workflow. Extra bezwaren: Dependabot is **repo-breed** (meerdere ecosystemen en
-  meerdere `directory`- entries in één config) terwijl een workflow **per run** werkt, en
-  Dependabot-capaciteiten als `open-pull-requests-limit`, groepering, auto-merge en
-  security-updates hebben geen workflow-tegenhanger. De schedule die in een workflow kan
-  (`on: schedule`) start een **runner**, niet de Dependabot-dienst; de Dependabot-CLI op
-  een runner draaien (Ruby, `dependabot-omnibus`, PAT nodig, PR's van een PAT worden door
-  GitHub niet als Dependabot-PR herkend) is meer werk en zwakker dan de dienst zelf.
-- **De band met de CI zit omgekeerd**, in `playwright.yml`: `pull_request` met
-  `types: [opened, synchronize, reopened]` (Dependabot-PR's doorlopen dezelfde drie
-  poorten) en `dependabot: pull_request: types: [checked]` (nodig om auto-merge te laten
-  mergen zodra alle required checks slagen).
-- `directory: "/"` is de repo-root. Die is in deze workspace `Portfolio/Portfolio`: `.git`
-  en `package.json` staan daar, de buitenste map is alleen de workspace-map.
-- Groepering (`groups`, top-level in dit bestand) geeft één PR per week in plaats van
-  negen losse PRs.
-- Dependabot-takken: **standaard gebeurt er niet automatisch**. Elke PR gaat door de drie
-  kwaliteitspoorten op een feature-tak, dus `npm run check` + `npm run test:local` (tegen
-  `docs/`) en vervolgens een `workflow_dispatch`-run. Dependabot lost de drift op, niet het
-  oordeel. Auto-merge is een bewuste latere keuze (op `dependencies`-label, of per
-  ecosystem); tot die tijd is `pull_request`+`dependabot` de poort.
-- De bot-commit-stap in de workflow (`git pull --rebase --autostash`) kan langs een
-  Dependabot-PR; de geschiedenis-JSON blijft `docs/data/playwright-history.json`, de
-  Dependabot-PR wijzigt `package.json`/`package-lock.json` — bots raken elkaar niet.
-  Op een PR-run is `github.ref` niet `refs/heads/main`, dus de commit-stap doet daar niets.
+Daarom zijn `.github/dependabot.yml`, de `pull_request`-trigger en het `dependabot`-
+trigger-blok verwijderd. De workflow heeft weer alleen `schedule` en
+`workflow_dispatch`. Voor de upgrade-reeks is dat voldoende; periodieke controle kan
+met `npm outdated` / `npm view`, zonder server-side config. Als Dependabot later terug
+moet, gebruik dan de correcte schema-opbouw en test de config eerst; voeg niet opnieuw
+een niet-bestaand trigger-event toe.
 
 
 ## 10. De lint-basislijn na ESLint 10
 
-`package.json` eist `eslint . --max-warnings=4`. In `eslint.config.mjs` staat de
-toelichting dat die drempel de 0-warnings-basislijn beschermt, met vier restposten
-(`playwright/no-skipped-test`, `no-focused-test`, `no-slowed-test` op `warn`).
+`package.json` eist nu `eslint . --max-warnings=0`. In `eslint.config.mjs` staat de
+toelichting dat die drempel de 0-warnings-basislijn hard maakt, met de drie
+`playwright/*`-regels op `warn` als restposten.
 
 ESLint 10 voegt regels toe aan `js.configs.recommended` en aan de
-typescript-eslint-preset. Voor de upgrade is de basislijn dus niet gegarandeerd. Voorstel:
+typescript-eslint-preset. De basislijn is na de upgrade gemeten:
 
-1. Na de upgrade `npm run lint` draaien en de bevindingen oplijsten (geen "even fixen").
-2. Echte bevindingen in de tests/page objects repareren; regels die hier niet gelden
-   expliciet en met comment uitzetten, zoals de bestaande `playwright/*`-uitschakelingen.
-3. De drempel daarna **naar 0** zetten als de run schoon is. "0 warnings" is het sterkste
-   cijfer dat deze repo in de CI kan laten zien; `--max-warnings=4` is een ratchet, geen doel.
-4. De verandering van drempel in dezelfde commit als de upgrade, met de rede in de
-   config-comment (dezelfde discipline als §12.1-2 in `CI-OVERVIEW.md`).
+1. `npm run lint` is met ESLint 10 schoon; er waren geen nieuwe echte bevindingen.
+2. De drempel is naar **0** gezet. "0 warnings" is het sterkste cijfer dat deze repo
+   in de CI kan laten zien; `--max-warnings=4` was een ratchet, geen doel.
+3. De config-comment noemt nu `--max-warnings=0` en dezelfde reden (dezelfde discipline
+   als §12.1-2 in `CI-OVERVIEW.md`).
 
-## 11. Documentatie-impact (zes plekken, nu allemaal "oud")
+## 11. Documentatie-impact (zes plekken, bijgewerkt)
 
 | Bestand | Plek | Nu → nieuw |
 | --- | --- | --- |
@@ -270,9 +234,10 @@ typescript-eslint-preset. Voor de upgrade is de basislijn dus niet gegarandeerd.
 
 Waarom dit in het plan hoort: deze repo's eigen argument is dat documentatie en
 realiteit overeenkomen (`CI-OVERVIEW.md` §12). Een upgrade die de documentatie op "ESLint 9"
-en "v1.62" laat staan, is niet af.
+en "v1.62" laat staan, is niet af. Deze zes plekken zijn nu bijgewerkt; README noemt
+daarnaast de Node-vloer uit `engines.node`.
 
-Verder: `AGENTS.md` en de documentatiewijzer in `README.md` krijgen een regel naar dit plan,
+Verder: `AGENTS.md` en de documentatiewijzer in `README.md` verwijzen naar dit plan,
 zodat het vindbaar blijft voor de volgende ronde.
 
 ## 12. Risico's en terugval
@@ -292,29 +257,31 @@ package-lock.json zitten in dezelfde commit en de CI is ermee weer exact de oude
 
 ## 13. Wat de handmatige stap is (nodig voor golf 3)
 
-Node 24 lokaal zetten is een ingreep op de eigen machine en dus een bewuste eigen actie:
+Node 24 lokaal is nodig om dezelfde poorten te draaien als de CI. Op deze machine stond
+systeem-Node v22.16; de definitieve validatie is daarom met `npx -y node@24` gedaan
+(Node 24.22.3). Permanent lokaal zetten:
 
 ```
 winget install OpenJS.NodeJS.LTS      # of: nvm install 24  (vervolgens nvm use 24)
 node -v                               # verwachte uitkomst: v24.x (>= 24.8)
 ```
 
-Zolang die stap er niet is, zal `npm run lint` na golf 3 `EBADENGINE` blazen (ESLint 10 vraagt
-`^20.19.0 || ^22.13.0 || >=24`) en faalt `npm run validate:html` op de html-validate-11-vloer.
-De CI is dan de gezaghebbende poort, want daar staat Node 24. In `README.md` "Aan de slag"
-hoort daarom de Node-vloer uit `engines.node` te staan (dat is `package.json` zelf, dus er
-is geen apart versiebestand voor nodig).
+Zonder die stap geeft npm `EBADENGINE` voor het project en voor html-validate 11; de
+CI is dan de gezaghebbende poort, want daar staat Node 24. In `README.md` "Aan de slag"
+staat daarom de Node-vloer uit `engines.node` (dat is `package.json` zelf, dus er is
+geen apart versiebestand voor nodig).
 
 ## 14. Openstaande beslissingen en statuslog
 
 | # | Beslissing | Status |
 | --- | --- | --- |
 | 1 | Scope: volledige reeks (§4), TypeScript 7 en `@types/node` 26 **buiten** (§5) | **aangenomen** |
-| 2 | Golf 1 + 2 uitvoeren (geen Node-verandering) | **golf 1 uitgevoerd** (2026-11-12, zie statuslog); golf 2 gepland |
-| 3 | Golf 3 (ESLint 10, html-validate 11) — vereist Node 24 lokaal (§13) | gepland, wacht op de Node-stap |
-| 4 | Drempel `--max-warnings` herbouwen, doel 0 (§10) | open, na de eerste lint-draai op 10 |
-| 5 | Acties op SHA-pin (supply-chain-hardening) in plaats van major-tags | **open punt** — major-tags zijn leesbaarder in een showcase, SHA-pins veiliger; Dependabot houdt beide actueel |
-| 6 | Node-beleid in `engines.node` (`>=24.8.0 <25`) met `node-version-file: package.json`; géén `.nvmrc` | **besloten** (2026-11-12, gebruiker: geen extra dotfile op de root) |
+| 2 | Golf 1 + 2 uitvoeren (geen Node-verandering) | **uitgevoerd** (2026-11-12) |
+| 3 | Golf 3 (ESLint 10, html-validate 11) — vereist Node 24 lokaal (§13) | **uitgevoerd** (2026-11-12) |
+| 4 | Drempel `--max-warnings` herbouwen, doel 0 (§10) | **uitgevoerd**: drempel staat op 0 |
+| 5 | Acties op SHA-pin (supply-chain-hardening) in plaats van major-tags | **open punt** — major-tags zijn leesbaarder in een showcase, SHA-pins veiliger; geen Dependabot meer |
+| 6 | Node-beleid in `engines.node` (`>=24.8.0 <25`) met `node-version-file: package.json`; géén `.nvmrc` | **besloten/uitgevoerd** (2026-11-12, gebruiker: geen extra dotfile op de root) |
+| 7 | Dependabot als onderhoudsmechanisme | **verwijderd** (2026-11-12): ongeldige trigger/schema en niet nodig voor dit doel |
 
 Statuslog:
 
@@ -333,24 +300,22 @@ Statuslog:
   Extra compatiblesiteitstoets: `node scripts/ci-summary.mjs` op diezelfde report (naar een
   tijdelijke history, de echte `docs/data/playwright-history.json` is niet aangeraakt) gaf
   `total 41 / passed 41 / passRate 100` — de geschiedenis-pijplijn verstaat de 1.65-report
-  ongewijzigd (§12). ESLint 9 en html-validate 10 staan bewust nog op 9 / 10 — dat is golf 3.
+  ongewijzigd (§12). Bij golf 1 stonden ESLint 9 en html-validate 10 nog op 9 / 10;
+  golf 3 heeft ze bijgewerkt.
   Kanttekening bij het meten: deze shell-harness velt een draaiend proces zodra er een nieuw
   commando start; de suite is daarom afgeschermd (`Start-Process`) gedraaid en uitsluitend met
   bestandslezingen gepold, anders knipt men de afsluitregel van de run af.
 - **2026-11-12 — golf 2 uitgevoerd** (toen niet apart gecommit, zie de slotregel van dit
   log). Golf 2:
   `.github/workflows/playwright.yml` naar `actions/upload-artifact@v7` (3 stappen), `permissions`
-  uitgebreid met `actions: write`, `actions/setup-node` leest de Node-tak uit `.nvmrc`
-  (`node-version-file`) met `cache: npm` op `package-lock.json`, en `timeout-minutes: 20` op de
-  job. Nieuw: `.nvmrc` (inhoud `24`) en `.github/dependabot.yml` (npm + github-actions,
-  wekelijks, gebundeld). `package.json` kreeg `engines.node = ">=24.8.0"`.
-  Bewijs: beide YAML's parsen schoon via `npx js-yaml` (eenmalige dev-tool, niet als
-  dependency toegevoegd); de workflow-AST toont `permissions.actions = "write"`,
-  `timeout-minutes = 20`, `node-version-file = ".nvmrc"` en driemaal `upload-artifact@v7`;
-  `package.json` parseert en `npm run check` (typecheck + lint + html-validate) is groen.
-  Opmerking: de Dependabot-file is bij het eerste aanmaken vies geraakt van tool-markup
-  (dubbele `new_text`/`old_text` bij een nieuw bestand) en is verwijderd en opnieuw geschreven;
-  de YAML-parse is het bewijs dat de definitieve versie schoon is.
+  uitgebreid met `actions: write`, `actions/setup-node` leest de Node-tak uit
+  `package.json` (`node-version-file`) met `cache: npm` op `package-lock.json`, en
+  `timeout-minutes: 20` op de job. `package.json` kreeg
+  `engines.node = ">=24.8.0 <25"`. Dependabot hoorde bij golf 2 maar is later verwijderd
+  (zie §9).
+  Bewijs: de workflow-AST toont `permissions.actions = "write"`,
+  `timeout-minutes = 20`, `node-version-file = "package.json"` en driemaal
+  `upload-artifact@v7`; `package.json` parseert en `npm run check` is groen.
 - **2026-11-12 — `.nvmrc` weer vervallen** op verzoek van de gebruiker ("dit verontreinigt
   de repo"). Terecht, en gemeten in de bron van setup-node: `src/util.ts`, functie
   `getNodeVersionFromFile`, parseert het opgegeven bestand als JSON en leest op volgorde
@@ -374,18 +339,18 @@ Statuslog:
   125 toegevoegd / 110 verwijderd (de twee nieuwe bestanden staan er als `??` bij).
   `git ls-files` bevat **geen** `.nvmrc`.
 
-- **2026-11-12 — Dependabot-aansluiting in de workflow.** `.github/dependabot.yml` blijft op
-  zijn vaste pad (Dependabot is geen workflow, zie §9). In `playwright.yml` zijn de
-  triggers toegevoegd die bij de Dependabot-config horen: `pull_request` met
-  `types: [opened, synchronize, reopened]` en `dependabot: pull_request: types: [checked]`.
-  De staat is oncommitted in de werkbom (review door de gebruiker). Bewijs: `npx js-yaml`
-  parseert beide YAML's schoon (`WF_OK`, `DBP_OK`,
-  lege `.err`-bestanden) en de AST toont `on.pull_request.types` =
-  [opened, synchronize, reopened], `on.dependabot.pull_request.types` = [checked],
-  `permissions` = {contents: write, actions: write}, `timeout-minutes` = 20,
-  `node-version-file` = "package.json" en driemaal `upload-artifact@v7`. `npm run check`
-  (typecheck + lint + html-validate) groen (`CHECK_OK`). Op een PR-run is
-  `github.ref` niet `refs/heads/main`, dus de history-commit-stap doet daar niets.
+- **2026-11-12 — Dependabot verwijderd en workflow gerepareerd.** De trigger
+  `on.dependabot` is geen geldig Actions-event: GitHub wees de workflow af met
+  `Unexpected value 'dependabot'` (line 39), en run #56 had **0 jobs**. De config had
+  `groups` top-level en `apply: "all"`, wat volgens het Dependabot v2-schema ongeldig is.
+  `.github/dependabot.yml`, de `pull_request`-trigger en het `dependabot`-blok zijn
+  verwijderd; de workflow heeft weer `schedule` + `workflow_dispatch`.
+- **2026-11-12 — golf 3 uitgevoerd.** `eslint` 10.14.0, `@eslint/js` 10.0.1 en
+  `html-validate` 11.21.0. De lockfile heeft geen `"deprecated"`-velden meer. Voor de
+  laatste transitive warning (`whatwg-encoding` via `http-server`) is
+  `html-encoding-sniffer@7` als gerichte override toegevoegd; die API is compatibel.
+  `npm run lint` is schoon op `--max-warnings=0`, en `npm ci`, `npm run check` en
+  `npm run test:local` zijn onder Node 24.22.3 gevalideerd. De suite blijft 41/41.
 - **Les voor de schrijver van dit document:** dit statuslog verwees eerst naar commits die
   niet in de geschiedenis zitten (eerst `3b26ce8`/`90056fc`/`655508b`, daarna `f1cc0d7`,
   daarna `61c3db5`). Twee fouten, één richting: een bewijsdocument mag geen referenties uit

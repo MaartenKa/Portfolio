@@ -27,19 +27,6 @@ on:
   # Handmatig starten via GitHub Actions.
   workflow_dispatch:
 
-  # Dependabot-PR's (config: .github/dependabot.yml) moeten door dezelfde
-  # poorten: een dependency-upgrade die de suite breekt mag niet wegmergeen.
-  # Dependabot opent PR's als normaal pull_request-event.
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened]
-
-  # Auto-merge op Dependabot-PR's. GitHub mergt zo'n PR pas wanneer de
-  # Dependabot-checks melden dat alle required checks slagen; dat is dit event.
-  dependabot:
-    pull_request:
-      types: [checked]
-
 permissions:
   contents: write
   # upload-artifact v7 heeft het `actions`-scope nodig. Scopes die hier niet

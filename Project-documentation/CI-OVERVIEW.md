@@ -59,13 +59,14 @@ bijhouden" én "site publiceren".
 
 1. **Trigger** — de wekker (cron) of jij via `workflow_dispatch`.
 2. **Repo pakken** — `actions/checkout@v7`: een verse kopie op een lege machine.
-3. **Node.js neerzetten** — `actions/setup-node@v7` met `node-version: lts/*`.
+3. **Node.js neerzetten** — `actions/setup-node@v7` met
+   `node-version-file: package.json`: de range uit `engines.node` (>=24.8, <25).
 4. **Dependencies** — `npm ci`: exact uit `package-lock.json`, geen verrassingen.
 5. **Type-check** — `npm run typecheck` (`tsc --noEmit`): tests én site-JS in één
   poort, vóórdat er een browser wordt gedownload.
-6. **Lint** — `npm run lint` (ESLint 9, flat config `eslint.config.mjs`,
-   inclusief `eslint-plugin-playwright`, met `--max-warnings=4` als
-   warning-basislijn).
+6. **Lint** — `npm run lint` (ESLint 10, flat config `eslint.config.mjs`,
+   inclusief `eslint-plugin-playwright`, met `--max-warnings=0`: elke
+   warning is een rode poort).
 7. **HTML-validate** — `npm run validate:html` (`docs/**/*.html`): de structuur
    van alle 10 site-pagina's (testcase HTML-01).
 8. **Browser** — `npx playwright install --with-deps`: Chromium plus de
@@ -104,7 +105,7 @@ Paden zijn relatief aan de repo-root (`Portfolio/`).
 | `tsconfig.site.json` | Bouwt uitsluitend `src/ts/` naar `docs/js/ts` | Dit is de build van de site-JS die de JSON rendert | `outDir` veranderen → `automation.html` mist zijn JS |
 | `.gitignore` | Negeert `playwright/playwright-report/`, `playwright/test-results/`, `node_modules/`, `dist/`, `.env*` | Houdt de rauwe rapporten uit de repo; `docs/data/` blijft wél getrackt | `docs/data/` per ongeluk negeren → de site krijgt een 404 op de fetch |
 | `.htmlvalidate.json` | HTML-regels (`html-validate:recommended`, lowercase doctype, selfclosing voids) | Bewaakt de HTML van `docs/*.html`, dus ook de `data-testid`-ankers van de CI-sectie | Regels versoepelen → kapotte HTML die de UI-tests niet vangen |
-| `eslint.config.mjs` | ESLint 9 flat config: `src/`, `playwright/` en `scripts/`, met de Playwright-plugin op de testbestanden | `npm run lint` is een van de drie poorten vóór de tests in de workflow | Config weglaten of rules uitzetten → de lint-poort in CI faalt of maskeert defects |
+| `eslint.config.mjs` | ESLint 10 flat config: `src/`, `playwright/` en `scripts/`, met de Playwright-plugin op de testbestanden | `npm run lint` is een van de drie poorten vóór de tests in de workflow | Config weglaten of rules uitzetten → de lint-poort in CI faalt of maskeert defects |
 | `playwright.local.config.ts` | Lokale override van de speelfile-config: neemt `playwright.config.ts` over en zet `baseURL` op `http://127.0.0.1:8080/` | Draait de suite tegen de lokale `docs/`-build, wanneer de live site de nieuwe markup nog niet bevat | In CI gebruiken: dan test je lokaal in plaats van live |
 | `AGENTS.md` | Wijsplaatje naar de relevante documentatie | Verwijst naar de docs in `Project-documentation/` | — |
 
@@ -405,7 +406,7 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    hulpm-config in de repo: `playwright.local.config.ts` (`npm run test:local`,
    poort 8080).
 8. **Kwaliteitspoorten draaien vóór de tests in de workflow.** `npm run typecheck`
-   (`tsc --noEmit`), `npm run lint` (ESLint 9 met `eslint.config.mjs`) en
+   (`tsc --noEmit`), `npm run lint` (ESLint 10 met `eslint.config.mjs`) en
    `npm run validate:html` (alle 10 pagina's slagen). Ze staan vóór de
    browserinstall, zodat een rode poort de run direct en goedkoop stop.
    Zie `TESTPLAN.md` §11 (entry-criteria) en §10 fase 6.

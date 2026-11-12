@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc --project tsconfig.site.json && tsc",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . --max-warnings=4",
+    "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
     "validate:html": "html-validate \"docs/**/*.html\"",
     "check": "npm run typecheck && npm run lint && npm run validate:html",
@@ -25,14 +25,17 @@
   "engines": {
     "node": ">=24.8.0 <25"
   },
+  "overrides": {
+    "html-encoding-sniffer": "^7.0.0"
+  },
   "devDependencies": {
-    "@eslint/js": "^9.39.5",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.0",
     "@types/node": "^24.19.2",
-    "eslint": "^9.39.5",
+    "eslint": "^10.14.0",
     "eslint-plugin-playwright": "^2.12.2",
     "globals": "^17.14.0",
-    "html-validate": "^10.0.0",
+    "html-validate": "^11.21.0",
     "http-server": "^14.1.1",
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.72.2"
