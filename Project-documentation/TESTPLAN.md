@@ -1,13 +1,13 @@
 # Testplan & Teststrategie — Portfolio Website
 
-| Veld | Waarde |
-| --- | --- |
-| **Versie** | 1.2 — november 2026 |
-| **Status** | Actueel testplan; status per testcase staat in de matrixen (§7, §8) |
-| **Eigenaar** | QA Engineer (zie §13) |
+| Veld           | Waarde                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| **Versie**     | 1.2 — november 2026                                                                         |
+| **Status**     | Actueel testplan; status per testcase staat in de matrixen (§7, §8)                         |
+| **Eigenaar**   | QA Engineer (zie §13)                                                                       |
 | **Testobject** | Statische portfolio-site in `docs/` (10 HTML-bestanden) + Playwright-suite in `playwright/` |
-| **Testbasis** | §3.3 |
-| **Bewijs** | `npm run check` groen; `npx playwright test --list` = 41 tests in 5 spec-bestanden |
+| **Testbasis**  | §3.3                                                                                        |
+| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 41 tests in 5 spec-bestanden          |
 
 **Scope:** de statische portfolio-website in `docs/` — 9 contentpagina's plus de
 `404.html`-fallback (10 HTML-bestanden), het CSS-design-systeem, één klein
@@ -61,21 +61,21 @@ kader gebruikt om de scope te bepalen en prioriteiten te onderbouwen.
 
 ## 2. Testdoelstellingen
 
-| #   | Doelstelling                                                                                                               | Type                                |
-| --- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| G1  | Alle pagina's laden zonder kritieke fouten (HTTP 200, geen JS/console errors)                                              | Functioneel / Smoke                 |
-| G2  | Navigatie (navbar, footer, CTA's, cards) leidt naar de juiste pagina                                                       | Functioneel                         |
-| G3  | Contactformulier valideert correct en stuurt alleen geldige berichten                                                      | Functioneel                         |
-| G4  | Mobiele menu-toggle opent/sluit de navigatie, zet `aria-expanded`/`aria-label` correct en beheert focus/Escape/klik-buiten | Functioneel                         |
-| G5  | Website is responsive op desktop, tablet en mobiel                                                                         | Non-functieel (responsive)          |
-| G6  | Website is toegankelijk (WCAG 2.1 AA, keyboard-navigatie, ARIA)                                                            | Non-functieel (a11y)                |
-| G7  | SEO-basis is correct (titel, meta, lang, robots, unieke headings)                                                          | Non-functieel (SEO)                 |
-| G8  | Geen gebroken links of afbeeldingen (intern + extern)                                                                      | Non-functieel (content-integriteit) |
-| G9  | Visueel stabiel (geen onbedoelde design-regressies)                                                                        | Non-functieel (visual)              |
-| G10 | Prestaties blijven binnen acceptabele marges (static site)                                                                 | Non-functieel (performance)         |
-| G11 | Tests draaien deterministisch en reproduceerbaar in CI (parallel-draaibaar ontwerp; CI zelf draait met 1 worker)          | Proces                              |
-| G12 | Kwaliteitspoorten (typecheck, lint, html-validate) en de suite draaien geautomatiseerd in CI; een pre-deploy gate is **open beslispunt** | Proces (CI/CD)  |
-| G13 | De CI-history-sectie op `automation.html` toont de nieuwste run en gepoolde cijfers correct uit de history-JSON            | Functioneel (dashboard)             |
+| #   | Doelstelling                                                                                                                             | Type                                |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| G1  | Alle pagina's laden zonder kritieke fouten (HTTP 200, geen JS/console errors)                                                            | Functioneel / Smoke                 |
+| G2  | Navigatie (navbar, footer, CTA's, cards) leidt naar de juiste pagina                                                                     | Functioneel                         |
+| G3  | Contactformulier valideert correct en stuurt alleen geldige berichten                                                                    | Functioneel                         |
+| G4  | Mobiele menu-toggle opent/sluit de navigatie, zet `aria-expanded`/`aria-label` correct en beheert focus/Escape/klik-buiten               | Functioneel                         |
+| G5  | Website is responsive op desktop, tablet en mobiel                                                                                       | Non-functieel (responsive)          |
+| G6  | Website is toegankelijk (WCAG 2.1 AA, keyboard-navigatie, ARIA)                                                                          | Non-functieel (a11y)                |
+| G7  | SEO-basis is correct (titel, meta, lang, robots, unieke headings)                                                                        | Non-functieel (SEO)                 |
+| G8  | Geen gebroken links of afbeeldingen (intern + extern)                                                                                    | Non-functieel (content-integriteit) |
+| G9  | Visueel stabiel (geen onbedoelde design-regressies)                                                                                      | Non-functieel (visual)              |
+| G10 | Prestaties blijven binnen acceptabele marges (static site)                                                                               | Non-functieel (performance)         |
+| G11 | Tests draaien deterministisch en reproduceerbaar in CI (parallel-draaibaar ontwerp; CI zelf draait met 1 worker)                         | Proces                              |
+| G12 | Kwaliteitspoorten (typecheck, lint, html-validate) en de suite draaien geautomatiseerd in CI; een pre-deploy gate is **open beslispunt** | Proces (CI/CD)                      |
+| G13 | De CI-history-sectie op `automation.html` toont de nieuwste run en gepoolde cijfers correct uit de history-JSON                          | Functioneel (dashboard)             |
 
 ---
 
@@ -127,14 +127,14 @@ kader gebruikt om de scope te bepalen en prioriteiten te onderbouwen.
 
 **Testbasis (waar de tests uit zijn afgeleid):**
 
-| Bron | Wat het levert |
-| --- | --- |
-| `docs/*.html` + `docs/css/style.css` | feitelijk gedrag, `data-testid`-contract, breakpoints, formulierattributen |
-| `docs/sitemap.xml`, `docs/robots.txt` | indexeerbare pagina's en het bewuste `noindex`-besluit |
-| `contact.html` (formulierattributen) + Formward-config | veldtypen, `required`, `maxlength`, honeypot, `_redirect` |
-| `src/ts/main.ts` + `docs/data/playwright-history.json` | CI-history-schema (`schemaVersion`, `runs[]`, `passRate`) en de rendering |
-| `.github/workflows/playwright.yml`, `scripts/ci-summary.mjs` | de werkelijke CI-keten, kwaliteitspoorten en history-productie |
-| `Project-documentation/PLAYWRIGHT.md`, `CI-PLAYWRIGHT-HISTORY.md`, `PLAN-CI-HISTORY-TESTS.md` | projectconventies, CI-spec en CI-history-testplan |
+| Bron                                                                                              | Wat het levert                                                               |
+| ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `docs/*.html` + `docs/css/style.css`                                                              | feitelijk gedrag, `data-testid`-contract, breakpoints, formulierattributen   |
+| `docs/sitemap.xml`, `docs/robots.txt`                                                             | indexeerbare pagina's en het bewuste `noindex`-besluit                       |
+| `contact.html` (formulierattributen) + Formward-config                                            | veldtypen, `required`, `maxlength`, honeypot, `_redirect`                    |
+| `src/ts/main.ts` + `docs/data/playwright-history.json`                                            | CI-history-schema (`schemaVersion`, `runs[]`, `passRate`) en de rendering    |
+| `.github/workflows/playwright.yml`, `scripts/ci-summary.mjs`                                      | de werkelijke CI-keten, kwaliteitspoorten en history-productie               |
+| `Project-documentation/PLAYWRIGHT.md`, `CI-PLAYWRIGHT-HISTORY.md`, `PLAN-CI-HISTORY-TESTS.md`     | projectconventies, CI-spec en CI-history-testplan                            |
 | WCAG 2.1 AA, ISTQB CTFL-syllabus, ISO/IEC/IEEE 29119-3, Playwright Best Practices / Locator-guide | externe normen voor a11y, testniveaus, testdocumentatie en locator-strategie |
 
 **Aannames:**
@@ -189,12 +189,13 @@ checks**. De "unit-laag" wordt gedeeltelijk vervangen door directe DOM/ARIA-asse
 ISTQB onderscheidt component, integration, system en acceptance testing. Voor deze
 statische site zijn er geen unit-testbare componenten; de enige integratie is de
 formulier-submit naar de externe dienst Formward. De toewijzing is daarom:
-| ISTQB-niveau | Toepassing in dit project |
-| --- | --- |
-| Component / unit | (bijna) niet van toepassing — de enige module-logic (`main.ts`) wordt via DOM/ARIA-asserts gedekt |
-| Integration | interactie formulier ↔ Formward (**system integration** met een gemockte externe interface); geen component-integratie in de klassieke zin |
-| System | de volledige site als geheel (Playwright E2E) |
-| Acceptance | systeemtest tegen de acceptatiecriteria van §3.3/§11 — géén formele UAT met eindgebruikers |
+
+| ISTQB-niveau     | Toepassing in dit project                                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Component / unit | (bijna) niet van toepassing — de enige module-logic (`main.ts`) wordt via DOM/ARIA-asserts gedekt                                          |
+| Integration      | interactie formulier ↔ Formward (**system integration** met een gemockte externe interface); geen component-integratie in de klassieke zin |
+| System           | de volledige site als geheel (Playwright E2E)                                                                                              |
+| Acceptance       | systeemtest tegen de acceptatiecriteria van §3.3/§11 — géén formele UAT met eindgebruikers                                                 |
 
 De nadruk ligt dus bewust op **system** en **acceptance testing**; dat past bij het
 risico-profiel van een statische portfolio-site. Waar het plan "acceptance" zegt,
@@ -207,12 +208,12 @@ uitgevoerde UAT.
 
 **Statuslegenda (geldt voor §5 en §7–§8):**
 
-| Status | Betekenis |
-| --- | --- |
-| **Bestaand** | Geautomatiseerd in de huidige suite (`playwright/tests/`), als test in een spec-bestand. |
-| **Deels** | Een subset van het beschreven gedrag is geautomatiseerd; de rest ontbreekt. |
-| **Gepland** | Nog niet geautomatiseerd; opgenomen in de roadmap (§10). |
-| **Niet gedekt** | Bewust buiten de huidige suite; alleen handmatig of door een andere keten bewezen. |
+| Status          | Betekenis                                                                                |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| **Bestaand**    | Geautomatiseerd in de huidige suite (`playwright/tests/`), als test in een spec-bestand. |
+| **Deels**       | Een subset van het beschreven gedrag is geautomatiseerd; de rest ontbreekt.              |
+| **Gepland**     | Nog niet geautomatiseerd; opgenomen in de roadmap (§10).                                 |
+| **Niet gedekt** | Bewust buiten de huidige suite; alleen handmatig of door een andere keten bewezen.       |
 
 ### 5.1 Functioneel
 
@@ -305,15 +306,15 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
 - **Centraal formulier-dataset (gepland, fase 3):** in `playwright/utils/test-data.ts`
   met datasets die 1-op-1 op de F-matrix (§7) mappen:
 
-  | Dataset | Gebruik | Status |
-  | --- | --- | --- |
-  | `valid` | F1, F9, F10 | Gepland |
-  | `missingRequired` | F2 | Gepland |
-  | `invalidEmail` | F3 | Gepland |
-  | `optionalSubjectEmpty` | F4 | Gepland |
-  | `boundary` (1 char / 500+ char) | F6 | Gepland |
-  | `specialChars` (unicode/emoji/quotes) | F7 | Gepland |
-  | `honeypotFilled` | F5 | Gepland |
+  | Dataset                               | Gebruik     | Status  |
+  | ------------------------------------- | ----------- | ------- |
+  | `valid`                               | F1, F9, F10 | Gepland |
+  | `missingRequired`                     | F2          | Gepland |
+  | `invalidEmail`                        | F3          | Gepland |
+  | `optionalSubjectEmpty`                | F4          | Gepland |
+  | `boundary` (1 char / 500+ char)       | F6          | Gepland |
+  | `specialChars` (unicode/emoji/quotes) | F7          | Gepland |
+  | `honeypotFilled`                      | F5          | Gepland |
 
   Tot fase 3 gebruiken F1–F3 inline waarden; de tabel hierboven is dus een
   **target**, niet de huidige testdata-organisatie.
@@ -347,6 +348,7 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
   - Desktop: `1280×800` (≥850px, nav inline)
   - Tablet: `850×1024` / `820×1180` (≤850px, menu-toggle zichtbaar)
   - Mobiel: `390×844` en `360×640` (≤500px, compacte layout, knoppen full-width)
+  - Extra ondergrens: `320×568` (smalle mobiel; extra check op horizontale scroll)
 - **Cross-browser (fase 7, optioneel):** Firefox + WebKit toevoegen (Playwright
   maakt dit triviaal via `devices`); prioriteit lager omdat de site simpel is.
 
@@ -356,18 +358,18 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
 
 De belangrijkste data-flow. Verwacht-gedrag per scenario:
 
-| #   | Scenario                          | Input                                 | Verwacht resultaat                                                                                                | Status |
-| --- | --------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --- |
-| F1  | Geldige submit                    | alle velden geldig                    | POST → redirect naar `bedankt.html` + tekst "Bedankt, uw bericht is ontvangen"                                    | Bestaand |
-| F2  | Lege verplichte velden            | name/email/bericht leeg               | géén submit (native validatie), blijft op `contact.html`, validatiemelding                                        | Bestaand (assert alleen "niet redirect"; melding niet geassert) |
-| F3  | Ongeldige e-mail                  | `ongeldig-email`                      | géén submit, e-mail-validatiemelding                                                                              | Bestaand (assert alleen "niet redirect"; melding niet geassert) |
-| F4  | Alleen optioneel veld ontbreekt   | `subject` leeg                        | WEL geldige submit (subject is niet `required`)                                                                   | Gepland |
-| F5  | Honeypot ingevuld (bot)           | `_gotcha` gevuld                      | spamfilter: géén geldig bericht (Formward verwijdert; lokaal: assert veld blijft hidden + tabindex -1)            | Deels (verborgen honeypot bestaat; ingevulde honeypot niet) |
-| F6  | Boundary: minimale/ extreme tekst | naam = 1 teken, bericht = 500+ tekens | WEL geldige submit; geen fouten/truncatie in UI (boundary value analysis)                                         | Gepland |
-| F7  | Speciale tekens / unicode         | emoji, quotes, accents                | WEL geldige submit; tekst wordt veilig gerenderd (geen HTML-injectie op static page)                              | Gepland |
-| F8  | Dubbel submit                     | snel dubbel klikken op verstuurknop   | Maximaal één POST naar Formward; redirect blijft idempotent                                                       | Gepland |
+| #   | Scenario                          | Input                                 | Verwacht resultaat                                                                                                | Status                                                                     |
+| --- | --------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| F1  | Geldige submit                    | alle velden geldig                    | POST → redirect naar `bedankt.html` + tekst "Bedankt, uw bericht is ontvangen"                                    | Bestaand                                                                   |
+| F2  | Lege verplichte velden            | name/email/bericht leeg               | géén submit (native validatie), blijft op `contact.html`, validatiemelding                                        | Bestaand (assert alleen "niet redirect"; melding niet geassert)            |
+| F3  | Ongeldige e-mail                  | `ongeldig-email`                      | géén submit, e-mail-validatiemelding                                                                              | Bestaand (assert alleen "niet redirect"; melding niet geassert)            |
+| F4  | Alleen optioneel veld ontbreekt   | `subject` leeg                        | WEL geldige submit (subject is niet `required`)                                                                   | Gepland                                                                    |
+| F5  | Honeypot ingevuld (bot)           | `_gotcha` gevuld                      | spamfilter: géén geldig bericht (Formward verwijdert; lokaal: assert veld blijft hidden + tabindex -1)            | Deels (verborgen honeypot bestaat; ingevulde honeypot niet)                |
+| F6  | Boundary: minimale/ extreme tekst | naam = 1 teken, bericht = 500+ tekens | WEL geldige submit; geen fouten/truncatie in UI (boundary value analysis)                                         | Gepland                                                                    |
+| F7  | Speciale tekens / unicode         | emoji, quotes, accents                | WEL geldige submit; tekst wordt veilig gerenderd (geen HTML-injectie op static page)                              | Gepland                                                                    |
+| F8  | Dubbel submit                     | snel dubbel klikken op verstuurknop   | Maximaal één POST naar Formward; redirect blijft idempotent                                                       | Gepland                                                                    |
 | F9  | Redirect-target is correct        | geldige submit                        | eind-URL = `bedankt.html` (subpath `/Portfolio/` behouden) + bedankt-tekst zichtbaar (geen lege/pagina-not-found) | Bestaand (met mock; bewijst afhandeling, niet de echte `_redirect`-waarde) |
-| F10 | Terugnavigatie na redirect        | geldige submit → back                 | browser back werkt naar `contact.html` zonder crash; formulier is gereset/leeg (nieuwe context per test)          | Gepland |
+| F10 | Terugnavigatie na redirect        | geldige submit → back                 | browser back werkt naar `contact.html` zonder crash; formulier is gereset/leeg (nieuwe context per test)          | Gepland                                                                    |
 
 > **Testdata-koppeling:** de datasets uit §6.1 zijn de **target-mapping** voor
 > F1–F7; in fase 3 worden ze centraal. F1–F3 gebruiken nu inline waarden.
@@ -401,56 +403,56 @@ beschrijft de volledige target-set; niet elke rij is al geïmplementeerd.
 
 ### 8.1 Smoke / sanity (G1) — `playwright/tests/smoke/smoke.spec.ts` _(bestaand)_
 
-| ID    | Testcase                                      | Verwacht resultaat                                                        | Status |
-| ----- | --------------------------------------------- | ------------------------------------------------------------------------- | --- |
-| SM-01 | Home (`index.html`) laadt                     | HTTP 200, `.navbar`/`.hero`/`.footer` zichtbaar, geen console/page errors | Bestaand |
-| SM-02 | Overige pagina's laden (curriculum … bedankt) | per pagina: HTTP 200 + geen console/page errors (8 pagina's)              | Bestaand |
+| ID    | Testcase                                      | Verwacht resultaat                                                        | Status                             |
+| ----- | --------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------- |
+| SM-01 | Home (`index.html`) laadt                     | HTTP 200, `.navbar`/`.hero`/`.footer` zichtbaar, geen console/page errors | Bestaand                           |
+| SM-02 | Overige pagina's laden (curriculum … bedankt) | per pagina: HTTP 200 + geen console/page errors (8 pagina's)              | Bestaand                           |
 | SM-03 | `404.html` fallback is bereikbaar             | onbekend pad → HTTP 404 met de fallback-pagina, geen crash                | Gepland (nog niet geautomatiseerd) |
 
 ### 8.2 Navigatie (G2) — `playwright/tests/functional/homepage-functional.spec.ts` _(deels bestaand)_
 
-| ID     | Testcase                                             | Verwacht resultaat                                                                                                                                     | Status |
-| ------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --- |
+| ID     | Testcase                                             | Verwacht resultaat                                                                                                                                     | Status                                                                                        |
+| ------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
 | NAV-01 | Elke `nav-*` link opent de juiste pagina             | URL matcht `NAV_ITEM_URLS[testId]`                                                                                                                     | Deels: homepage-suite dekt 2 links; mobiele suite dekt alle 7 nav-links via het geopende menu |
-| NAV-02 | CTA's (`cta-projects`, `cta-curriculum`) navigeren   | correcte bestemming                                                                    | Bestaand (2 tests) |
-| NAV-03 | Card-links (`card-link-testing/automation/projects`) | correcte bestemming                                                                    | Deels: alleen `card-link-testing` |
-| NAV-04 | Footer-links (contact, github, linkedin, privacy)    | interne → juiste URL; externe → juiste `href`/`target`/`rel`                                                                                           | Gepland |
-| NAV-05 | Actieve footer-link op eigen pagina                  | `footer-contact` (contact) en `footer-privacy` (privacy): `class="active"` + kleur `rgb(134, 239, 172)`; overige pagina's: géén `.active` in de footer | Gepland |
+| NAV-02 | CTA's (`cta-projects`, `cta-curriculum`) navigeren   | correcte bestemming                                                                                                                                    | Bestaand (2 tests)                                                                            |
+| NAV-03 | Card-links (`card-link-testing/automation/projects`) | correcte bestemming                                                                                                                                    | Deels: alleen `card-link-testing`                                                             |
+| NAV-04 | Footer-links (contact, github, linkedin, privacy)    | interne → juiste URL; externe → juiste `href`/`target`/`rel`                                                                                           | Gepland                                                                                       |
+| NAV-05 | Actieve footer-link op eigen pagina                  | `footer-contact` (contact) en `footer-privacy` (privacy): `class="active"` + kleur `rgb(134, 239, 172)`; overige pagina's: géén `.active` in de footer | Gepland                                                                                       |
 
 ### 8.3 Mobiele menu-toggle (G4) — `playwright/tests/functional/mobile-menu-functional.spec.ts` _(deels bestaand, hoogste prioriteit)_
 
-| ID      | Testcase                                           | Verwacht resultaat                                             | Status |
-| ------- | -------------------------------------------------- | -------------------------------------------------------------- | --- |
-| MENU-01 | Initiale toestand (mobiel ≤850px)                  | menu closed, `aria-expanded="false"`, nav-links niet zichtbaar | Bestaand |
-| MENU-02 | Toggle openen                                      | `.open` + alle nav-items zichtbaar, `aria-expanded="true"`     | Bestaand |
-| MENU-03 | Toggle sluiten                                     | geen `.open`, `aria-expanded="false"`                          | Bestaand |
+| ID      | Testcase                                           | Verwacht resultaat                                             | Status                                                          |
+| ------- | -------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------- |
+| MENU-01 | Initiale toestand (mobiel ≤850px)                  | menu closed, `aria-expanded="false"`, nav-links niet zichtbaar | Bestaand                                                        |
+| MENU-02 | Toggle openen                                      | `.open` + alle nav-items zichtbaar, `aria-expanded="true"`     | Bestaand                                                        |
+| MENU-03 | Toggle sluiten                                     | geen `.open`, `aria-expanded="false"`                          | Bestaand                                                        |
 | MENU-04 | State-transition closed → open → closed (herhaald) | toestand wisselt correct, geen stale class                     | Deels: één open→sluit-cyclus; geen herhaalde/stale-state-assert |
-| MENU-05 | Navigatie via geopend menu werkt                   | nav-link klikt + juiste URL; menu gesloten na navigatie        | Bestaand (7 nav-links + 1 contact-link) |
-| MENU-06 | Op desktop (≥850px) is toggle niet nodig/zichtbaar | menu inline zichtbaar zonder toggle                            | Bestaand |
-| MENU-07 | `Escape` sluit geopend menu                        | geen `.open`, `aria-expanded="false"`, focus terug naar toggle | Gepland |
-| MENU-08 | Klik buiten geopend menu sluit het menu            | geen `.open`, `aria-expanded="false"`, focus terug naar toggle | Gepland |
-| MENU-09 | Focus na openen gaat naar eerste nav-link          | eerste nav-link is gefocust                                    | Gepland |
-| MENU-10 | `Escape` op gesloten menu verandert de focus niet  | focus blijft op huidige actieve locator                        | Gepland |
+| MENU-05 | Navigatie via geopend menu werkt                   | nav-link klikt + juiste URL; menu gesloten na navigatie        | Bestaand (7 nav-links + 1 contact-link)                         |
+| MENU-06 | Op desktop (≥850px) is toggle niet nodig/zichtbaar | menu inline zichtbaar zonder toggle                            | Bestaand                                                        |
+| MENU-07 | `Escape` sluit geopend menu                        | geen `.open`, `aria-expanded="false"`, focus terug naar toggle | Gepland                                                         |
+| MENU-08 | Klik buiten geopend menu sluit het menu            | geen `.open`, `aria-expanded="false"`, focus terug naar toggle | Gepland                                                         |
+| MENU-09 | Focus na openen gaat naar eerste nav-link          | eerste nav-link is gefocust                                    | Gepland                                                         |
+| MENU-10 | `Escape` op gesloten menu verandert de focus niet  | focus blijft op huidige actieve locator                        | Gepland                                                         |
 
 ### 8.4 Non-functioneel (G5–G10) — nieuwe spec-bestanden _(fase 4–5)_
 
-| ID      | Categorie           | Testcase                                                        | Verwacht resultaat (concreet)                                                                                                                                                          | Status |
-| ------- | ------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
-| RESP-01 | Responsive          | Layout per breakpoint (desktop/tablet/mobiel)                   | juiste nav-stijl; geen horizontale scroll op 1280×800, 850×1024, 390×844, 360×640 en de extra grens 320px breed                    | Gepland (fase 4) |
-| A11Y-01 | Accessibility       | Keyboard-only navigatie + focus-visible                         | alle interactieve elementen toetsbaar bereikbaar; zichtbare focus-indicator (WCAG 2.4.7)                                               | Gepland (fase 4) |
-| A11Y-02 | Accessibility       | `aria-expanded` / labels / `lang="nl"` / img `alt`              | attributen aanwezig en correct; `lang="nl"` op elke pagina; decoratieve `<img>` met lege `alt` + `aria-hidden`                        | Gepland (fase 4) |
-| A11Y-03 | Accessibility       | Skip-link, decoratieve iconen en section-labels                 | skip-link → `#hoofdinhoud` met focus op het doel; decoratieve emoji/pijlen `aria-hidden="true"`; section-labels in het Nederlands | Gepland (fase 4) |
-| A11Y-04 | Accessibility       | Placeholder-contrast en `forced-colors` fallback                | computed `::placeholder`-kleur `rgb(148, 163, 184)`; contrast ≥ 4.5:1 tegen de invoerachtergrond (meting, geen alleen CSS-waarde); in forced-colors `CanvasText`, geen gradient-clip | Gepland (fase 4) |
-| SEO-01  | SEO                 | unieke `<title>` + meta description per pagina                  | geen duplicaten, NL-taal                                                                                                             | Gepland (fase 4) |
-| SEO-02  | SEO                 | één `h1` per pagina, geen duplicaat `id`, robots.txt            | structuur correct; `docs/robots.txt` aanwezig en geldig                                                                              | Gepland (fase 4) |
-| SEO-03  | SEO                 | canonical + Open Graph/Twitter cards per pagina                 | canonical = eigen absolute URL; `og:title`/`og:url` = eigen `<title>`/URL; `og:image` absolute; `twitter:card=summary`                 | Gepland (fase 4) |
-| SEO-04  | SEO                 | `docs/sitemap.xml`                                              | geldige XML, 8 content-pagina's, `404`/`bedankt` uitgesloten, alle locaties = bestaande bestanden                                     | Gepland (fase 4) |
+| ID      | Categorie           | Testcase                                                           | Verwacht resultaat (concreet)                                                                                                                                                         | Status                                          |
+| ------- | ------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| RESP-01 | Responsive          | Layout per breakpoint (desktop/tablet/mobiel)                      | juiste nav-stijl; geen horizontale scroll op 1280×800, 850×1024, 390×844, 360×640 en de extra grens 320px breed                                                                       | Gepland (fase 4)                                |
+| A11Y-01 | Accessibility       | Keyboard-only navigatie + focus-visible                            | alle interactieve elementen toetsbaar bereikbaar; zichtbare focus-indicator (WCAG 2.4.7)                                                                                              | Gepland (fase 4)                                |
+| A11Y-02 | Accessibility       | `aria-expanded` / labels / `lang="nl"` / img `alt`                 | attributen aanwezig en correct; `lang="nl"` op elke pagina; decoratieve `<img>` met lege `alt` + `aria-hidden`                                                                        | Gepland (fase 4)                                |
+| A11Y-03 | Accessibility       | Skip-link, decoratieve iconen en section-labels                    | skip-link → `#hoofdinhoud` met focus op het doel; decoratieve emoji/pijlen `aria-hidden="true"`; section-labels in het Nederlands                                                     | Gepland (fase 4)                                |
+| A11Y-04 | Accessibility       | Placeholder-contrast en `forced-colors` fallback                   | computed `::placeholder`-kleur `rgb(148, 163, 184)`; contrast ≥ 4.5:1 tegen de invoerachtergrond (meting, geen alleen CSS-waarde); in forced-colors `CanvasText`, geen gradient-clip  | Gepland (fase 4)                                |
+| SEO-01  | SEO                 | unieke `<title>` + meta description per pagina                     | geen duplicaten, NL-taal                                                                                                                                                              | Gepland (fase 4)                                |
+| SEO-02  | SEO                 | één `h1` per pagina, geen duplicaat `id`, robots.txt               | structuur correct; `docs/robots.txt` aanwezig en geldig                                                                                                                               | Gepland (fase 4)                                |
+| SEO-03  | SEO                 | canonical + Open Graph/Twitter cards per pagina                    | canonical = eigen absolute URL; `og:title`/`og:url` = eigen `<title>`/URL; `og:image` absolute; `twitter:card=summary`                                                                | Gepland (fase 4)                                |
+| SEO-04  | SEO                 | `docs/sitemap.xml`                                                 | geldige XML, 8 content-pagina's, `404`/`bedankt` uitgesloten, alle locaties = bestaande bestanden                                                                                     | Gepland (fase 4)                                |
 | HTML-01 | Content-integriteit | `npx html-validate "docs/**/*.html"` (config `.htmlvalidate.json`) | 0 errors (o.a. `no-implicit-close`, `close-order`, `element-case`, `no-raw-characters`, `no-utf8-bom`; stijlstijlen `doctype-style`/`void-style`/`no-implicit-button-type` staan uit) | **Bestaand** (CI-poort `npm run validate:html`) |
-| LINK-01 | Content-integriteit | interne links op alle pagina's                                  | geen gebroken interne links                                                                                                          | Gepland (fase 4) |
-| LINK-02 | Content-integriteit | externe links (`href^="https://"`)                              | elke externe link heeft `target="_blank"` + `rel="noopener noreferrer"`                                                              | Gepland (fase 4) |
-| IMG-01  | Content-integriteit | afbeeldingen laden                                              | geen 404/bron-fouten; alle `<img>` hebben niet-lege `alt`                                                                            | Gepland (fase 4) |
-| VIS-01  | Visual (fase 5)     | screenshot-baseline per pagina × breakpoint                     | geen onbedoelde regressies; baseline gemaakt in CI/Linux met vaste fonts; tolerantie max 1% diff-pixels                              | Gepland (fase 5) |
-| PERF-01 | Performance         | Lighthouse (Perf/A11y/BestPractices/SEO) ≥ drempel              | Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 90, SEO ≥ 90; LCP < 2,5 s, CLS < 0,1 en TBT < 200 ms                         | Gepland (fase 5) |
+| LINK-01 | Content-integriteit | interne links op alle pagina's                                     | geen gebroken interne links                                                                                                                                                           | Gepland (fase 4)                                |
+| LINK-02 | Content-integriteit | externe links (`href^="https://"`)                                 | elke externe link heeft `target="_blank"` + `rel="noopener noreferrer"`                                                                                                               | Gepland (fase 4)                                |
+| IMG-01  | Content-integriteit | afbeeldingen laden                                                 | geen 404/bron-fouten; alle `<img>` hebben niet-lege `alt`                                                                                                                             | Gepland (fase 4)                                |
+| VIS-01  | Visual (fase 5)     | screenshot-baseline per pagina × breakpoint                        | geen onbedoelde regressies; baseline gemaakt in CI/Linux met vaste fonts; tolerantie max 1% diff-pixels                                                                               | Gepland (fase 5)                                |
+| PERF-01 | Performance         | Lighthouse (Perf/A11y/BestPractices/SEO) ≥ drempel                 | Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 90, SEO ≥ 90; LCP < 2,5 s, CLS < 0,1 en TBT < 200 ms                                                                           | Gepland (fase 5)                                |
 
 ### 8.5 CI-history & dashboard (G13) — `playwright/tests/functional/ci-history-functional.spec.ts` _(bestaand, 5 tests)_
 
@@ -461,13 +463,13 @@ Deze sectie test het **eindpunt van de weergave** (data → kaarten/tabel), niet
 producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 (zie `CI-PLAYWRIGHT-HISTORY.md` en `PLAN-CI-HISTORY-TESTS.md` §2–§3 en §7).
 
-| ID     | Testcase                                                      | Verwacht resultaat                                                                                                                                              | Status |
-| ------ | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
-| CIH-01 | Laatste-run kaarten tonen de nieuwste run                     | `ci-suite-size` = "40 tests", `ci-runs` = "3", `ci-total-tests` = "40", `ci-pass-rate` = "100%", `ci-status` = "Geslaagd"                                          | Bestaand |
+| ID     | Testcase                                                       | Verwacht resultaat                                                                                                                                                                                                                   | Status   |
+| ------ | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| CIH-01 | Laatste-run kaarten tonen de nieuwste run                      | `ci-suite-size` = "40 tests", `ci-runs` = "3", `ci-total-tests` = "40", `ci-pass-rate` = "100%", `ci-status` = "Geslaagd"                                                                                                            | Bestaand |
 | CIH-02 | Aggregate kaarten poolen alle runs (Σ passed / Σ total)        | `ci-total-executed` = "120", `ci-total-passed` = "108 van 120", `ci-pass-ratio` = "90%", `ci-streak` = "1", `ci-flaky-runs` = "1", `ci-failed-runs` = "2", `ci-metrics-note` bevat "Over 3 CI-runs" en "108 van 120 tests geslaagd." | Bestaand |
-| CIH-03 | Geschiedenis-tabel toont één rij per run met werkende run-link | 3 rijen in `ci-history-body`; link "Run 42" heeft de juiste `href` naar de GitHub Actions-run                                   | Bestaand |
-| CIH-04 | Runs zonder noemer (`total = 0`) vallen buiten de totalen     | alleen 2 van 3 runs geteld: `ci-total-executed` = "80", `ci-pass-ratio` = "90%", `ci-streak` = "0", `ci-status` = "Geannuleerd"; notering bevat "2 van 3 CI-runs geteld" | Bestaand |
-| CIH-05 | Lege geschiedenis: placeholders en placeholder-rij             | alle kaarten tonen "—", `ci-history-body` bevat "Geen CI-historie beschikbaar."                                               | Bestaand |
+| CIH-03 | Geschiedenis-tabel toont één rij per run met werkende run-link | 3 rijen in `ci-history-body`; link "Run 42" heeft de juiste `href` naar de GitHub Actions-run                                                                                                                                        | Bestaand |
+| CIH-04 | Runs zonder noemer (`total = 0`) vallen buiten de totalen      | alleen 2 van 3 runs geteld: `ci-total-executed` = "80", `ci-pass-ratio` = "90%", `ci-streak` = "0", `ci-status` = "Geannuleerd"; notering bevat "2 van 3 CI-runs geteld"                                                             | Bestaand |
+| CIH-05 | Lege geschiedenis: placeholders en placeholder-rij             | alle kaarten tonen "—", `ci-history-body` bevat "Geen CI-historie beschikbaar."                                                                                                                                                      | Bestaand |
 
 > **Bewijs:** `npx playwright test --list` telt 5 tests in dit spec-bestand (41 in
 > de hele suite). De tabel heeft in de markup 6 kolommen (Run, Datum, Status,
@@ -485,22 +487,22 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 Risico's gerangschikt op impact × waarschijnlijkheid voor een statische site.
 Mitigaties zijn bewust verweven in BestPractices (determinisme, mocking, isolation).
 
-| #   | Risico                                                                                             | Impact | Waarschijnlijkheid | Mitigatie                                                                                                      |
-| --- | -------------------------------------------------------------------------------------------------- | :----: | :----------------: | -------------------------------------------------------------------------------------------------------------- |
-| R1  | Formward-down/vertraagd → flaky suite                                                              |  Hoog  |       Middel       | Altijd `page.route(...)` mock in CI; géén echte POST's (BestPractices §10, §22)                                |
-| R2  | Menu-regressie na CSS/JS-wijziging                                                                 |  Hoog  |       Middel       | TC MENU-01…10; bestaande suite groen houden en nieuwe focus/Escape/klik-buiten-cases automatiseren in fase 2   |
-| R3  | Flaky tests door timing/external deps                                                              |  Hoog  |       Middel       | Auto-wait + web-first asserts; geen `waitForTimeout`; retries alleen als vangnet (BestPractices §13)           |
-| R4  | Gebroken link/afbeelding na wijziging                                                              | Middel |       Middel       | LINK-01 / IMG-01 in regression-set                                                                             |
-| R5  | Design-regressie (CSS) onopgemerkt                                                                 | Middel |       Middel       | Visual baseline VIS-01 (fase 4), kleine tolerantie                                                             |
-| R6  | Externe links (GitHub/LinkedIn) flaky in CI                                                        |  Laag  |        Hoog        | In CI alleen link-structuur checken, niet bereikbaarheid (§6.2)                                                |
-| R7  | a11y/SEO-regressie                                                                                 | Middel |    Laag-Middel     | A11Y/SEO-asserts (fase 3); optioneel axe-core                                                                  |
-| R8  | Performance-degradatie                                                                             |  Laag  |        Laag        | Lighthouse-drempels PERF-01, apart van E2E                                                                     |
-| R9  | Legacy-mappen (`old/`) onbedoeld aangepakt                                                         | Middel |        Laag        | Uit scope (§3.2); niet in `testDir` / config                                                                   |
-| R10 | SEO-meta/canonical/sitemap raken inconsistent na nieuwe pagina                                     | Middel |       Middel       | SEO-03/SEO-04 asserts; sitemap en canonical-explicitie per pagina (PLAYWRIGHT §4)                              |
-| R11 | HTML-structuurdefecten (onafgesloten `<p>`, `</P>`, raw `&`) blijven onopgemerkt in statische HTML | Middel |       Middel       | HTML-01 `html-validate` als poort vóór de E2E-suite (browser repareert impliciet, dus E2E detecteert dit niet) |
-| R12 | Lege placeholder-content (logo, favicon) of lege CI-history wekt onvolledige indruk                |  Laag  |       Middel       | Logo/favicon gedocumenteerd (§3.2); CI-history start bewust leeg en vult zich na de eerste CI-run             |
-| R13 | De history-data is er, maar de weergave (kaarten/Geschiedenis-tabel) ontbreekt of is onvolledig → bezoeker ziet lege kaarten | Middel |    Laag-Middel     | CIH-01…05 in `ci-history-functional.spec.ts`; placeholder-fallback CIH-05; `data-testid`-contract in de HTML (PLAYWRIGHT §4) |
-| R14 | Één incidentele (niet-reproduceerbare) testmislukking in de suite: bij de eerste volledige lokale run na de kwaliteitspoorten viel de homepage-CTA-test weg; in isolatie en in een volledige herhaling was 41/41 groen. Determinisme is daarmee een gemeten risico, geen aanname | Middel | Laag | 5 opeenvolgende groene runs als exit-metric (§11); `retries: 2` in CI maar `0` lokaal (`playwright.local.config.ts`) zodat een lokale bevinding zichtbaar blijft; bij herhaling: trace/screenshot (`retain-on-failure`) analyseren |
+| #   | Risico                                                                                                                                                                                                                                                                           | Impact | Waarschijnlijkheid | Mitigatie                                                                                                                                                                                                                          |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----: | :----------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | Formward-down/vertraagd → flaky suite                                                                                                                                                                                                                                            |  Hoog  |       Middel       | Altijd `page.route(...)` mock in CI; géén echte POST's (BestPractices §10, §22)                                                                                                                                                    |
+| R2  | Menu-regressie na CSS/JS-wijziging                                                                                                                                                                                                                                               |  Hoog  |       Middel       | TC MENU-01…10; bestaande suite groen houden en nieuwe focus/Escape/klik-buiten-cases automatiseren in fase 2                                                                                                                       |
+| R3  | Flaky tests door timing/external deps                                                                                                                                                                                                                                            |  Hoog  |       Middel       | Auto-wait + web-first asserts; geen `waitForTimeout`; retries alleen als vangnet (BestPractices §13)                                                                                                                               |
+| R4  | Gebroken link/afbeelding na wijziging                                                                                                                                                                                                                                            | Middel |       Middel       | LINK-01 / IMG-01 in regression-set                                                                                                                                                                                                 |
+| R5  | Design-regressie (CSS) onopgemerkt                                                                                                                                                                                                                                               | Middel |       Middel       | Visual baseline VIS-01 (fase 4), kleine tolerantie                                                                                                                                                                                 |
+| R6  | Externe links (GitHub/LinkedIn) flaky in CI                                                                                                                                                                                                                                      |  Laag  |        Hoog        | In CI alleen link-structuur checken, niet bereikbaarheid (§6.2)                                                                                                                                                                    |
+| R7  | a11y/SEO-regressie                                                                                                                                                                                                                                                               | Middel |    Laag-Middel     | A11Y/SEO-asserts (fase 3); optioneel axe-core                                                                                                                                                                                      |
+| R8  | Performance-degradatie                                                                                                                                                                                                                                                           |  Laag  |        Laag        | Lighthouse-drempels PERF-01, apart van E2E                                                                                                                                                                                         |
+| R9  | Legacy-mappen (`old/`) onbedoeld aangepakt                                                                                                                                                                                                                                       | Middel |        Laag        | Uit scope (§3.2); niet in `testDir` / config                                                                                                                                                                                       |
+| R10 | SEO-meta/canonical/sitemap raken inconsistent na nieuwe pagina                                                                                                                                                                                                                   | Middel |       Middel       | SEO-03/SEO-04 asserts; sitemap en canonical-explicitie per pagina (PLAYWRIGHT §4)                                                                                                                                                  |
+| R11 | HTML-structuurdefecten (onafgesloten `<p>`, `</P>`, raw `&`) blijven onopgemerkt in statische HTML                                                                                                                                                                               | Middel |       Middel       | HTML-01 `html-validate` als poort vóór de E2E-suite (browser repareert impliciet, dus E2E detecteert dit niet)                                                                                                                     |
+| R12 | Lege placeholder-content (logo, favicon) of lege CI-history wekt onvolledige indruk                                                                                                                                                                                              |  Laag  |       Middel       | Logo/favicon gedocumenteerd (§3.2); CI-history start bewust leeg en vult zich na de eerste CI-run                                                                                                                                  |
+| R13 | De history-data is er, maar de weergave (kaarten/Geschiedenis-tabel) ontbreekt of is onvolledig → bezoeker ziet lege kaarten                                                                                                                                                     | Middel |    Laag-Middel     | CIH-01…05 in `ci-history-functional.spec.ts`; placeholder-fallback CIH-05; `data-testid`-contract in de HTML (PLAYWRIGHT §4)                                                                                                       |
+| R14 | Één incidentele (niet-reproduceerbare) testmislukking in de suite: bij de eerste volledige lokale run na de kwaliteitspoorten viel de homepage-CTA-test weg; in isolatie en in een volledige herhaling was 41/41 groen. Determinisme is daarmee een gemeten risico, geen aanname | Middel |        Laag        | 5 opeenvolgende groene runs als exit-metric (§11); `retries: 2` in CI maar `0` lokaal (`playwright.local.config.ts`) zodat een lokale bevinding zichtbaar blijft; bij herhaling: trace/screenshot (`retain-on-failure`) analyseren |
 
 **Schaal en eigenaarschap:** Impact en waarschijnlijkheid zijn labels op een
 3-puntschaal (Laag / Middel / Hoog) en geen formele FMEA-score. Elke rij heeft
@@ -515,15 +517,15 @@ de datum van die review wordt in het CI-/releaselog vastgelegd.
 Elke fase is self-contained en draait al na afloop groen in CI. Volgorde volgt
 impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish/CI.
 
-| Fase | Scope                                                                                                               | Levert / exit-criterium                                                                                                                                            |
-| :--: | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-|  1   | Bestaande suite stabiliseren (smoke + navigatie + contact)                                                          | Alle huidige tests groen, deterministisch, gemockt; geen flaky                                                                                                     |
-|  2   | **Mobiele menu-toggle stabiliseren & uitbreiden** (TC MENU-01…10, bestaand + nieuwe focus/Escape/klik-buiten-cases) | Suite groen + deterministisch; extra viewports (850×1024, 360×640) toegevoegd; ARIA state-transition, focusbeheer, `Escape`-sluiten en klik-buiten-het-menu gedekt |
+| Fase | Scope                                                                                                                           | Levert / exit-criterium                                                                                                                                            |
+| :--: | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|  1   | Bestaande suite stabiliseren (smoke + navigatie + contact)                                                                      | Alle huidige tests groen, deterministisch, gemockt; geen flaky                                                                                                     |
+|  2   | **Mobiele menu-toggle stabiliseren & uitbreiden** (TC MENU-01…10, bestaand + nieuwe focus/Escape/klik-buiten-cases)             | Suite groen + deterministisch; extra viewports (850×1024, 360×640) toegevoegd; ARIA state-transition, focusbeheer, `Escape`-sluiten en klik-buiten-het-menu gedekt |
 |  3   | Testdata centraliseren (`utils/test-data.ts` heeft nu de pagina- en URL-constanten) + boundary/special-char cases (F4/F6/F7/F8) | Formulier-testdataset centraal; F-matrix compleet gedekt                                                                                                           |
-|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks                                                            | RESP/A11Y/SEO/LINK/IMG groen op alle 10 pagina's                                                                                                                   |
-|  5   | Visual regression + Lighthouse-drempels                                                                             | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                                                                            |
-|  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → test → artifacts → history                                       | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit                                                                         |
-|  7   | Optioneel: pre-deploy/PR-gate (push-trigger op de poorten), cross-browser (Firefox/WebKit) + exploratoire device-sessies | Gate-besluit (§10.2), browser-coverage & handmatige findings geformaliseerd                                                                                        |
+|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks                                                                        | RESP/A11Y/SEO/LINK/IMG groen op alle 10 pagina's                                                                                                                   |
+|  5   | Visual regression + Lighthouse-drempels                                                                                         | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                                                                            |
+|  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → test → artifacts → history   | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit                                                                         |
+|  7   | Optioneel: pre-deploy/PR-gate (push-trigger op de poorten), cross-browser (Firefox/WebKit) + exploratoire device-sessies        | Gate-besluit (§10.2), browser-coverage & handmatige findings geformaliseerd                                                                                        |
 
 ### 10.1 CI-pipeline (fase 6, in lijn met BestPractices §18)
 
@@ -538,8 +540,8 @@ steps:
   - run: npm run typecheck # tsc --noEmit
   - run: npm run lint # ESLint 10, eslint-plugin-playwright
   - run: npm run validate:html # HTML-01: structuur van de site-pagina's
-  - run: npx playwright install --with-deps            # installeert alle browsers
-  - run: npm run test                                  # suite (1 worker in CI, 2 retries)
+  - run: npx playwright install --with-deps # installeert alle browsers
+  - run: npm run test # suite (1 worker in CI, 2 retries)
   - run: node scripts/ci-summary.mjs # Playwright JSON-report → CI-history
   - uses: actions/upload-artifact # HTML report + JSON report + CI-history
 ```
@@ -560,13 +562,13 @@ als **doel/aspiratie**, niet als huidige werkelijkheid.
 
 ### 10.3 Bekende CI-beperkingen
 
-| # | Beperking | Gevolg | Status |
-| --- | --- | --- | --- |
-| 1 | CI draait met `workers: 1` | De CI-run is niet parallel; `fullyParallel: true` betekent alleen dat tests parallel-draaibaar zijn ontworpen | Bewust; lokaal draait de suite met default workers |
-| 2 | `retries: 2` in CI | Een retry kan flakiness maskeren | Bewust vangnet; een test die alleen via een retry slaagt telt als flaky (§12.1) |
-| 3 | `npx playwright install --with-deps` installeert alle browsers | Onnodige downloadtijd | Verbeterpunt: alleen `chromium` installeren |
-| 4 | `playwright/test-results/` (trace/screenshot/video) wordt niet als artifact geüpload | Failure-debugging via trace ontbreekt in CI | Verbeterpunt: `test-results/` uploaden bij failure |
-| 5 | Geen pre-deploy gate | Een push naar `main` wordt niet automatisch op de suite gevalideerd | Open beslispunt (§10.2) |
+| #   | Beperking                                                                            | Gevolg                                                                                                        | Status                                                                          |
+| --- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 1   | CI draait met `workers: 1`                                                           | De CI-run is niet parallel; `fullyParallel: true` betekent alleen dat tests parallel-draaibaar zijn ontworpen | Bewust; lokaal draait de suite met default workers                              |
+| 2   | `retries: 2` in CI                                                                   | Een retry kan flakiness maskeren                                                                              | Bewust vangnet; een test die alleen via een retry slaagt telt als flaky (§12.1) |
+| 3   | `npx playwright install --with-deps` installeert alle browsers                       | Onnodige downloadtijd                                                                                         | Verbeterpunt: alleen `chromium` installeren                                     |
+| 4   | `playwright/test-results/` (trace/screenshot/video) wordt niet als artifact geüpload | Failure-debugging via trace ontbreekt in CI                                                                   | Verbeterpunt: `test-results/` uploaden bij failure                              |
+| 5   | Geen pre-deploy gate                                                                 | Een push naar `main` wordt niet automatisch op de suite gevalideerd                                           | Open beslispunt (§10.2)                                                         |
 
 ---
 
@@ -620,14 +622,14 @@ het acceptatieniveau van een volledige release, niet de huidige stand.
 
 ### Meetbare exit-metrics
 
-| Metric | Doel (release-target) | Bron / meting |
-| --- | --- | --- |
-| Uitgevoerde testcases | 100% van de cases in §7/§8 die status **Bestaand** of **Deels** hebben | Playwright JSON-report (`stats.expected`) |
-| Vereisten-dekking | Elk in-scope productdoel G1–G10 en G13 heeft ≥1 **bestaande** testcase; G11/G12 worden door CI-config en een CI-run bewezen, niet door een testcase; geplande cases tellen niet mee als dekking | Traceerbaarheid §15 + `npx playwright test --list` |
-| Pass-rate | 100% pass, 0 fail, 0 skipped, 0 unexpected | Playwright JSON-report |
-| Flaky-aandeel | 0% (geen test die alleen via een retry slaagt) | JSON-report `flaky`-veld + 5 groene runs met `retries: 0` lokaal |
-| Dekking van de F-matrix | 10/10 cases bestaand (nu 5/10) | §7 |
-| CI-history | CIH-01…CIH-05 bestaand en groen (5/5) | `ci-history-functional.spec.ts` |
+| Metric                  | Doel (release-target)                                                                                                                                                                           | Bron / meting                                                    |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Uitgevoerde testcases   | 100% van de cases in §7/§8 die status **Bestaand** of **Deels** hebben                                                                                                                          | Playwright JSON-report (`stats.expected`)                        |
+| Vereisten-dekking       | Elk in-scope productdoel G1–G10 en G13 heeft ≥1 **bestaande** testcase; G11/G12 worden door CI-config en een CI-run bewezen, niet door een testcase; geplande cases tellen niet mee als dekking | Traceerbaarheid §15 + `npx playwright test --list`               |
+| Pass-rate               | 100% pass, 0 fail, 0 skipped, 0 unexpected                                                                                                                                                      | Playwright JSON-report                                           |
+| Flaky-aandeel           | 0% (geen test die alleen via een retry slaagt)                                                                                                                                                  | JSON-report `flaky`-veld + 5 groene runs met `retries: 0` lokaal |
+| Dekking van de F-matrix | 10/10 cases bestaand (nu 5/10)                                                                                                                                                                  | §7                                                               |
+| CI-history              | CIH-01…CIH-05 bestaand en groen (5/5)                                                                                                                                                           | `ci-history-functional.spec.ts`                                  |
 
 > Let op: de CI draait met `workers: 1` (`playwright.config.ts`). "Parallel" betekent
 > hier dat tests **parallel-draaibaar ontworpen** zijn (`fullyParallel: true`), niet dat
@@ -667,6 +669,17 @@ Testing hervat wanneer:
 - de omgeving weer stabiel is, óf
 - de gewijzigde vereisten zijn opgenomen in de testcases.
 
+### 12.4 Test closure
+
+Na de laatste run van een release-target worden vastgelegd:
+
+- het definitieve JSON/HTML-report en de CI-history als bewijs;
+- de flaky-analyse (tests die alleen via een retry slaagden);
+- de open defecten met severity en workaround;
+- de actuele traceabilitytabel (§15), inclusief welke cases **Bestaand** zijn;
+- lessons learned en de reden van een planwijziging; bij een volgende release
+  wordt de planversie in de kop van dit document bijgewerkt.
+
 ---
 
 ## 13. Rollen & verantwoordelijkheden
@@ -701,26 +714,48 @@ De kolom **Status** gebruikt de legenda uit §5. Alleen een testcase met status
 **Bestaand** telt als dekking; **Deels** en **Gepland** zijn zichtbaar als open
 werk, niet als bewijs.
 
-| Doel | Testcases | Spec-bestand | Status | Bewijs / resultaat |
-| ---- | --------- | ------------ | ------ | ------------------ |
-| G1 | SM-01, SM-02; SM-03 | `smoke.spec.ts` | Bestaand: SM-01/02; SM-03 gepland | 9 smoke-tests |
-| G2 | NAV-01…NAV-05 | `homepage-functional.spec.ts`, `mobile-menu-functional.spec.ts` | NAV-01 deels; NAV-02 bestaand; NAV-03 deels; NAV-04/05 gepland | 5 homepage- + 12 menu-tests |
-| G3 | F1…F10 | `contact-functional.spec.ts` | F1–F3 en F9 bestaand; F5 deels; F4/F6–F8/F10 gepland | 10 contact-tests |
-| G4 | MENU-01…MENU-10 | `mobile-menu-functional.spec.ts` | MENU-01–03, 05, 06 bestaand; MENU-04 deels; MENU-07–10 gepland | 12 menu-tests |
-| G5 | RESP-01 | nog te maken (fase 4) | Gepland | — |
-| G6 | A11Y-01…A11Y-04 | nog te maken (fase 4) | Gepland | — |
-| G7 | SEO-01…SEO-04 | nog te maken (fase 4) | Gepland | — |
-| G8 | LINK-01, LINK-02, IMG-01, HTML-01 | HTML-01 via CI-poort; rest fase 4 | HTML-01 bestaand; LINK/IMG gepland | `npm run validate:html` |
-| G9 | VIS-01 | nog te maken (fase 5) | Gepland | — |
-| G10 | PERF-01 | nog te maken (fase 5) | Gepland | — |
-| G11 | procesdoel — geen producttestcase | `playwright.config.ts`, CI-run | Bewezen door CI-config, niet door een testcase | `fullyParallel: true`; CI `workers: 1` |
-| G12 | procesdoel — geen producttestcase | `.github/workflows/playwright.yml` | Poorten + suite bestaand; pre-deploy gate open beslispunt (§10.2) | workflow-run + artifacts |
-| G13 | CIH-01…CIH-05; CIH-06/07/08 gepland | `ci-history-functional.spec.ts` | Bestaand: CIH-01…05 | 5 CI-history-tests |
+| Doel | Testcases                           | Spec-bestand                                                    | Status                                                            | Bewijs / resultaat                     |
+| ---- | ----------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------- |
+| G1   | SM-01, SM-02; SM-03                 | `smoke.spec.ts`                                                 | Bestaand: SM-01/02; SM-03 gepland                                 | 9 smoke-tests                          |
+| G2   | NAV-01…NAV-05                       | `homepage-functional.spec.ts`, `mobile-menu-functional.spec.ts` | NAV-01 deels; NAV-02 bestaand; NAV-03 deels; NAV-04/05 gepland    | 5 homepage- + 12 menu-tests            |
+| G3   | F1…F10                              | `contact-functional.spec.ts`                                    | F1–F3 en F9 bestaand; F5 deels; F4/F6–F8/F10 gepland              | 10 contact-tests                       |
+| G4   | MENU-01…MENU-10                     | `mobile-menu-functional.spec.ts`                                | MENU-01–03, 05, 06 bestaand; MENU-04 deels; MENU-07–10 gepland    | 12 menu-tests                          |
+| G5   | RESP-01                             | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
+| G6   | A11Y-01…A11Y-04                     | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
+| G7   | SEO-01…SEO-04                       | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
+| G8   | LINK-01, LINK-02, IMG-01, HTML-01   | HTML-01 via CI-poort; rest fase 4                               | HTML-01 bestaand; LINK/IMG gepland                                | `npm run validate:html`                |
+| G9   | VIS-01                              | nog te maken (fase 5)                                           | Gepland                                                           | —                                      |
+| G10  | PERF-01                             | nog te maken (fase 5)                                           | Gepland                                                           | —                                      |
+| G11  | procesdoel — geen producttestcase   | `playwright.config.ts`, CI-run                                  | Bewezen door CI-config, niet door een testcase                    | `fullyParallel: true`; CI `workers: 1` |
+| G12  | procesdoel — geen producttestcase   | `.github/workflows/playwright.yml`                              | Poorten + suite bestaand; pre-deploy gate open beslispunt (§10.2) | workflow-run + artifacts               |
+| G13  | CIH-01…CIH-05; CIH-06/07/08 gepland | `ci-history-functional.spec.ts`                                 | Bestaand: CIH-01…05                                               | 5 CI-history-tests                     |
 
 > G11 en G12 zijn **procesdoelen**; ze worden niet door een Playwright-testcase
 > bewezen. Daarom geldt de dekkingseis uit §11 alleen voor de productdoelen
 > G1–G10 en G13, plus de procesbewijzen van G11/G12.
 
+---
+
+## 16. Deliverables, planning en goedkeuring
+
+| Onderdeel         | Deliverable                                     | Bron / bewijs                                                          |
+| ----------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
+| Testplan          | dit document, met status per testcase           | `Project-documentation/TESTPLAN.md`                                    |
+| Testsuite         | 5 spec-bestanden, 41 tests                      | `playwright/tests/` + `npx playwright test --list`                     |
+| Testrapportage    | HTML-report en JSON-report per run              | `playwright/playwright-report/`, `playwright/test-results/report.json` |
+| CI-history        | `docs/data/playwright-history.json` + dashboard | `scripts/ci-summary.mjs`, `automation.html`                            |
+| Kwaliteitspoorten | typecheck, lint en html-validate                | `npm run check`, `playwright.yml`                                      |
+
+**Planning en inspanning:** de fasering staat in §10. Fase 1–3 zijn de
+functionele basis, fase 4–5 de non-functionele kwaliteit en fase 6–7 de
+CI-keten en optionele cross-browser/device-sessies. Voor een 1-persoons
+portfolio is de inspanning per fase klein en iteratief; er wordt geen formele
+personeelsplanning beloofd.
+
+**Goedkeuring:** de QA Engineer stelt het plan en de suite op; de Reviewer
+(§13) beoordeelt testkwaliteit en Definition of Done. Acceptatie van een
+release gebeurt tegen de release-target-criteria in §11; de baseline-criteria
+in §11 gelden voor de huidige suite en zijn geen release-goedkeuring.
 
 ---
 
@@ -740,3 +775,40 @@ werk, niet als bewijs.
 - **html-validate:** statische HTML-structureel validator (regels zoals
   `no-implicit-close`, `close-order`, `element-case`, `no-raw-characters`).
 - **Page Object Model (POM):** UI-interactie gecentraliseerd in page objects.
+
+####
+
+# DELETE WHEN DONE
+
+####
+
+Status
+Het testplan is praktisch klaar. De P1- en P2-punten uit de review zijn doorgevoerd; alleen de P3-correcties op BESTPRACTICES.md en het daadwerkelijk bouwen van de geplande tests staan nog open.
+
+Onderdeel Status
+P1 — harde inconsistenties Doorgevoerd
+P2 — standards/CI/traceability Doorgevoerd
+P3 — BestPractices Nog niet gewijzigd
+Geplande testcases implementeren Nog open
+Validatie Groen
+Doorgevoerd in TESTPLAN.md
+Statuslegenda Bestaand / Deels / Gepland / Niet gedekt.
+Status per testcase in §7 en §8.
+§8.5 CI-history gecorrigeerd naar 5 tests, playwright-history.json, schemaVersion, total, passRate.
+SM-03, NAV-04/05, MENU-07…10 en F4–F8/F10 expliciet als gepland gemarkeerd.
+CI-status gecorrigeerd: pipeline bestaat; pre-deploy gate is een open beslispunt.
+Exit-criteria gesplitst in huidige baseline en release-target.
+Testbasis, aannames en acceptatiecriteria toegevoegd (§3.3).
+Traceabilitymatrix uitgebreid met spec-bestand, status en bewijs (§15).
+Concrete non-functionele drempels en CI-beperkingen toegevoegd.
+Test closure (§12.4), deliverables/planning/goedkeuring (§16) en de extra 320px-viewport toegevoegd.
+Validatie
+npm run check → CHECK_OK (typecheck, lint, html-validate).
+npx playwright test --list → 41 tests in 5 spec-bestanden.
+git status → alleen Project-documentation/TESTPLAN.md gewijzigd; 36 insertions, niet gecommit.
+Geen git reset, restore, checkout of clean gebruikt.
+Wat nog open is
+BESTPRACTICES.md P3-correcties: locator-volgorde als projectconventie, “deprecated” → “discouraged”, .open-asserts, skip-link-voorbeeld, networkidle-uitzondering, browserinstallatie en bronnen.
+Geplande tests bouwen: SM-03, F4–F8/F10, MENU-07…10, NAV-04/05 en de RESP/A11Y/SEO/LINK/IMG/VIS/PERF-suites.
+CI-optimalisaties: alleen Chromium installeren, test-results/ uploaden en het gate-besluit nemen.
+Kort: het testplan zelf is nu actueel en consistent; de rest is implementatie en de BestPractices-review.
