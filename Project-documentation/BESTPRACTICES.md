@@ -1,8 +1,14 @@
-Playwright Best Practices — Coding Agent Reference
+# Playwright Best Practices — Coding Agent Reference
 
-Doel: schrijf Playwright-tests die betrouwbaar, onderhoudbaar, snel, deterministisch en gebruikersgericht zijn.
+| Veld | Waarde |
+| --- | --- |
+| **Versie** | 1.1 — november 2026 |
+| **Status** | Interne projectrichtlijn; geen formele ISTQB/Playwright-standaard |
+| **Bronnen** | Playwright Best Practices, Playwright Locator-guide, ISTQB CTFL-syllabus, ISO/IEC/IEEE 29119-3 |
 
-1. Kernprincipes
+**Doel:** schrijf Playwright-tests die betrouwbaar, onderhoudbaar, snel, deterministisch en gebruikersgericht zijn.
+
+## 1. Kernprincipes
 
    Test gebruikersgedrag, niet implementation details.
 
@@ -20,54 +26,56 @@ Doel: schrijf Playwright-tests die betrouwbaar, onderhoudbaar, snel, determinist
 
    Gebruik Playwright tooling (trace/report/inspector) om failures te onderzoeken.
 
-2. Locators
+## 2. Locators
 
-Voorkeursvolgorde (Playwright 1.x):
+**Officiële Playwright-volgorde (user-facing eerst):**
 
-    getByRole()
+```text
+getByRole()
+getByText()
+getByLabel()
+getByPlaceholder()
+getByAltText()
+getByTitle()
+getByTestId()
+CSS/XPath alleen als laatste redmiddel
+```
 
-    getByLabel()
-
-    getByTestId()
-
-    getByPlaceholder()
-
-    getByText()
-
-    getByAltText()
-
-    getByTitle()
-
-    CSS/XPath alleen als laatste redmiddel
+**Projectconventie:** waar de site een expliciet `data-testid`-contract heeft,
+mag `getByTestId()` als stabiel testcontract worden gebruikt. Dat is een
+projectkeuze, niet omdat `getByTestId()` in de officiële volgorde hoger staat
+dan tekst, label of placeholder. Gebruik het alleen wanneer de markup die ID
+bewust garandeert.
 
 Goed:
 
-page.getByRole('button', { name: 'Save' })
-page.getByLabel('Email')
-page.getByTestId('checkout-submit')
+```ts
+page.getByRole('button', { name: 'Save' });
+page.getByLabel('Email');
+page.getByTestId('checkout-submit'); // expliciet testcontract
+```
 
 Vermijd:
 
-page.locator('.btn-primary')
-page.locator('div:nth-child(3)')
-page.locator('//div[2]/button')
+```ts
+page.locator('.btn-primary');
+page.locator('div:nth-child(3)');
+page.locator('//div[2]/button');
+```
 
 Regels:
 
-    Maak locators specifiek genoeg om één logisch element te identificeren.
+- Maak locators specifiek genoeg om één logisch element te identificeren.
+- Gebruik chaining/filtering bij lijsten:
+  `locator.filter({ hasText: '...' })`.
+- Geef voorkeur aan user-facing/semantische selectors.
+- Gebruik `data-testid` als expliciet stabiel testcontract wanneer semantische
+  locators onvoldoende zijn.
+- Vermijd selectors gebaseerd op toevallige DOM/CSS-structuur.
+- Gebruik geen `ElementHandle`/laag-niveau DOM API als een Locator volstaat.
 
-    Gebruik chaining/filtering bij lijsten:
-    locator.filter({ hasText: '...' }).
 
-    Geef voorkeur aan user-facing/semantische selectors.
-
-    Gebruik data-testid als expliciet stabiel testcontract wanneer semantische locators onvoldoende zijn.
-
-    Vermijd selectors gebaseerd op toevallige DOM/CSS-structuur.
-
-    Gebruik geen ElementHandle/laag-niveau DOM API als een Locator volstaat.
-
-3. Acties & waiting
+## 3. Acties & waiting
 
 Gebruik normale Playwright-acties:
 
@@ -86,12 +94,23 @@ page.waitForLoadState(...)
 
 Gebruik alleen expliciete waits wanneer er een echte specifieke reden voor is.
 
+> **Projectuitzondering — `networkidle`:** `BasePage.goto()` en de
+> smoke-check gebruiken `waitForLoadState('networkidle')` omdat de pagina
+> externe assets heeft (o.a. een shields.io-badge) en de suite standaard tegen
+> de live site draait. Dat is een bewuste, gedocumenteerde uitzondering.
+> `networkidle` is geen betrouwbaar readiness-signaal en geldt niet als
+> algemene regel. De ESLint-regel `playwright/no-networkidle` staat daarom uit
+> in `eslint.config.mjs`. Nieuwe tests gebruiken web-first assertions in
+> plaats van deze wait.
+
 Synchroniseer op betekenisvolle toestand:
 
 await expect(page.getByText('Saved')).toBeVisible();
 await expect(page).toHaveURL(/dashboard/);
 
-Nooit een sleep gebruiken om een race condition te verbergen. 4. Assertions
+Nooit een sleep gebruiken om een race condition te verbergen.
+
+## 4. Assertions
 
 Gebruik altijd bij voorkeur web-first assertions:
 
@@ -108,7 +127,9 @@ expect(await locator.textContent()).toBe('Done');
 
 Web-first assertions retryen tot de verwachte toestand bereikt is of de timeout verloopt.
 
-Assertions moeten gebruikersrelevant zijn; vermijd assertions op irrelevante DOM-details. 5. Test isolation
+Assertions moeten gebruikersrelevant zijn; vermijd assertions op irrelevante DOM-details.
+
+## 5. Test isolation
 
 Elke test moet zelfstandig kunnen draaien.
 
@@ -136,7 +157,9 @@ Vereisten:
 
     Vermijd serial; gebruik het alleen wanneer echte state-afhankelijkheid onvermijdelijk is.
 
-Playwright Browser Contexts zorgen voor geïsoleerde cookies/storage/session state. 6. Testdata & database
+Playwright Browser Contexts zorgen voor geïsoleerde cookies/storage/session state.
+
+## 6. Testdata & database
 
 Maak testdata voorspelbaar.
 
@@ -152,7 +175,9 @@ Gebruik unieke data wanneer parallelle tests elkaar anders kunnen beïnvloeden.
 
 Gebruik API/database helpers voor snelle setup wanneer de setup zelf niet het gedrag is dat je wilt testen.
 
-Gebruik de UI alleen voor setup wanneer de UI-flow onderdeel van de test is. 7. Authentication
+Gebruik de UI alleen voor setup wanneer de UI-flow onderdeel van de test is.
+
+## 7. Authentication
 
 Gebruik storageState om login-state te hergebruiken wanneer passend.
 
@@ -174,7 +199,9 @@ Als tests server-side dezelfde account-state wijzigen:
 
     ontwerp tests zodat ze geen conflicterende state delen.
 
-Kies shared auth alleen wanneer tests server-side veilig dezelfde state kunnen delen. 8. Fixtures
+Kies shared auth alleen wanneer tests server-side veilig dezelfde state kunnen delen.
+
+## 8. Fixtures
 
 Gebruik fixtures voor gedeelde test-infrastructuur:
 
@@ -194,7 +221,9 @@ Gebruik fixtures om setup/teardown en dependencies expliciet te maken.
 
 Gebruik beforeEach voor eenvoudige per-test setup.
 
-Gebruik beforeAll/afterAll alleen voor echte worker-level/global setup; maak tests niet afhankelijk van hook-volgorde. 9. Page Objects
+Gebruik beforeAll/afterAll alleen voor echte worker-level/global setup; maak tests niet afhankelijk van hook-volgorde.
+
+## 9. Page Objects
 
 Gebruik Page Objects wanneer de suite groot/complex genoeg is.
 
@@ -215,7 +244,9 @@ Doel:
 
     tests leesbaar houden
 
-Kleine tests mogen direct Locators gebruiken. 10. Network & external dependencies
+Kleine tests mogen direct Locators gebruiken.
+
+## 10. Network & external dependencies
 
 Test externe systemen niet onnodig als onderdeel van jouw E2E-test.
 
@@ -240,7 +271,9 @@ json: [{ id: 1, name: 'Product A' }],
 });
 });
 
-Mock niet blind alles: houd belangrijke integratiepaden met echte systemen waar die integratie zelf onderdeel van het risico is. 11. API testing
+Mock niet blind alles: houd belangrijke integratiepaden met echte systemen waar die integratie zelf onderdeel van het risico is.
+
+## 11. API testing
 
 Gebruik APIRequestContext voor API-tests en efficiënte setup.
 
@@ -251,7 +284,9 @@ UI → gebruikersgedrag
 
 Gebruik API calls bijvoorbeeld om een user/order/entity te creëren voordat de UI-test begint.
 
-Zo voorkom je lange UI-setup voor state die niet relevant is voor de test. 12. Parallelism
+Zo voorkom je lange UI-setup voor state die niet relevant is voor de test.
+
+## 12. Parallelism
 
 Ontwerp tests vanaf het begin voor parallel execution.
 
@@ -269,7 +304,9 @@ npx playwright test --shard=1/3
 
 Gebruik `test.describe.configure({ mode: 'parallel' })` alleen wanneer tests daadwerkelijk onafhankelijk zijn.
 
-Overweeg soft assertions (`expect.soft`) voor meerdere onafhankelijke checks in één test; zo falen ze niet direct maar rapporteert Playwright alle failing assertions aan het einde van de test. 13. Retries & flaky tests
+Overweeg soft assertions (`expect.soft`) voor meerdere onafhankelijke checks in één test; zo falen ze niet direct maar rapporteert Playwright alle failing assertions aan het einde van de test.
+
+## 13. Retries & flaky tests
 
 Retries zijn een diagnostisch vangnet, geen oplossing.
 
@@ -296,7 +333,9 @@ Onderzoek de oorzaak:
 
     applicatiebug
 
-Verhoog niet simpelweg retries/timeouts om flakiness te verbergen. 14. Timeouts
+Verhoog niet simpelweg retries/timeouts om flakiness te verbergen.
+
+## 14. Timeouts
 
 Gebruik timeouts bewust.
 
@@ -318,7 +357,9 @@ Gebruik geen extreem hoge timeout om slechte synchronisatie te maskeren.
 
 Als een test langzaam is, bepaal eerst waarom.
 
-Gebruik globalTimeout in CI om runaway suites te begrenzen. 15. Time-dependent behavior
+Gebruik globalTimeout in CI om runaway suites te begrenzen.
+
+## 15. Time-dependent behavior
 
 Voor tests die afhankelijk zijn van tijd:
 
@@ -328,7 +369,9 @@ Voor tests die afhankelijk zijn van tijd:
 
     vermijd wachten op echte tijd.
 
-Bij een vaste tijd kan bijvoorbeeld page.clock.setFixedTime(...) worden gebruikt. 16. page.evaluate()
+Bij een vaste tijd kan bijvoorbeeld page.clock.setFixedTime(...) worden gebruikt.
+
+## 16. page.evaluate()
 
 Gebruik page.evaluate() alleen wanneer directe browser-JS daadwerkelijk nodig is.
 
@@ -342,7 +385,9 @@ await page.evaluate(() => {
 document.querySelector('#submit')?.click();
 });
 
-E2E-tests moeten zoveel mogelijk via normale browser/user-interactie werken. 17. Browser coverage
+E2E-tests moeten zoveel mogelijk via normale browser/user-interactie werken.
+
+## 17. Browser coverage
 
 Test bewust op de browser engines die relevant zijn:
 
@@ -352,7 +397,9 @@ Test bewust op de browser engines die relevant zijn:
 
     WebKit
 
-Gebruik meerdere browser projects wanneer cross-browser gedrag onderdeel van het risico is. 18. CI
+Gebruik meerdere browser projects wanneer cross-browser gedrag onderdeel van het risico is.
+
+## 18. CI
 
 CI moet minimaal:
 
@@ -370,15 +417,24 @@ CI moet minimaal:
 
 Voorbeeld:
 
+```bash
 npm ci
-npx playwright install chromium --with-deps
+npx playwright install --with-deps chromium
 npx tsc --noEmit
 npx eslint .
 npx playwright test
+```
 
 Installeer alleen browsers die de pipeline daadwerkelijk nodig heeft.
 
-Gebruik Linux voor CI waar mogelijk (goedkoper en sneller). Schaal parallelism bewust via workers/sharding; een conservatieve default is één worker voor stabiliteit. 19. TypeScript & linting
+> **Projectstatus:** `playwright.yml` gebruikt op dit moment
+> `npx playwright install --with-deps`, terwijl alleen het Chromium-project is
+> geconfigureerd. Dat is een bekende beperking; het verbeterpunt is alleen
+> Chromium te installeren (`--with-deps chromium`). Zie `TESTPLAN.md` §10.3.
+
+Gebruik Linux voor CI waar mogelijk (goedkoper en sneller). Schaal parallelism bewust via workers/sharding; een conservatieve default is één worker voor stabiliteit.
+
+## 19. TypeScript & linting
 
 Gebruik TypeScript waar mogelijk. Playwright ondersteunt `.ts`-tests out of the box.
 
@@ -388,6 +444,8 @@ Aanbevolen controle in CI:
 
 tsc --noEmit
 npx eslint .
+
+## 20. Debugging & tooling
 
 Vooral voor CI-failures en lokale debugging is de **Trace Viewer** de belangrijkste bron: timeline, DOM-snapshots per actie, network requests en console logs in één PWA.
 
@@ -419,7 +477,9 @@ use: {
 trace: 'on-first-retry',
 }
 
-om traces vooral bij problematische tests te verzamelen. Stel `trace` niet op `'on'` in voor alle tests, omdat dat prestatie-verzwakking geeft. 21. Reports
+om traces vooral bij problematische tests te verzamelen. Stel `trace` niet op `'on'` in voor alle tests, omdat dat prestatie-verzwakking geeft.
+
+## 21. Reports
 
 Gebruik de HTML reporter voor lokale/CI debugging.
 
@@ -435,7 +495,9 @@ Bewaar relevante CI artifacts:
 
     video indien nodig
 
-Gebruik video niet standaard als trace/screenshot voldoende is; artifacts kosten opslag. 22. Determinisme
+Gebruik video niet standaard als trace/screenshot voldoende is; artifacts kosten opslag.
+
+## 22. Determinisme
 
 Minimaliseer afhankelijkheid van:
 
@@ -455,7 +517,9 @@ Minimaliseer afhankelijkheid van:
 
     onvoorspelbare third-party services
 
-Een goede test heeft dezelfde uitkomst wanneer hij opnieuw, alleen of parallel wordt uitgevoerd. 23. Test pyramid
+Een goede test heeft dezelfde uitkomst wanneer hij opnieuw, alleen of parallel wordt uitgevoerd.
+
+## 23. Test pyramid
 
 Gebruik niet alles als E2E.
 
@@ -472,7 +536,9 @@ Gebruik E2E voor belangrijke gebruikersflows en browsergedrag.
 
 Gebruik unit/integration/API-tests voor logica en lagere lagen waar browsergedrag niet relevant is.
 
-Doel: maximale confidence met minimale dure/flaky browser-tests. 24. Test naming
+Doel: maximale confidence met minimale dure/flaky browser-tests.
+
+## 24. Test naming
 
 Testnamen moeten het gedrag beschrijven:
 
@@ -486,7 +552,9 @@ Minder goed:
 test('button works', ...)
 test('test login', ...)
 
-Beschrijf wat de gebruiker/business-flow verwacht. 25. Test structure
+Beschrijf wat de gebruiker/business-flow verwacht.
+
+## 25. Test structure
 
 Houd tests kort en gefocust.
 
@@ -504,15 +572,16 @@ login
 
 Als één stap faalt, wordt diagnose moeilijk en isolation slecht.
 
-Splits onafhankelijke scenario's op. 26. Anti-patterns
+Splits onafhankelijke scenario's op.
+
+## 26. Anti-patterns
 
 Vermijd:
 
 await page.waitForTimeout(...)
 
-await page.$(...) // deprecated; gebruik Locator
-
-await page.$eval(...) // deprecated; gebruik Locator
+await page.$(...) // discouraged; gebruik Locator
+await page.$eval(...) // discouraged; gebruik Locator
 
 page.locator('div:nth-child(4)')
 
@@ -544,7 +613,7 @@ Ook vermijden:
 
     alles via UI opzetten.
 
-27. Recommended default config
+## 27. Recommended default config
 
 Gebruik een eenvoudige, expliciete configuratie als uitgangspunt:
 
@@ -584,7 +653,9 @@ use: { ...devices['Desktop Chrome'] },
 ],
 });
 
-Pas dit aan de daadwerkelijke CI/browser/teststrategie aan; kopieer geen instellingen blind. 28. Agent decision rules
+Pas dit aan de daadwerkelijke CI/browser/teststrategie aan; kopieer geen instellingen blind.
+
+## 28. Agent decision rules
 
 Bij het schrijven/wijzigen van een Playwright-test:
 
@@ -601,26 +672,35 @@ Bij het schrijven/wijzigen van een Playwright-test:
 11. Als hij flaky is: wat is de echte oorzaak?
 12. Is een Page Object/fixture daadwerkelijk nodig?
 
-13. Locator decision tree
+## 29. Locator decision tree
 
 Element zoeken
 │
-├─ Heeft het een duidelijke ARIA/user-facing betekenis?
+├─ Duidelijke ARIA/user-facing rol?
 │ └─ getByRole()
+│
+├─ Duidelijke zichtbare tekst?
+│ └─ getByText()
 │
 ├─ Form field met label?
 │ └─ getByLabel()
 │
-├─ Duidelijke placeholder/tekst/alt/title?
-│ └─ getByPlaceholder/getByText/getByAltText/getByTitle
+├─ Placeholder?
+│ └─ getByPlaceholder()
 │
-├─ Geen betrouwbare user-facing locator, of data-testid beschikbaar?
+├─ Alt-tekst?
+│ └─ getByAltText()
+│
+├─ Title?
+│ └─ getByTitle()
+│
+├─ Expliciet data-testid-contract?
 │ └─ getByTestId()
 │
 └─ Nog steeds niet mogelijk?
-└─ CSS/XPath, zo specifiek/stabiel mogelijk
+  └─ CSS/XPath, zo specifiek/stabiel mogelijk
 
-30. Assertion decision tree
+## 30. Assertion decision tree
 
 Wil je browser/UI-state controleren?
 │
@@ -636,7 +716,9 @@ URL → toHaveURL()
 title → toHaveTitle()
 count → toHaveCount()
 
-Vermijd eerst data ophalen en daarna een gewone assertion doen wanneer een web-first assertion bestaat. 31. Definition of Done
+Vermijd eerst data ophalen en daarna een gewone assertion doen wanneer een web-first assertion bestaat.
+
+## 31. Definition of Done
 
 Een nieuwe Playwright-test is klaar wanneer:
 
@@ -666,7 +748,7 @@ Een nieuwe Playwright-test is klaar wanneer:
 
     failure/debugging via trace/report mogelijk is.
 
-32. Prioriteitsvolgorde bij trade-offs
+## 32. Prioriteitsvolgorde bij trade-offs
 
 Wanneer meerdere oplossingen mogelijk zijn, geef voorkeur aan:
 
@@ -686,7 +768,9 @@ Wanneer meerdere oplossingen mogelijk zijn, geef voorkeur aan:
 
     Complexe abstractions alleen wanneer nodig
 
-Een kortere test is niet automatisch beter als hij daardoor fragiel wordt. 33. Golden rule
+Een kortere test is niet automatisch beter als hij daardoor fragiel wordt.
+
+## 33. Golden rule
 
 Bij twijfel:
 
@@ -712,7 +796,7 @@ implementation-detail assertion
 ↓
 shared state
 
-34. Accessibility & keyboard testing
+## 34. Accessibility & keyboard testing
 
 Test accessibility als gebruikersgedrag, niet als puur CSS/DOM-detail.
 
@@ -732,24 +816,35 @@ const menu = page.getByTestId('nav-links');
 
 await toggle.click();
 
-await expect(menu).toHaveClass(/open/);
+await expect(menu).toBeVisible();
 await expect(toggle).toHaveAttribute('aria-expanded', 'true');
 await expect(menu.getByRole('link').first()).toBeFocused();
 
 await page.keyboard.press('Escape');
 
-await expect(menu).not.toHaveClass(/open/);
+await expect(menu).toBeHidden();
 await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 await expect(toggle).toBeFocused();
 ```
 
+> `.open` is een project-specifiek CSS-contract. Assert die class alleen als je
+> dat contract bewust test; voor gebruikersgedrag zijn `toBeVisible()`/
+> `toBeHidden()` en `aria-expanded` de primaire assertions.
+
 Voor skip-links:
 
 ```ts
+const skip = page.getByRole('link', { name: 'Ga naar hoofdinhoud' });
+
 await page.keyboard.press('Tab');
-await expect(page.getByRole('link', { name: 'Ga naar hoofdinhoud' })).toBeFocused();
+await expect(skip).toBeFocused();
+
 await page.keyboard.press('Enter');
-await expect(page.locator('#hoofdinhoud')).toHaveCount(1);
+await expect(page).toHaveURL(/#hoofdinhoud$/);
+await expect(page.locator('#hoofdinhoud')).toBeInViewport();
+
+// Alleen toevoegen als het doel focusbaar is, bijvoorbeeld met tabindex="-1":
+// await expect(page.locator('#hoofdinhoud')).toBeFocused();
 ```
 
 Voor decoratieve iconen:
@@ -763,7 +858,7 @@ aanvullend axe-core, Lighthouse, CSS-analyse en handmatige controles;
 Playwright kan alleen het DOM-/interactiegedrag bewijzen dat via de browser
 toegankelijk is.
 
-35. Local docs verification
+## 35. Local docs verification
 
 Wanneer de Playwright-suite standaard tegen een live URL draait, zijn lokale
 `docs/`-wijzigingen niet direct gedekt door `npx playwright test`.
@@ -792,3 +887,13 @@ npm run test:local   # = npx playwright test -c playwright.local.config.ts
 Vermijd ad-hoc configs met eigen poorten (3000 en 3123 zijn historical; één vaste
 lokale poort houdt handleidingen en artifacts consistent). Tijdelijke specs zelf
 verwijderen na verifiëring, bewezen gedrag naar `playwright/tests/`.
+
+## Bronnen
+
+- Playwright — Best Practices: <https://playwright.dev/docs/best-practices>
+- Playwright — Locators: <https://playwright.dev/docs/locators>
+- ISTQB CTFL-syllabus (actuele versie) — testniveaus, testtypes en testtechnieken
+- ISO/IEC/IEEE 29119-3 — testdocumentatie en traceerbaarheid
+
+Deze lijst is een **projectrichtlijn**. Bij conflict tussen deze richtlijn en de
+officiële Playwright-documentatie geldt de officiële documentatie.
