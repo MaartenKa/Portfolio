@@ -126,6 +126,7 @@ een rode poort stopt de suite.
 | [PLAYWRIGHT.md](Project-documentation/PLAYWRIGHT.md)                             | Projectopbouw, Page Objects, conventies, commando's |
 | [TESTPLAN.md](Project-documentation/TESTPLAN.md)                                 | Teststrategie, testmatrix G1–G13, roadmap           |
 | [PLAN-TEST-IMPROVEMENTS.md](Project-documentation/PLAN-TEST-IMPROVEMENTS.md)     | Uitvoeringsplan en status van de testarchitectuur   |
+| [PLAN-HERO-SOFT-3D.md](Project-documentation/PLAN-HERO-SOFT-3D.md)               | Plan en resultaat van de soft-3D homepage-card     |
 | [BESTPRACTICES.md](Project-documentation/BESTPRACTICES.md)                       | ISTQB- en Playwright-methodiek                      |
 | [CI-OVERVIEW.md](Project-documentation/CI-OVERVIEW.md)                           | CI/CD in gewoon taalgebruik + bestandsgids          |
 | [CI-PLAYWRIGHT-HISTORY.md](Project-documentation/CI-PLAYWRIGHT-HISTORY.md)       | Technische CI-spec: schema's en verificatie         |
