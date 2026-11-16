@@ -1,31 +1,33 @@
-import { test } from "@playwright/test";
-import { HomePage } from "../../pages/home.page";
+import { test } from "../../fixtures/test-fixtures";
 
 test.describe("Homepage - functionele navigatie", () => {
-  let home: HomePage;
-
-  test.beforeEach(async ({ page }) => {
-    home = new HomePage(page);
-    await home.navigate();
+  test('CTA-knop "Bekijk mijn projecten" opent de projectenpagina', async ({
+    homePage,
+  }) => {
+    await homePage.clickProjectsCta();
   });
 
-  test('CTA-knop "Bekijk mijn projecten" opent de projectenpagina', async () => {
-    await home.clickProjectsCta();
+  test('CTA-knop "Bekijk mijn Curriculum vitae" opent de curriculumpagina', async ({
+    homePage,
+  }) => {
+    await homePage.clickCurriculumCta();
   });
 
-  test('CTA-knop "Bekijk mijn Curriculum vitae" opent de curriculumpagina', async () => {
-    await home.clickCurriculumCta();
+  test('navigatielink "Contact" opent de contactpagina', async ({
+    homePage,
+  }) => {
+    await homePage.clickContactNavLink();
   });
 
-  test('navigatielink "Contact" opent de contactpagina', async () => {
-    await home.clickContactNavLink();
+  test('navigatielink "Projecten" opent de projectenpagina', async ({
+    homePage,
+  }) => {
+    await homePage.clickProjectsNavLink();
   });
 
-  test('navigatielink "Projecten" opent de projectenpagina', async () => {
-    await home.clickProjectsNavLink();
-  });
-
-  test('card-link "Meer over testing" opent de testpagina', async () => {
-    await home.clickTestingCardLink();
+  test('card-link "Meer over testing" opent de testpagina', async ({
+    homePage,
+  }) => {
+    await homePage.clickTestingCardLink();
   });
 });

@@ -1,10 +1,8 @@
-import { test, expect } from "@playwright/test";
-import {
-  CiHistoryPage,
-  HistoryRunFixture,
-} from "../../pages/ci-history.page";
+import { expect, test } from "../../fixtures/test-fixtures";
+import type { HistoryRunFixture } from "../../pages/ci-history.page";
 
-const RUN_URL = "https://github.com/MaartenKa/Portfolio/actions/runs/41424673096";
+const RUN_URL =
+  "https://github.com/MaartenKa/Portfolio/actions/runs/41424673096";
 
 const run = (overrides: Partial<HistoryRunFixture>): HistoryRunFixture => ({
   runId: 41424673096,
@@ -58,52 +56,61 @@ const threeRuns: HistoryRunFixture[] = [
 ];
 
 test.describe("CI-resultaten - kaarten en geschiedenis", () => {
-  let ci: CiHistoryPage;
+  test("laatste-run kaarten tonen de nieuwste CI-run", async ({
+    ciHistoryPage,
+  }) => {
+    await ciHistoryPage.mockHistory(threeRuns);
+    await ciHistoryPage.navigate();
 
-  test.beforeEach(async ({ page }) => {
-    ci = new CiHistoryPage(page);
+    await expect(ciHistoryPage.value("ci-suite-size")).toHaveText("40 tests");
+    await expect(ciHistoryPage.value("ci-runs")).toHaveText("3");
+    await expect(ciHistoryPage.value("ci-total-tests")).toHaveText("40");
+    await expect(ciHistoryPage.value("ci-pass-rate")).toHaveText("100%");
+    await expect(ciHistoryPage.value("ci-status")).toHaveText("Geslaagd");
   });
 
-  test("laatste-run kaarten tonen de nieuwste CI-run", async () => {
-    await ci.mockHistory(threeRuns);
-    await ci.navigate();
-
-    await expect(ci.value("ci-suite-size")).toHaveText("40 tests");
-    await expect(ci.value("ci-runs")).toHaveText("3");
-    await expect(ci.value("ci-total-tests")).toHaveText("40");
-    await expect(ci.value("ci-pass-rate")).toHaveText("100%");
-    await expect(ci.value("ci-status")).toHaveText("Geslaagd");
-  });
-
-  test("aggregate kaarten poolen alle runs en de ratio is Σ passed / Σ total", async () => {
-    await ci.mockHistory(threeRuns);
-    await ci.navigate();
+  test("aggregate kaarten poolen alle runs en de ratio is Σ passed / Σ total", async ({
+    ciHistoryPage,
+  }) => {
+    await ciHistoryPage.mockHistory(threeRuns);
+    await ciHistoryPage.navigate();
 
     // 40 + 40 + 40 uitgevoerde tests, 40 + 38 + 30 geslaagde tests.
-    await expect(ci.value("ci-total-executed")).toHaveText("120");
-    await expect(ci.value("ci-total-passed")).toHaveText("108 van 120");
-    await expect(ci.value("ci-pass-ratio")).toHaveText("90%");
-    await expect(ci.value("ci-streak")).toHaveText("1");
-    await expect(ci.value("ci-flaky-runs")).toHaveText("1");
-    await expect(ci.value("ci-failed-runs")).toHaveText("2");
+    await expect(ciHistoryPage.value("ci-total-executed")).toHaveText("120");
+    await expect(ciHistoryPage.value("ci-total-passed")).toHaveText(
+      "108 van 120",
+    );
+    await expect(ciHistoryPage.value("ci-pass-ratio")).toHaveText("90%");
+    await expect(ciHistoryPage.value("ci-streak")).toHaveText("1");
+    await expect(ciHistoryPage.value("ci-flaky-runs")).toHaveText("1");
+    await expect(ciHistoryPage.value("ci-failed-runs")).toHaveText("2");
 
-    await expect(ci.value("ci-metrics-note")).toContainText("Over 3 CI-runs");
-    await expect(ci.value("ci-metrics-note")).toContainText(
+    await expect(ciHistoryPage.value("ci-metrics-note")).toContainText(
+      "Over 3 CI-runs",
+    );
+    await expect(ciHistoryPage.value("ci-metrics-note")).toContainText(
       "108 van 120 tests geslaagd.",
     );
   });
 
-  test("geschiedenis toont een rij per run met een werkende run-link", async () => {
-    await ci.mockHistory(threeRuns);
-    await ci.navigate();
+  test("geschiedenis toont een rij per run met een werkende run-link", async ({
+    ciHistoryPage,
+  }) => {
+    await ciHistoryPage.mockHistory(threeRuns);
+    await ciHistoryPage.navigate();
 
-    await expect(ci.historyRows()).toHaveCount(3);
+    await expect(ciHistoryPage.historyRows()).toHaveCount(3);
     await expect(
-      ci.value("ci-history-body").getByRole("link", { name: "Run 42" }),
+      ciHistoryPage
+        .value("ci-history-body")
+        .getByRole("link", { name: "Run 42" }),
     ).toHaveAttribute("href", RUN_URL);
   });
 
-  test("runs zonder noemer worden uitgesloten van de totalen", async () => {
+
+  test("runs zonder noemer worden uitgesloten van de totalen", async ({
+    ciHistoryPage,
+  }) => {
     const withCancelled: HistoryRunFixture[] = [
       run({
         runId: 4,
@@ -140,24 +147,28 @@ test.describe("CI-resultaten - kaarten en geschiedenis", () => {
       }),
     ];
 
-    await ci.mockHistory(withCancelled);
-    await ci.navigate();
+    await ciHistoryPage.mockHistory(withCancelled);
+    await ciHistoryPage.navigate();
 
     // Alleen de twee runs met total > 0 tellen mee: 72 van 80 = 90%.
-    await expect(ci.value("ci-total-executed")).toHaveText("80");
-    await expect(ci.value("ci-total-passed")).toHaveText("72 van 80");
-    await expect(ci.value("ci-pass-ratio")).toHaveText("90%");
-    await expect(ci.value("ci-streak")).toHaveText("0");
-    await expect(ci.value("ci-status")).toHaveText("Geannuleerd");
+    await expect(ciHistoryPage.value("ci-total-executed")).toHaveText("80");
+    await expect(ciHistoryPage.value("ci-total-passed")).toHaveText(
+      "72 van 80",
+    );
+    await expect(ciHistoryPage.value("ci-pass-ratio")).toHaveText("90%");
+    await expect(ciHistoryPage.value("ci-streak")).toHaveText("0");
+    await expect(ciHistoryPage.value("ci-status")).toHaveText("Geannuleerd");
 
-    await expect(ci.value("ci-metrics-note")).toContainText(
+    await expect(ciHistoryPage.value("ci-metrics-note")).toContainText(
       "2 van 3 CI-runs geteld",
     );
   });
 
-  test("lege geschiedenis toont placeholders en de placeholder-rij", async () => {
-    await ci.mockHistory([]);
-    await ci.navigate();
+  test("lege geschiedenis toont placeholders en de placeholder-rij", async ({
+    ciHistoryPage,
+  }) => {
+    await ciHistoryPage.mockHistory([]);
+    await ciHistoryPage.navigate();
 
     for (const testId of [
       "ci-suite-size",
@@ -172,13 +183,13 @@ test.describe("CI-resultaten - kaarten en geschiedenis", () => {
       "ci-flaky-runs",
       "ci-failed-runs",
     ]) {
-      await expect(ci.value(testId)).toHaveText("—");
+      await expect(ciHistoryPage.value(testId)).toHaveText("—");
     }
 
-    await expect(ci.value("ci-history-body")).toContainText(
+    await expect(ciHistoryPage.value("ci-history-body")).toContainText(
       "Geen CI-historie beschikbaar.",
     );
-    await expect(ci.value("ci-metrics-note")).toContainText(
+    await expect(ciHistoryPage.value("ci-metrics-note")).toContainText(
       "Σ geslaagde tests",
     );
   });

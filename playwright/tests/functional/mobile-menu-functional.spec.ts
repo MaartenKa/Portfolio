@@ -1,6 +1,5 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from "../../fixtures/test-fixtures";
 import {
-  NavigationPage,
   NAV_ITEM_TEST_IDS,
   NAV_ITEM_URLS,
 } from "../../pages/mobile.page";
@@ -13,82 +12,82 @@ test.describe("Mobiele menu-toggle", () => {
     test.use({ viewport: DESKTOP_VIEWPORT });
 
     test("menu-toggle is niet zichtbaar en nav-links staan inline", async ({
-      page,
+      navPage,
     }) => {
-      const nav = new NavigationPage(page);
-      await nav.goto("");
-
       // Toggle button bestaat in DOM maar is via CSS verborgen (display: none)
-      await expect(nav.menuToggle).toBeHidden();
+      await expect(navPage.menuToggle).toBeHidden();
 
       // Navigatie-lijst is inline zichtbaar, zonder .open klasse
-      await nav.expectMenuState(false);
+      await navPage.expectMenuState(false);
+      await expect(navPage.navLinks).toBeVisible();
     });
   });
 
   test.describe("Mobiel (≤850px)", () => {
     test.use({ viewport: MOBILE_VIEWPORT });
 
-    let nav: NavigationPage;
-
-    test.beforeEach(async ({ page }) => {
-      nav = new NavigationPage(page);
-      await nav.goto("");
-    });
-
-    test("toggle is zichtbaar en menu is initieel gesloten", async () => {
+    test("toggle is zichtbaar en menu is initieel gesloten", async ({
+      navPage,
+    }) => {
       // Toggle is zichtbaar en aangegeven als "niet geëxpanded"
-      await expect(nav.menuToggle).toBeVisible();
-      await nav.expectToggleAriaExpanded(false);
+      await expect(navPage.menuToggle).toBeVisible();
+      await navPage.expectToggleAriaExpanded(false);
 
       // Menu is gesloten (géén .open klasse) en op mobiel niet zichtbaar
-      await nav.expectMenuState(false);
-      await expect(nav.navLinks).toBeHidden();
+      await navPage.expectMenuState(false);
+      await expect(navPage.navLinks).toBeHidden();
     });
 
-    test("klik op toggle opent het menu", async () => {
-      await nav.toggleMenu();
+    test("klik op toggle opent het menu", async ({ navPage }) => {
+      await navPage.toggleMenu();
 
       // Menu open: .open + zichtbaar + alle items zichtbaar + aria-expanded=true
-      await nav.expectMenuState(true);
-      await nav.expectToggleAriaExpanded(true);
+      await navPage.expectMenuState(true);
+      await navPage.expectToggleAriaExpanded(true);
     });
 
-    test("klik op toggle sluit het menu weer", async () => {
+    test("klik op toggle sluit het menu weer", async ({ navPage }) => {
       // Open eerst
-      await nav.toggleMenu();
+      await navPage.toggleMenu();
       // Klik opnieuw → gesloten
-      await nav.toggleMenu();
+      await navPage.toggleMenu();
 
-      await nav.expectMenuState(false);
-      await expect(nav.navLinks).toBeHidden();
-      await nav.expectToggleAriaExpanded(false);
+      await navPage.expectMenuState(false);
+      await expect(navPage.navLinks).toBeHidden();
+      await navPage.expectToggleAriaExpanded(false);
     });
 
-    test("klik op nav-link in open menu sluit het menu en navigeert", async () => {
+    test("klik op nav-link in open menu sluit het menu en navigeert", async ({
+      navPage,
+    }) => {
       // Open het menu
-      await nav.toggleMenu();
-      await nav.expectMenuState(true);
+      await navPage.toggleMenu();
+      await navPage.expectMenuState(true);
 
       // Klik op een nav-link (Contact) → navigatie + menu gesloten op nieuwe pagina
-      await nav.clickNavLink("nav-contact", /contact\.html/);
-      await expect(nav.navLinks).not.toHaveClass(/open/);
-      await expect(nav.menuToggle).toHaveAttribute("aria-expanded", "false");
+      await navPage.clickNavLink("nav-contact", /contact\.html/);
+      await expect(navPage.navLinks).not.toHaveClass(/open/);
+      await expect(navPage.menuToggle).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      );
     });
 
     test.describe("Alle nav-links navigeren naar de juiste pagina", () => {
       for (const testId of NAV_ITEM_TEST_IDS) {
-        test(`nav-link "${testId}" navigeert naar ${NAV_ITEM_URLS[testId]}`, async () => {
+        test(`nav-link "${testId}" navigeert naar ${NAV_ITEM_URLS[testId]}`, async ({
+          navPage,
+        }) => {
           // Open het menu
-          await nav.toggleMenu();
-          await nav.expectMenuState(true);
+          await navPage.toggleMenu();
+          await navPage.expectMenuState(true);
 
           // Klik op de nav-link en verifieer de URL
-          await nav.clickNavLink(testId, NAV_ITEM_URLS[testId]);
+          await navPage.clickNavLink(testId, NAV_ITEM_URLS[testId]);
 
           // Menu is gesloten na navigatie
-          await expect(nav.navLinks).not.toHaveClass(/open/);
-          await expect(nav.menuToggle).toHaveAttribute(
+          await expect(navPage.navLinks).not.toHaveClass(/open/);
+          await expect(navPage.menuToggle).toHaveAttribute(
             "aria-expanded",
             "false",
           );

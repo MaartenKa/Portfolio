@@ -1,6 +1,6 @@
 import { Page, expect } from "@playwright/test";
 import { BasePage } from "./base.page";
-import { FORMWARD_URL, EMAIL, GITHUB_URL, LINKEDIN_URL } from "../utils/test-data";
+import { FORMWARD_URL, THANK_YOU_PAGE, EMAIL, GITHUB_URL, LINKEDIN_URL } from "../utils/test-data";
 
 // const FORMWARD_URL = "..."  ← VERWIJDERD (nu uit test-data)
 
@@ -12,6 +12,8 @@ export interface ContactFormData {
 }
 
 export class ContactPage extends BasePage {
+  formwardRequests: string[] = [];
+
   constructor(page: Page) {
     super(page);
   }
@@ -24,21 +26,53 @@ export class ContactPage extends BasePage {
     return this;
   }
 
-  /** Mock de Formward POST zodat tests deterministisch zijn en geen internet nodig hebben. */
+  /**
+   * Mock de Formward POST zodat tests deterministisch zijn en er nooit een
+   * echt bericht wordt verstuurd. De route blijft actief; requests worden
+   * geregistreerd zodat een test kan asserten dat een ongeldige submit geen
+   * request veroorzaakt.
+   */
   async mockFormSubmit(): Promise<void> {
     await this.page.route(FORMWARD_URL, async (route) => {
+      this.formwardRequests.push(route.request().url());
+
+      const redirectUrl = new URL(THANK_YOU_PAGE, this.page.url()).toString();
+
       await route.fulfill({
         status: 302,
         headers: {
-          Location: "https://maartenka.github.io/Portfolio/bedankt.html",
+          Location: redirectUrl,
         },
       });
     });
   }
 
-  /** Verwijder de Formward-mock zodat native validatie de submit kan blokkeren. */
-  async clearFormMock(): Promise<void> {
-    await this.page.unroute(FORMWARD_URL);
+  async expectFormwardRequestCount(count: number): Promise<void> {
+    expect(
+      this.formwardRequests,
+      `Verwacht ${count} Formward-request(s), ontvangen ${this.formwardRequests.length}`,
+    ).toHaveLength(count);
+  }
+
+  async expectFormInvalid(): Promise<void> {
+    // De form heeft geen stabiele semantische locator of testid; deze
+    // DOM-check is daarom een bewuste uitzondering op de raw-locator-regel.
+    // eslint-disable-next-line playwright/no-raw-locators
+    const form = this.page.locator("form");
+    const isValid = await form.evaluate((element) =>
+      (element as HTMLFormElement).checkValidity(),
+    );
+
+    expect(isValid, "Formulier is onverwacht geldig").toBe(false);
+  }
+
+  async expectFieldInvalid(label: string): Promise<void> {
+    const field = this.page.getByLabel(label);
+    const isValid = await field.evaluate((element) =>
+      (element as HTMLInputElement | HTMLTextAreaElement).checkValidity(),
+    );
+
+    expect(isValid, `Veld "${label}" is onverwacht geldig`).toBe(false);
   }
 
   async expectTitleContains(title: string): Promise<void> {
@@ -81,7 +115,9 @@ export class ContactPage extends BasePage {
 
   async expectHoneypotHidden(): Promise<void> {
     const honeypot = this.page.getByTestId("field-honeypot");
-    await expect(honeypot).toHaveAttribute("style", /display:\s*none/);
+    await expect(honeypot).toBeHidden();
+    await expect(honeypot).toHaveAttribute("tabindex", "-1");
+    await expect(honeypot).toHaveAttribute("autocomplete", "off");
   }
 
   async expectPrivacyLink(): Promise<void> {

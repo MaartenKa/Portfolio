@@ -17,6 +17,21 @@ export const GITHUB_URL = "https://github.com/MaartenKa/Portfolio";
 export const LINKEDIN_URL =
   "https://www.linkedin.com/in/maarten-kamps-a6909527/";
 
+/** Geldige formulierdataset voor F1/F9. */
+export const VALID_CONTACT = {
+  name: "Test Gebruiker",
+  email: "test@example.com",
+  subject: "Test onderwerp",
+  message: "Dit is een testbericht.",
+};
+
+/** Ongeldige e-maildataset voor F3. */
+export const INVALID_EMAIL_CONTACT = {
+  name: "Test Gebruiker",
+  email: "ongeldig-email",
+  message: "Dit is een testbericht.",
+};
+
 /** Pagina's voor de smoke lightweight check. */
 export const OTHER_PAGES_TO_TEST = [
   "curriculum.html",

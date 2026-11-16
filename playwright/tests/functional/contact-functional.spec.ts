@@ -1,81 +1,76 @@
-import { test } from "@playwright/test";
-import { ContactPage } from "../../pages/contact.page";
+import { test } from "../../fixtures/test-fixtures";
+import {
+  INVALID_EMAIL_CONTACT,
+  VALID_CONTACT,
+} from "../../utils/test-data";
 
 test.describe("Contactpagina - functionele tests", () => {
-  let contact: ContactPage;
-
-  test.beforeEach(async ({ page }) => {
-    contact = new ContactPage(page);
-    // Installeer de Formward-mock VÓÓR het navigeren, zodat elke request naar
-    // Formward (incl. een eventuele submit) al geïntercepteerd wordt en er nooit
-    // een echt POST/mailtje weggaat. Tests die native validatie willen testen,
-    // roepen zelf clearFormMock() aan.
-    await contact.mockFormSubmit();
-    await contact.navigate();
-  });
-
   test.describe("Pagina-structuur", () => {
-    test("titel bevat 'Contact'", async () => {
-      await contact.expectTitleContains("Contact");
+    test("titel bevat 'Contact'", async ({ contactPage }) => {
+      await contactPage.expectTitleContains("Contact");
     });
 
-    test("alle formulievelden zijn zichtbaar", async () => {
-      await contact.expectFieldVisible("Naam");
-      await contact.expectFieldVisible("E-mailadres");
-      await contact.expectFieldVisible("Onderwerp");
-      await contact.expectFieldVisible("Bericht");
+    test("alle formuliervelden zijn zichtbaar", async ({ contactPage }) => {
+      await contactPage.expectFieldVisible("Naam");
+      await contactPage.expectFieldVisible("E-mailadres");
+      await contactPage.expectFieldVisible("Onderwerp");
+      await contactPage.expectFieldVisible("Bericht");
     });
 
-    test("honeypot-veld is verborgen", async () => {
-      await contact.expectHoneypotHidden();
+    test("honeypot-veld is verborgen", async ({ contactPage }) => {
+      await contactPage.expectHoneypotHidden();
     });
 
-    test("privacyverklaring-link verwijst naar privacy-pagina", async () => {
-      await contact.expectPrivacyLink();
+    test("privacyverklaring-link verwijst naar privacy-pagina", async ({
+      contactPage,
+    }) => {
+      await contactPage.expectPrivacyLink();
     });
 
-    test("e-mail-link heeft correct mailto-adres", async () => {
-      await contact.expectEmailLink();
+    test("e-mail-link heeft correct mailto-adres", async ({ contactPage }) => {
+      await contactPage.expectEmailLink();
     });
 
-    test("GitHub-link heeft correcte URL", async () => {
-      await contact.expectGitHubLink();
+    test("GitHub-link heeft correcte URL", async ({ contactPage }) => {
+      await contactPage.expectGitHubLink();
     });
 
-    test("LinkedIn-link heeft correcte URL", async () => {
-      await contact.expectLinkedInLink();
+    test("LinkedIn-link heeft correcte URL", async ({ contactPage }) => {
+      await contactPage.expectLinkedInLink();
     });
   });
 
   test.describe("Formulier-inzending", () => {
-    // De Formward-mock staat al in de bovenliggende beforeEach.
-    test("geldig formulier redirect naar bedanktpagina", async () => {
-      await contact.fillForm({
-        name: "Test Gebruiker",
-        email: "test@example.com",
-        subject: "Test onderwerp",
-        message: "Dit is een testbericht.",
-      });
-      await contact.submitForm();
-      await contact.expectRedirectToThankYouPage();
+    test("geldig formulier redirect naar bedanktpagina", async ({
+      contactPage,
+    }) => {
+      await contactPage.fillForm(VALID_CONTACT);
+      await contactPage.submitForm();
+      await contactPage.expectRedirectToThankYouPage();
+      await contactPage.expectFormwardRequestCount(1);
     });
 
-    test("formulier zonder verplichte velden redirect niet", async () => {
-      await contact.clearFormMock();
-      await contact.submitForm();
-      await contact.expectNotRedirected();
+    test("formulier zonder verplichte velden redirect niet", async ({
+      contactPage,
+    }) => {
+      await contactPage.submitForm();
+      await contactPage.expectNotRedirected();
+      await contactPage.expectFormInvalid();
+      await contactPage.expectFieldInvalid("Naam");
+      await contactPage.expectFieldInvalid("E-mailadres");
+      await contactPage.expectFieldInvalid("Bericht");
+      await contactPage.expectFormwardRequestCount(0);
     });
 
-    test("formulier met ongeldige e-mail redirect niet", async () => {
-      await contact.clearFormMock();
-      await contact.fillForm({
-        name: "Test Gebruiker",
-        email: "ongeldig-email",
-        message: "Dit is een testbericht.",
-      });
-      await contact.submitForm();
-      await contact.expectNotRedirected();
+    test("formulier met ongeldige e-mail redirect niet", async ({
+      contactPage,
+    }) => {
+      await contactPage.fillForm(INVALID_EMAIL_CONTACT);
+      await contactPage.submitForm();
+      await contactPage.expectNotRedirected();
+      await contactPage.expectFormInvalid();
+      await contactPage.expectFieldInvalid("E-mailadres");
+      await contactPage.expectFormwardRequestCount(0);
     });
   });
 });
-

@@ -1,57 +1,33 @@
-import { test, expect } from "@playwright/test";
-import { HomePage } from "../../pages/home.page";
+import { expect, test } from "../../fixtures/test-fixtures";
 import { OTHER_PAGES_TO_TEST } from "../../utils/test-data";
-
-// const otherPagesToTest = [...]  ← VERWIJDERD (nu uit test-data)
 
 test.describe("Smoke test – Index pagina (Deep Check)", () => {
   test("index pagina laadt zonder fouten en structuur is correct", async ({
-    page,
+    homePage,
   }) => {
-    const home = new HomePage(page);
-    await home.navigate();
-    // De Page Object controlleert op de volledage integriteit van de homepage
-    await home.expectStructureVisible();
-    await home.expectNoConsoleErrors();
+    // De fixture navigeert al naar de homepage.
+    await homePage.expectStructureVisible();
+    await homePage.expectNoConsoleErrors();
   });
 });
 
-// Test of de overige pagina's laden.
-// Gebruikt nu de test-data import
 test.describe("Smoke test – Overige pagina's (Lightweight Check)", () => {
   for (const url of OTHER_PAGES_TO_TEST) {
-    test(`${url} laadt zonder kritieke fouten`, async ({ page }) => {
-      const consoleErrors: string[] = [];
-      // Luister naar console errors
-
-      page.on("console", (msg) => {
-        if (msg.type() === "error") {
-          consoleErrors.push(msg.text());
-        }
-      });
-
-      const response = await page.goto(url);
-      // Controlleren of de pagina bestaat
+    test(`${url} laadt zonder kritieke fouten`, async ({ basePage }) => {
+      const response = await basePage.goto(url);
 
       expect(
         response,
         `Pagina ${url} kon niet worden geladen (geen response).`,
       ).not.toBeNull();
-      // Check status code 200
 
       expect(
         response?.status(),
         `Pagina ${url} gaf een foutieve status: ${response?.status()}`,
       ).toBe(200);
-      // Wachten op netwerk idle
 
-      await page.waitForLoadState("networkidle");
-      // Controle of er console javascript fouten zijn opgetreden
-
-      expect(
-        consoleErrors,
-        `Console errors gevonden op ${url}: ${consoleErrors.join(", ")}`,
-      ).toHaveLength(0);
+      // Captures zowel console-errors als pageerror.
+      await basePage.expectNoConsoleErrors();
     });
   }
 });
