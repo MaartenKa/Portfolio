@@ -88,11 +88,12 @@ src/ts/main.ts                 # bron van de site-JS (menu + CI-history UI)
 playwright/
   pages/                       # Page Objects
   fixtures/test-fixtures.ts    # typed Page Object-fixtures
+  fixtures/formward.mock.ts    # Formward-mock + request-registratie
   utils/test-data.ts           # gedeelde constanten + formulierdatasets
   tests/smoke|functional/      # de 41 tests
   tests/accessibility|compatibility|e2e|regression/   # gereserveerd, nog leeg
 scripts/ci-summary.mjs         # JSON-report → CI-history
-Project-documentation/         # testplan, CI-documentatie, best practices, suite-status
+Project-documentation/         # testplan, CI-documentatie, best practices, verbeterplan
 ```
 
 ## Testsuite
@@ -124,7 +125,7 @@ een rode poort stopt de suite.
 | -------------------------------------------------------------------------------- | --------------------------------------------------- |
 | [PLAYWRIGHT.md](Project-documentation/PLAYWRIGHT.md)                             | Projectopbouw, Page Objects, conventies, commando's |
 | [TESTPLAN.md](Project-documentation/TESTPLAN.md)                                 | Teststrategie, testmatrix G1–G13, roadmap           |
-| [TEST-SUITE-STATUS.md](Project-documentation/TEST-SUITE-STATUS.md)               | Actuele suite-status en openstaande punten           |
+| [PLAN-TEST-IMPROVEMENTS.md](Project-documentation/PLAN-TEST-IMPROVEMENTS.md)     | Uitvoeringsplan en status van de testarchitectuur   |
 | [BESTPRACTICES.md](Project-documentation/BESTPRACTICES.md)                       | ISTQB- en Playwright-methodiek                      |
 | [CI-OVERVIEW.md](Project-documentation/CI-OVERVIEW.md)                           | CI/CD in gewoon taalgebruik + bestandsgids          |
 | [CI-PLAYWRIGHT-HISTORY.md](Project-documentation/CI-PLAYWRIGHT-HISTORY.md)       | Technische CI-spec: schema's en verificatie         |
@@ -148,4 +149,4 @@ een rode poort stopt de suite.
 - E-mail: <Maarten.kamps.bee@outlook.com>
 - LinkedIn: <https://www.linkedin.com/in/maarten-kamps-a6909527/>
 - GitHub: <https://github.com/MaartenKa/Portfolio>
-- Licentie: MIT — zie [LICENSE](LICENSE)
+- Licentie: MIT met bekerking zie [LICENSE](LICENSE)

@@ -195,10 +195,11 @@ Twee dingen die opvallen:
 
 | Bestand | Rol |
 | --- | --- |
-| `playwright/pages/base.page.ts` | Basisklasse voor page objects: console- én page-errors worden één keer per `page` geregistreerd, `goto()` wacht op `load` (niet op `networkidle`), `expectNoConsoleErrors()` assert dat de lijst leeg is |
-| `playwright/fixtures/test-fixtures.ts` | Typed fixtures voor `homePage`, `contactPage`, `navPage`, `ciHistoryPage` en `basePage`; specs importeren `test`/`expect` hieruit |
+| `playwright/pages/base.page.ts` | Basisklasse voor page objects: console- én page-errors worden één keer per `page` geregistreerd, `goto()` wacht op `load` (niet op `networkidle`), `expectNoRuntimeErrors()` assert dat de lijst leeg is |
+| `playwright/fixtures/test-fixtures.ts` | Typed fixtures voor `homePage`, `contactPage`, `navPage`, `ciHistoryPage`, `basePage` en `formwardMock`; specs importeren `test`/`expect` hieruit |
+| `playwright/fixtures/formward.mock.ts` | `FormwardMock`: route-mock met request-registratie; `expectRequestCount` bewijst dat invalid submits geen request veroorzaken |
 | `playwright/pages/home.page.ts` | Page object voor de homepagina (CTA's, navigatie) |
-| `playwright/pages/contact.page.ts` | Page object voor contact: formuliervelden, Formward-mock met request-registratie, validatie-asserts, honeypot en externe links |
+| `playwright/pages/contact.page.ts` | Page object voor contact: formuliervelden, validatie-asserts, honeypot en externe links; de Formward-mock staat in `FormwardMock` |
 | `playwright/pages/mobile.page.ts` | Mobiele menu-data: `NAV_ITEM_TEST_IDS` en `NAV_ITEM_URLS` |
 | `playwright/utils/test-data.ts` | Gedeelde constanten: `FORMWARD_URL`, `THANK_YOU_PAGE`, `EMAIL`, `GITHUB_URL`, `LINKEDIN_URL`, `OTHER_PAGES_TO_TEST` (8 pagina's) en formulierdatasets `VALID_CONTACT` / `INVALID_EMAIL_CONTACT` |
 | `playwright/tests/smoke/smoke.spec.ts` | Deep check op `index.html` plus lightweight check op de overige pagina's; gebruikt de `basePage`-fixture en assert console- én page-errors |
@@ -208,7 +209,7 @@ Twee dingen die opvallen:
 | `playwright/pages/ci-history.page.ts` | Page object `CiHistoryPage`: mockt `data/playwright-history.json` via `page.route()`, navigeert naar `automation.html`, leest kaarten per `data-testid` en de rijen van de history-tabel |
 | `playwright/tests/functional/ci-history-functional.spec.ts` | Vijf tests over de CI-resultatensectie: laatste-run kaarten, gepoolde totalen en ratio, één rij per run met run-link, runs zonder noemer, en de lege staat. Testsoort en afbakening: `PLAN-CI-HISTORY-TESTS.md` |
 | `playwright/tests/accessibility/`, `compatibility/`, `e2e/`, `regression/` | Nu lege mappen: de plek waar de volgende testcategorieën komen |
-| `Project-documentation/` | `PLAYWRIGHT.md`, `TESTPLAN.md`, `TEST-SUITE-STATUS.md`, `BESTPRACTICES.md`, `CI-PLAYWRIGHT-HISTORY.md` en dit bestand |
+| `Project-documentation/` | `PLAYWRIGHT.md`, `TESTPLAN.md`, `PLAN-TEST-IMPROVEMENTS.md`, `BESTPRACTICES.md`, `CI-PLAYWRIGHT-HISTORY.md` en dit bestand |
 
 Waarom `base.page.ts` zo belangrijk is voor de CI: de runtime-error check betekent
 dat een kapotte fetch — bijvoorbeeld een ontbrekende history-JSON — de eigen tests

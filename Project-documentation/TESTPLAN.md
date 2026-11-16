@@ -363,9 +363,9 @@ De belangrijkste data-flow. Verwacht-gedrag per scenario:
 
 | #   | Scenario                          | Input                                 | Verwacht resultaat                                                                                                | Status                                                                     |
 | --- | --------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| F1  | Geldige submit                    | alle velden geldig                    | POST → redirect naar `bedankt.html` + tekst "Bedankt, uw bericht is ontvangen"                                    | Bestaand                                                                   |
-| F2  | Lege verplichte velden            | name/email/bericht leeg               | géén submit (native validatie), blijft op `contact.html`, validatiemelding                                        | Bestaand (assert alleen "niet redirect"; melding niet geassert)            |
-| F3  | Ongeldige e-mail                  | `ongeldig-email`                      | géén submit, e-mail-validatiemelding                                                                              | Bestaand (assert alleen "niet redirect"; melding niet geassert)            |
+| F1  | Geldige submit                    | alle velden geldig                    | POST → redirect naar `bedankt.html` + tekst "Bedankt, uw bericht is ontvangen"                                    | Bestaand (mock; 1 request)                                                  |
+| F2  | Lege verplichte velden            | name/email/bericht leeg               | géén submit (native validatie), blijft op `contact.html`, validatiemelding                                        | Bestaand (checkValidity + invalid fields + 0 requests)                     |
+| F3  | Ongeldige e-mail                  | `ongeldig-email`                      | géén submit, e-mail-validatiemelding                                                                              | Bestaand (checkValidity + invalid field + 0 requests)                       |
 | F4  | Alleen optioneel veld ontbreekt   | `subject` leeg                        | WEL geldige submit (subject is niet `required`)                                                                   | Gepland                                                                    |
 | F5  | Honeypot ingevuld (bot)           | `_gotcha` gevuld                      | spamfilter: géén geldig bericht (Formward verwijdert; lokaal: assert veld blijft hidden + tabindex -1)            | Deels (verborgen honeypot bestaat; ingevulde honeypot niet)                |
 | F6  | Boundary: minimale/ extreme tekst | naam = 1 teken, bericht = 500+ tekens | WEL geldige submit; geen fouten/truncatie in UI (boundary value analysis)                                         | Gepland                                                                    |
@@ -374,9 +374,10 @@ De belangrijkste data-flow. Verwacht-gedrag per scenario:
 | F9  | Redirect-target is correct        | geldige submit                        | eind-URL = `bedankt.html` (subpath `/Portfolio/` behouden) + bedankt-tekst zichtbaar (geen lege/pagina-not-found) | Bestaand (met mock; bewijst afhandeling, niet de echte `_redirect`-waarde) |
 | F10 | Terugnavigatie na redirect        | geldige submit → back                 | browser back werkt naar `contact.html` zonder crash; formulier is gereset/leeg (nieuwe context per test)          | Gepland                                                                    |
 
-> **Testdata-koppeling:** de datasets uit §6.1 zijn de **target-mapping** voor
-> F1–F7; in fase 3 worden ze centraal. F1–F3 gebruiken nu inline waarden.
-> De Formward-mock (`ContactPage.mockFormSubmit`) blijft actief en registreert
+> **Testdata-koppeling:** `VALID_CONTACT` en `INVALID_EMAIL_CONTACT` bestaan
+> in `playwright/utils/test-data.ts`; de andere datasets zijn target voor
+> fase 3. F1 en F3 gebruiken de bestaande datasets.
+> De Formward-mock (`FormwardMock`-fixture) blijft actief en registreert
 > requests; F2/F3 asserten dat invalid submits **0 Formward-requests**
 > veroorzaken. Er is geen `clearFormMock()` meer nodig.
 >
@@ -427,13 +428,13 @@ beschrijft de volledige target-set; niet elke rij is al geïmplementeerd.
 | ID      | Testcase                                           | Verwacht resultaat                                             | Status                                                          |
 | ------- | -------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------- |
 | MENU-01 | Initiale toestand (mobiel ≤850px)                  | menu closed, `aria-expanded="false"`, nav-links niet zichtbaar | Bestaand                                                        |
-| MENU-02 | Toggle openen                                      | `.open` + alle nav-items zichtbaar, `aria-expanded="true"`     | Bestaand                                                        |
-| MENU-03 | Toggle sluiten                                     | geen `.open`, `aria-expanded="false"`                          | Bestaand                                                        |
-| MENU-04 | State-transition closed → open → closed (herhaald) | toestand wisselt correct, geen stale class                     | Deels: één open→sluit-cyclus; geen herhaalde/stale-state-assert |
+| MENU-02 | Toggle openen                                      | menu zichtbaar + alle nav-items zichtbaar, `aria-expanded="true"` | Bestaand                                                        |
+| MENU-03 | Toggle sluiten                                     | menu op mobiel verborgen, `aria-expanded="false"`               | Bestaand                                                        |
+| MENU-04 | State-transition closed → open → closed (herhaald) | toestand wisselt correct, geen stale state                     | Deels: één open→sluit-cyclus; geen herhaalde/stale-state-assert |
 | MENU-05 | Navigatie via geopend menu werkt                   | nav-link klikt + juiste URL; menu gesloten na navigatie        | Bestaand (7 nav-links in de loop + 1 extra contact-navigatietest) |
 | MENU-06 | Op desktop (≥850px) is toggle niet nodig/zichtbaar | menu inline zichtbaar zonder toggle                            | Bestaand                                                        |
-| MENU-07 | `Escape` sluit geopend menu                        | geen `.open`, `aria-expanded="false"`, focus terug naar toggle | Gepland                                                         |
-| MENU-08 | Klik buiten geopend menu sluit het menu            | geen `.open`, `aria-expanded="false"`, focus terug naar toggle | Gepland                                                         |
+| MENU-07 | `Escape` sluit geopend menu                        | menu verborgen, `aria-expanded="false"`, focus terug naar toggle | Gepland                                                         |
+| MENU-08 | Klik buiten geopend menu sluit het menu            | menu verborgen, `aria-expanded="false"`, focus terug naar toggle | Gepland                                                         |
 | MENU-09 | Focus na openen gaat naar eerste nav-link          | eerste nav-link is gefocust                                    | Gepland                                                         |
 | MENU-10 | `Escape` op gesloten menu verandert de focus niet  | focus blijft op huidige actieve locator                        | Gepland                                                         |
 
@@ -470,7 +471,7 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 | ------ | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
 | CIH-01 | Laatste-run kaarten tonen de nieuwste run                      | `ci-suite-size` = "40 tests", `ci-runs` = "3", `ci-total-tests` = "40", `ci-pass-rate` = "100%", `ci-status` = "Geslaagd"                                                                                                            | Bestaand |
 | CIH-02 | Aggregate kaarten poolen alle runs (Σ passed / Σ total)        | `ci-total-executed` = "120", `ci-total-passed` = "108 van 120", `ci-pass-ratio` = "90%", `ci-streak` = "1", `ci-flaky-runs` = "1", `ci-failed-runs` = "2", `ci-metrics-note` bevat "Over 3 CI-runs" en "108 van 120 tests geslaagd." | Bestaand |
-| CIH-03 | Geschiedenis-tabel toont één rij per run met werkende run-link | 3 rijen in `ci-history-body`; link "Run 42" heeft de juiste `href` naar de GitHub Actions-run                                                                                                                                        | Bestaand |
+| CIH-03 | Geschiedenis-tabel toont één rij per run met werkende run-link | 3 rijen in `ci-history-body`; per rij Run/Datum/Status/Tests/Geslaagd/Flaky geassert; link "Run 42" heeft de juiste `href` naar de GitHub Actions-run | Bestaand |
 | CIH-04 | Runs zonder noemer (`total = 0`) vallen buiten de totalen      | alleen 2 van 3 runs geteld: `ci-total-executed` = "80", `ci-pass-ratio` = "90%", `ci-streak` = "0", `ci-status` = "Geannuleerd"; notering bevat "2 van 3 CI-runs geteld"                                                             | Bestaand |
 | CIH-05 | Lege geschiedenis: placeholders en placeholder-rij             | alle kaarten tonen "—", `ci-history-body` bevat "Geen CI-historie beschikbaar."                                                                                                                                                      | Bestaand |
 

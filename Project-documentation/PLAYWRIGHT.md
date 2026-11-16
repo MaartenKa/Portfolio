@@ -62,11 +62,12 @@ network mocking, CI-ready configuratie).
 │   ├── pages/                # Page Object Model (huidige versie)
 │   │   ├── base.page.ts      # BasePage: goto + console/page-error catch
 │   │   ├── home.page.ts      # HomePage
-│   │   ├── contact.page.ts   # ContactPage (incl. Formward-mock)
+│   │   ├── contact.page.ts   # ContactPage
 │   │   ├── ci-history.page.ts # CiHistoryPage: mock + kaarten/tabel van automation.html
 │   │   ├── mobile.page.ts    # NavigationPage (mobiele menu-toggle)
 │   │
 │   ├── fixtures/
+│   │   ├── formward.mock.ts  # FormwardMock: route + request-registratie
 │   │   └── test-fixtures.ts  # Typed Page Object-fixtures (test.extend)
 │   ├── utils/
 │   │   └── test-data.ts      # Gedeelde statische data & constants
@@ -172,17 +173,18 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 
 - **Page Object Model** in `playwright/pages/`:
   - `BasePage` — basisklasse: `goto(path)` (wacht op `load`, vangt console errors
-    + page errors op), `expectNoConsoleErrors()`.
+    + page errors op), `expectNoRuntimeErrors()`.
   - `HomePage extends BasePage` — `navigate()`, `expectStructureVisible()`
     (`.navbar` / `.hero` / `.footer`) + functionele navigatie-mappen
     (`clickProjectsCta`, `clickCurriculumCta`, `clickContactNavLink`,
     `clickProjectsNavLink`, `clickTestingCardLink`).
   - `ContactPage extends BasePage` — `navigate()`, `fillForm()`, `submitForm()`,
-    `mockFormSubmit()` (route-mock op Formward; requests worden geregistreerd),
-    `expectFormwardRequestCount()`, `expectFormInvalid()`, `expectFieldInvalid()`,
-    assertions op velden, honeypot en externe links.
+    `expectFormInvalid()`, `expectFieldInvalid()` en assertions op velden,
+    honeypot en externe links. De Formward-mock staat in `FormwardMock`, niet
+    in dit Page Object.
   - `NavigationPage extends BasePage` (in `mobile.page.ts`) — mobiele
-    menu-toggle interactie: `toggleMenu()`, `expectMenuState()`,
+    menu-toggle interactie: `toggleMenu()`, `expectMenuOpen()`,
+    `expectMenuClosedOnMobile()`, `expectMenuInlineOnDesktop()`,
     `expectToggleAriaExpanded()`, `clickNavLink()`. Exporteert ook
     `NAV_ITEM_TEST_IDS` en `NAV_ITEM_URLS` als page-specifieke constants.
 
@@ -299,9 +301,12 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   `tsconfig.json` → de gezende `tsc`-run **type-checkt alleen** (no `dist/`
   output). `tsconfig.site.json` overrules met `noEmit: false` voor de site-JS.
 - **`fixtures/test-fixtures.ts`** — typed custom fixtures (`test.extend`) voor
-  `homePage`, `contactPage`, `navPage`, `ciHistoryPage` en `basePage`.
-  Specs importeren `test`/`expect` hieruit; `contactPage` installeert de
-  Formward-mock vóór navigatie.
+  `homePage`, `contactPage`, `navPage`, `ciHistoryPage`, `basePage` en
+  `formwardMock`. Navigatie en mock zijn expliciet in de test of in een
+  `beforeEach`; de fixtures zelf navigeren niet.
+- **`fixtures/formward.mock.ts`** — `FormwardMock`: route-mock met
+  request-registratie; `expectRequestCount(count)` bewijst dat invalid submits
+  geen request veroorzaken.
 - **`utils/test-data.ts`** — gedeelde statische constanten (`FORMWARD_URL`,
   `THANK_YOU_PAGE`, `EMAIL`, externe links, `OTHER_PAGES_TO_TEST`) en
   formulierdatasets `VALID_CONTACT` en `INVALID_EMAIL_CONTACT`.
@@ -323,10 +328,10 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   (`contact.html`). Formward resolve de redirect ten opzichte van de
   verzendende URL, dus een relatieve waarde is subpath-safe
   (`/Portfolio/bedankt.html`); een absolute `https://.../Portfolio/bedankt.html`
-  kan de subpath verliezen. Let op: de Playwright-mock
-  (`ContactPage.mockFormSubmit`) simuleert de redirect zélf met een absolute
-  `Location`-header en asserts die mock-waarde — de echte Formward-redirect is
-  dus via de suite níét gedekt (alleen handmatig/live verifiëren).
+  kan de subpath verliezen. Let op: de Playwright-mock (`FormwardMock`)
+  gebruikt een relatieve `Location`, resolved tegen de huidige pagina-URL.
+  Daarmee wordt lokaal `docs/bedankt.html` gebruikt; de echte
+  Formward-redirect blijft alleen handmatig/live geverifieerd.
 
 - **Externe links:** elke link naar een andere domein heeft
   `target="_blank" rel="noopener noreferrer"` (footers, socials-knoppen op
