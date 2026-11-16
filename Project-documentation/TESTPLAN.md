@@ -376,9 +376,9 @@ De belangrijkste data-flow. Verwacht-gedrag per scenario:
 
 > **Testdata-koppeling:** de datasets uit §6.1 zijn de **target-mapping** voor
 > F1–F7; in fase 3 worden ze centraal. F1–F3 gebruiken nu inline waarden.
-> De Formward-mock (`ContactPage.mockFormSubmit`) garandeert dat er nooit
-> een echt POST/mailtje weggaat; tests die native validatie controleren roepen
-> zelf `clearFormMock()` aan (bestaand patroon in `contact-functional.spec.ts`).
+> De Formward-mock (`ContactPage.mockFormSubmit`) blijft actief en registreert
+> requests; F2/F3 asserten dat invalid submits **0 Formward-requests**
+> veroorzaken. Er is geen `clearFormMock()` meer nodig.
 >
 > **Status:** F1–F3 en F9 zijn geautomatiseerd; F4–F8 en F10 zijn gepland.
 > Deze matrix is een specificatie, geen bewijs van volledige dekking.

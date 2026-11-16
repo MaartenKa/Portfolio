@@ -29,7 +29,7 @@
 | **Desktop-menu** | De desktop-test assert nu ook dat de inline nav zichtbaar is. |
 | **Redirect** | De Formward-mock gebruikt een relatieve `Location`, resolved tegen de huidige pagina-URL; lokaal wordt `docs/bedankt.html` gebruikt. |
 | **Testdata** | `VALID_CONTACT` en `INVALID_EMAIL_CONTACT` staan in `playwright/utils/test-data.ts`. |
-| **Documentatie** | `TESTPLAN.md` vermeldt de fixtures en de bestaande formulierdatasets. |
+| **Documentatie** | `README.md`, `PLAYWRIGHT.md`, `CI-OVERVIEW.md` en `TESTPLAN.md` zijn bijgewerkt voor fixtures, testdata en de verwijderde `networkidle`-wait. |
 
 ## 3. Wat nog open is binnen de bestaande suite
 

@@ -94,14 +94,12 @@ page.waitForLoadState(...)
 
 Gebruik alleen expliciete waits wanneer er een echte specifieke reden voor is.
 
-> **Projectuitzondering — `networkidle`:** `BasePage.goto()` en de
-> smoke-check gebruiken `waitForLoadState('networkidle')` omdat de pagina
-> externe assets heeft (o.a. een shields.io-badge) en de suite standaard tegen
-> de live site draait. Dat is een bewuste, gedocumenteerde uitzondering.
-> `networkidle` is geen betrouwbaar readiness-signaal en geldt niet als
-> algemene regel. De ESLint-regel `playwright/no-networkidle` staat daarom uit
-> in `eslint.config.mjs`. Nieuwe tests gebruiken web-first assertions in
-> plaats van deze wait.
+> **Projectgeschiedenis — `networkidle`:** `BasePage.goto()` en de
+> smoke-check gebruikten vroeger `waitForLoadState('networkidle')`; dat is
+> verwijderd. `networkidle` is geen betrouwbaar readiness-signaal. De
+> ESLint-regel `playwright/no-networkidle` staat uit in `eslint.config.mjs`,
+> maar dat is geen aanmoediging om de wait te gebruiken. Nieuwe tests
+> gebruiken web-first assertions.
 
 Synchroniseer op betekenisvolle toestand:
 

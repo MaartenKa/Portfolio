@@ -67,7 +67,7 @@ network mocking, CI-ready configuratie).
 │   │   ├── mobile.page.ts    # NavigationPage (mobiele menu-toggle)
 │   │
 │   ├── fixtures/
-│   │   └── test-fixtures.ts  # Custom Playwright fixtures (test.extend)
+│   │   └── test-fixtures.ts  # Typed Page Object-fixtures (test.extend)
 │   ├── utils/
 │   │   └── test-data.ts      # Gedeelde statische data & constants
 │   └── tests/
@@ -171,15 +171,16 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 ### Architectuur
 
 - **Page Object Model** in `playwright/pages/`:
-  - `BasePage` — abstracte basis: `goto(path)` (wacht op `networkidle`,
-    vangt console errors + page errors op), `expectNoConsoleErrors()`.
+  - `BasePage` — basisklasse: `goto(path)` (wacht op `load`, vangt console errors
+    + page errors op), `expectNoConsoleErrors()`.
   - `HomePage extends BasePage` — `navigate()`, `expectStructureVisible()`
     (`.navbar` / `.hero` / `.footer`) + functionele navigatie-mappen
     (`clickProjectsCta`, `clickCurriculumCta`, `clickContactNavLink`,
     `clickProjectsNavLink`, `clickTestingCardLink`).
   - `ContactPage extends BasePage` — `navigate()`, `fillForm()`, `submitForm()`,
-    `mockFormSubmit()` / `clearFormMock()` (route-mock op Formward),
-    assertions op velden, honeypot, en externe links.
+    `mockFormSubmit()` (route-mock op Formward; requests worden geregistreerd),
+    `expectFormwardRequestCount()`, `expectFormInvalid()`, `expectFieldInvalid()`,
+    assertions op velden, honeypot en externe links.
   - `NavigationPage extends BasePage` (in `mobile.page.ts`) — mobiele
     menu-toggle interactie: `toggleMenu()`, `expectMenuState()`,
     `expectToggleAriaExpanded()`, `clickNavLink()`. Exporteert ook
@@ -191,7 +192,8 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    - Deep check op `index.html`: structuur + geen console errors.
    - Lightweight check op overige pagina's (curriculum, testing, automation,
      projects, personal, contact, privacy, bedankt): HTTP 200 + geen
-     console errors. Gebruikt bewust géén page object (netwerk/infra-laag).
+     console errors. Gebruikt de `basePage`-fixture (`BasePage`) voor de
+     netwerk/infra-laag, zodat ook `pageerror` wordt gevangen.
 2. **Functioneel** — `tests/functional/`
    - `homepage-functional.spec.ts`: CTA's + nav-links openen de juiste pagina's.
    - `contact-functional.spec.ts`: pagina-structuur + formulier-inzending
@@ -282,8 +284,10 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
 - **Gebruik Page Objects** (`playwright/pages/`) voor UI-interactie; roep ze
   niet direct op via `page` in tests (uitzondering: lightweight smoke op de
   netwerklaag, expliciet gemotiveerd).
-- **Locator-strategie:** preferentie voor `getByTestId(...)`, `getByLabel(...)`,
-  `getByRole(...)` — robuuster dan CSS-selectors.
+- **Locator-strategie:** officiële Playwright-volgorde role → text → label →
+  placeholder → alt → title → testid; CSS/XPath als laatste redmiddel.
+  `getByTestId()` is hier een bewust projectcontract waar de markup dat
+  garandeert, niet de hoogste algemene voorkeur.
 - **Determinisme:** externe netwerkaanroepen (Formward) worden gemockt via
   `page.route(...)` zodat tests offline en betrouwbaar draaien.
 - **Console/page errors** worden centraal gevangen in `BasePage` en geassert.
@@ -294,11 +298,13 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
 - **TypeScript strict mode**; `noEmitOnError: true`; `noEmit: true` in
   `tsconfig.json` → de gezende `tsc`-run **type-checkt alleen** (no `dist/`
   output). `tsconfig.site.json` overrules met `noEmit: false` voor de site-JS.
-- **`fixtures/test-fixtures.ts`** — custom Playwright fixtures (`test.extend`).
-  Nog leeg (geen fixtures gedefinieerd), klaar voor uitbreiding.
-- **`utils/test-data.ts`** — gedeelde statische constants (`FORMWARD_URL`,
-  `OTHER_PAGES_TO_TEST`, externe links, e-mail). Geïmporteerd door page
-  objects en specs waar nodig.
+- **`fixtures/test-fixtures.ts`** — typed custom fixtures (`test.extend`) voor
+  `homePage`, `contactPage`, `navPage`, `ciHistoryPage` en `basePage`.
+  Specs importeren `test`/`expect` hieruit; `contactPage` installeert de
+  Formward-mock vóór navigatie.
+- **`utils/test-data.ts`** — gedeelde statische constanten (`FORMWARD_URL`,
+  `THANK_YOU_PAGE`, `EMAIL`, externe links, `OTHER_PAGES_TO_TEST`) en
+  formulierdatasets `VALID_CONTACT` en `INVALID_EMAIL_CONTACT`.
 - De website is **Nederlands**; test-namen en UI-teksten zijn dus in het
   Nederlands.
 
@@ -388,8 +394,8 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   token nodig. Shields.io is niet-tracking (bewaart geen logs), maar de badge
   doet wel een externe request per pageview — verwerkt in de privacyverklaring
   (`privacy.html`, sectie 9). De afbeelding staat op `loading="lazy"` en staat
-  onder de fold, zodat de request buiten de `networkidle`-wachttijd van
-  `BasePage.goto()` valt.
+  onder de fold. `BasePage.goto()` wacht op `load`, niet op `networkidle`;
+  de badge-request is daarom geen synchronisatiepunt voor de suite.
 
 ## 9. Snelreferentie
 

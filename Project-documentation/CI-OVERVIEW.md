@@ -195,21 +195,22 @@ Twee dingen die opvallen:
 
 | Bestand | Rol |
 | --- | --- |
-| `playwright/pages/base.page.ts` | Basis van alle page objects: console- én page-errors worden één keer per `page` geregistreerd (niet per `goto()`), `goto()` wacht op `networkidle`, `expectNoConsoleErrors()` assert dat de lijst leeg is |
+| `playwright/pages/base.page.ts` | Basisklasse voor page objects: console- én page-errors worden één keer per `page` geregistreerd, `goto()` wacht op `load` (niet op `networkidle`), `expectNoConsoleErrors()` assert dat de lijst leeg is |
+| `playwright/fixtures/test-fixtures.ts` | Typed fixtures voor `homePage`, `contactPage`, `navPage`, `ciHistoryPage` en `basePage`; specs importeren `test`/`expect` hieruit |
 | `playwright/pages/home.page.ts` | Page object voor de homepagina (CTA's, navigatie) |
-| `playwright/pages/contact.page.ts` | Page object voor contact: formuliervelden, mock van Formward, check op privacy- en e-maillink (relatief `href`, want een absoluut pad geeft 404 op de `/Portfolio/`-subpath) |
+| `playwright/pages/contact.page.ts` | Page object voor contact: formuliervelden, Formward-mock met request-registratie, validatie-asserts, honeypot en externe links |
 | `playwright/pages/mobile.page.ts` | Mobiele menu-data: `NAV_ITEM_TEST_IDS` en `NAV_ITEM_URLS` |
-| `playwright/utils/test-data.ts` | Gedeelde constanten: `FORMWARD_URL`, `THANK_YOU_PAGE`, `EMAIL`, `GITHUB_URL`, `LINKEDIN_URL` en `OTHER_PAGES_TO_TEST` (8 pagina's, waaronder `automation.html`) |
-| `playwright/tests/smoke/smoke.spec.ts` | Deep check op `index.html` plus lightweight check op de overige pagina's, telkens zonder console errors |
+| `playwright/utils/test-data.ts` | Gedeelde constanten: `FORMWARD_URL`, `THANK_YOU_PAGE`, `EMAIL`, `GITHUB_URL`, `LINKEDIN_URL`, `OTHER_PAGES_TO_TEST` (8 pagina's) en formulierdatasets `VALID_CONTACT` / `INVALID_EMAIL_CONTACT` |
+| `playwright/tests/smoke/smoke.spec.ts` | Deep check op `index.html` plus lightweight check op de overige pagina's; gebruikt de `basePage`-fixture en assert console- én page-errors |
 | `playwright/tests/functional/homepage-functional.spec.ts` | CTA's en nav-links openen de juiste pagina's |
-| `playwright/tests/functional/contact-functional.spec.ts` | Paginastructuur en formulierinzending (Formward gemockt; valide submit redirect naar `bedankt.html`) |
+| `playwright/tests/functional/contact-functional.spec.ts` | Paginastructuur en formulierinzending (Formward gemockt; valide submit redirect naar `bedankt.html`; invalid submit veroorzaakt 0 Formward-requests) |
 | `playwright/tests/functional/mobile-menu-functional.spec.ts` | Menu-toggle op desktop en mobiel, `aria-expanded`, focusbeheer, alle nav-links |
 | `playwright/pages/ci-history.page.ts` | Page object `CiHistoryPage`: mockt `data/playwright-history.json` via `page.route()`, navigeert naar `automation.html`, leest kaarten per `data-testid` en de rijen van de history-tabel |
 | `playwright/tests/functional/ci-history-functional.spec.ts` | Vijf tests over de CI-resultatensectie: laatste-run kaarten, gepoolde totalen en ratio, één rij per run met run-link, runs zonder noemer, en de lege staat. Testsoort en afbakening: `PLAN-CI-HISTORY-TESTS.md` |
 | `playwright/tests/accessibility/`, `compatibility/`, `e2e/`, `regression/` | Nu lege mappen: de plek waar de volgende testcategorieën komen |
-| `Project-documentation/` | `PLAYWRIGHT.md`, `TESTPLAN.md`, `BESTPRACTICES.md`, `CI-PLAYWRIGHT-HISTORY.md` en dit bestand |
+| `Project-documentation/` | `PLAYWRIGHT.md`, `TESTPLAN.md`, `TEST-SUITE-STATUS.md`, `BESTPRACTICES.md`, `CI-PLAYWRIGHT-HISTORY.md` en dit bestand |
 
-Waarom `base.page.ts` zo belangrijk is voor de CI: de console-error check betekent
+Waarom `base.page.ts` zo belangrijk is voor de CI: de runtime-error check betekent
 dat een kapotte fetch — bijvoorbeeld een ontbrekende history-JSON — de eigen tests
 doet falen. Daarom moet `docs/data/playwright-history.json` in de repo bestaan. De
 CI en de tests bijten elkaar hier niet, ze houden elkaar juist scherp.
