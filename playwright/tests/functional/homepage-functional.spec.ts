@@ -1,6 +1,10 @@
 import { test } from "../../fixtures/test-fixtures";
 
 test.describe("Homepage - functionele navigatie", () => {
+  test.beforeEach(async ({ homePage }) => {
+    await homePage.navigate();
+  });
+
   test('CTA-knop "Bekijk mijn projecten" opent de projectenpagina', async ({
     homePage,
   }) => {

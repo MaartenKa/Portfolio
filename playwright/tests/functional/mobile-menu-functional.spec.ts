@@ -8,18 +8,17 @@ const DESKTOP_VIEWPORT = { width: 1920, height: 1080 }; // >850px breedte → na
 const MOBILE_VIEWPORT = { width: 390, height: 844 }; // ≤850px breedte → menu-toggle zichtbaar
 
 test.describe("Mobiele menu-toggle", () => {
+  test.beforeEach(async ({ navPage }) => {
+    await navPage.goto("");
+  });
+
   test.describe("Desktop (>850px)", () => {
     test.use({ viewport: DESKTOP_VIEWPORT });
 
     test("menu-toggle is niet zichtbaar en nav-links staan inline", async ({
       navPage,
     }) => {
-      // Toggle button bestaat in DOM maar is via CSS verborgen (display: none)
-      await expect(navPage.menuToggle).toBeHidden();
-
-      // Navigatie-lijst is inline zichtbaar, zonder .open klasse
-      await navPage.expectMenuState(false);
-      await expect(navPage.navLinks).toBeVisible();
+      await navPage.expectMenuInlineOnDesktop();
     });
   });
 
@@ -33,16 +32,15 @@ test.describe("Mobiele menu-toggle", () => {
       await expect(navPage.menuToggle).toBeVisible();
       await navPage.expectToggleAriaExpanded(false);
 
-      // Menu is gesloten (géén .open klasse) en op mobiel niet zichtbaar
-      await navPage.expectMenuState(false);
-      await expect(navPage.navLinks).toBeHidden();
+      // Menu is gesloten en op mobiel niet zichtbaar
+      await navPage.expectMenuClosedOnMobile();
     });
 
     test("klik op toggle opent het menu", async ({ navPage }) => {
       await navPage.toggleMenu();
 
-      // Menu open: .open + zichtbaar + alle items zichtbaar + aria-expanded=true
-      await navPage.expectMenuState(true);
+      // Menu open: zichtbaar + alle items zichtbaar + aria-expanded=true
+      await navPage.expectMenuOpen();
       await navPage.expectToggleAriaExpanded(true);
     });
 
@@ -52,9 +50,7 @@ test.describe("Mobiele menu-toggle", () => {
       // Klik opnieuw → gesloten
       await navPage.toggleMenu();
 
-      await navPage.expectMenuState(false);
-      await expect(navPage.navLinks).toBeHidden();
-      await navPage.expectToggleAriaExpanded(false);
+      await navPage.expectMenuClosedOnMobile();
     });
 
     test("klik op nav-link in open menu sluit het menu en navigeert", async ({
@@ -62,15 +58,11 @@ test.describe("Mobiele menu-toggle", () => {
     }) => {
       // Open het menu
       await navPage.toggleMenu();
-      await navPage.expectMenuState(true);
+      await navPage.expectMenuOpen();
 
       // Klik op een nav-link (Contact) → navigatie + menu gesloten op nieuwe pagina
       await navPage.clickNavLink("nav-contact", /contact\.html/);
-      await expect(navPage.navLinks).not.toHaveClass(/open/);
-      await expect(navPage.menuToggle).toHaveAttribute(
-        "aria-expanded",
-        "false",
-      );
+      await navPage.expectMenuClosedOnMobile();
     });
 
     test.describe("Alle nav-links navigeren naar de juiste pagina", () => {
@@ -80,17 +72,13 @@ test.describe("Mobiele menu-toggle", () => {
         }) => {
           // Open het menu
           await navPage.toggleMenu();
-          await navPage.expectMenuState(true);
+          await navPage.expectMenuOpen();
 
           // Klik op de nav-link en verifieer de URL
           await navPage.clickNavLink(testId, NAV_ITEM_URLS[testId]);
 
           // Menu is gesloten na navigatie
-          await expect(navPage.navLinks).not.toHaveClass(/open/);
-          await expect(navPage.menuToggle).toHaveAttribute(
-            "aria-expanded",
-            "false",
-          );
+          await navPage.expectMenuClosedOnMobile();
         });
       }
     });

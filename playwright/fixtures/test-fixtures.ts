@@ -1,6 +1,7 @@
 // Portfolio / playwright / fixtures / test-fixtures.ts
 import { test as base } from "@playwright/test";
 import { BasePage } from "../pages/base.page";
+import { FormwardMock } from "./formward.mock";
 import { CiHistoryPage } from "../pages/ci-history.page";
 import { ContactPage } from "../pages/contact.page";
 import { HomePage } from "../pages/home.page";
@@ -19,26 +20,26 @@ type Fixtures = {
   navPage: NavigationPage;
   ciHistoryPage: CiHistoryPage;
   basePage: BasePage;
+  formwardMock: FormwardMock;
 };
 
 export const test = base.extend<Fixtures>({
   homePage: async ({ page }, use) => {
-    const homePage = new HomePage(page);
-    await homePage.navigate();
-    await use(homePage);
+    await use(new HomePage(page));
   },
 
   contactPage: async ({ page }, use) => {
-    const contactPage = new ContactPage(page);
-    await contactPage.mockFormSubmit();
-    await contactPage.navigate();
-    await use(contactPage);
+    await use(new ContactPage(page));
   },
 
   navPage: async ({ page }, use) => {
-    const navPage = new NavigationPage(page);
-    await navPage.goto("");
-    await use(navPage);
+    await use(new NavigationPage(page));
+  },
+
+  formwardMock: async ({ page }, use) => {
+    const mock = new FormwardMock(page);
+    await mock.install();
+    await use(mock);
   },
 
   ciHistoryPage: async ({ page }, use) => {

@@ -5,6 +5,11 @@ import {
 } from "../../utils/test-data";
 
 test.describe("Contactpagina - functionele tests", () => {
+  test.beforeEach(async ({ contactPage, formwardMock: _formwardMock }) => {
+    // De mock is via de fixture geïnstalleerd; navigeer pas daarna.
+    await contactPage.navigate();
+  });
+
   test.describe("Pagina-structuur", () => {
     test("titel bevat 'Contact'", async ({ contactPage }) => {
       await contactPage.expectTitleContains("Contact");
@@ -43,15 +48,17 @@ test.describe("Contactpagina - functionele tests", () => {
   test.describe("Formulier-inzending", () => {
     test("geldig formulier redirect naar bedanktpagina", async ({
       contactPage,
+      formwardMock,
     }) => {
       await contactPage.fillForm(VALID_CONTACT);
       await contactPage.submitForm();
       await contactPage.expectRedirectToThankYouPage();
-      await contactPage.expectFormwardRequestCount(1);
+      await formwardMock.expectRequestCount(1);
     });
 
     test("formulier zonder verplichte velden redirect niet", async ({
       contactPage,
+      formwardMock,
     }) => {
       await contactPage.submitForm();
       await contactPage.expectNotRedirected();
@@ -59,18 +66,19 @@ test.describe("Contactpagina - functionele tests", () => {
       await contactPage.expectFieldInvalid("Naam");
       await contactPage.expectFieldInvalid("E-mailadres");
       await contactPage.expectFieldInvalid("Bericht");
-      await contactPage.expectFormwardRequestCount(0);
+      await formwardMock.expectRequestCount(0);
     });
 
     test("formulier met ongeldige e-mail redirect niet", async ({
       contactPage,
+      formwardMock,
     }) => {
       await contactPage.fillForm(INVALID_EMAIL_CONTACT);
       await contactPage.submitForm();
       await contactPage.expectNotRedirected();
       await contactPage.expectFormInvalid();
       await contactPage.expectFieldInvalid("E-mailadres");
-      await contactPage.expectFormwardRequestCount(0);
+      await formwardMock.expectRequestCount(0);
     });
   });
 });

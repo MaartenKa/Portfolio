@@ -5,9 +5,9 @@ test.describe("Smoke test – Index pagina (Deep Check)", () => {
   test("index pagina laadt zonder fouten en structuur is correct", async ({
     homePage,
   }) => {
-    // De fixture navigeert al naar de homepage.
+    await homePage.navigate();
     await homePage.expectStructureVisible();
-    await homePage.expectNoConsoleErrors();
+    await homePage.expectNoRuntimeErrors();
   });
 });
 
@@ -27,7 +27,7 @@ test.describe("Smoke test – Overige pagina's (Lightweight Check)", () => {
       ).toBe(200);
 
       // Captures zowel console-errors als pageerror.
-      await basePage.expectNoConsoleErrors();
+      await basePage.expectNoRuntimeErrors();
     });
   }
 });

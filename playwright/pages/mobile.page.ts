@@ -52,25 +52,27 @@ export class NavigationPage extends BasePage {
     await this.menuToggle.click();
   }
 
-  /**
-   * Assert de toestand van het navigatiemenu.
-   * open=true  → de navLinks-lijst (data-testid="nav-links") heeft .open, is zichtbaar
-   *              én alle items zijn zichtbaar.
-   * open=false → de navLinks-lijst heeft géén .open (op mobiel hidden, op desktop inline visible).
-   */
-  async expectMenuState(open: boolean) {
-    if (open) {
-      await expect(this.navLinks).toHaveClass(/open/);
-      await expect(this.navLinks).toBeVisible();
-      for (const id of NAV_ITEM_TEST_IDS) {
-        await expect(
-          this.page.getByTestId(id),
-          `Menu-item "${id}" is niet zichtbaar`,
-        ).toBeVisible();
-      }
-    } else {
-      await expect(this.navLinks).not.toHaveClass(/open/);
+  /** Assert dat het menu geopend en gebruikerszichtbaar is. */
+  async expectMenuOpen() {
+    await expect(this.navLinks).toBeVisible();
+    for (const id of NAV_ITEM_TEST_IDS) {
+      await expect(
+        this.page.getByTestId(id),
+        `Menu-item "${id}" is niet zichtbaar`,
+      ).toBeVisible();
     }
+  }
+
+  /** Assert dat het menu op mobiel gesloten en verborgen is. */
+  async expectMenuClosedOnMobile() {
+    await expect(this.navLinks).toBeHidden();
+    await expect(this.menuToggle).toHaveAttribute("aria-expanded", "false");
+  }
+
+  /** Assert dat de navigatie op desktop inline zichtbaar is. */
+  async expectMenuInlineOnDesktop() {
+    await expect(this.navLinks).toBeVisible();
+    await expect(this.menuToggle).toBeHidden();
   }
 
   /** Assert de aria-expanded toestand van de toggle. */

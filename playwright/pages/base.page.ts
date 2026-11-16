@@ -19,7 +19,7 @@ export class BasePage {
     return response;
   }
 
-  async expectNoConsoleErrors() {
+  async expectNoRuntimeErrors() {
     expect(this.consoleErrors, "Runtime errors gevonden op de pagina").toEqual([]);
   }
 }

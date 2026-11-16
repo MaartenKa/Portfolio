@@ -10,7 +10,7 @@ import { BasePage } from "./base.page";
  */
 export type HistoryRunFixture = {
   runId: number;
-  runNumber: number;
+  runNumber: number | null;
   createdAt: string;
   conclusion: string;
   total: number;
@@ -19,6 +19,11 @@ export type HistoryRunFixture = {
   flaky: number;
   passRate: number;
   runUrl: string;
+  branch?: string;
+  commit?: string;
+  event?: string;
+  skipped?: number;
+  durationMs?: number;
 };
 
 const CI_HISTORY_ROUTE = "**/data/playwright-history.json";

@@ -1,8 +1,6 @@
 import { Page, expect } from "@playwright/test";
 import { BasePage } from "./base.page";
-import { FORMWARD_URL, THANK_YOU_PAGE, EMAIL, GITHUB_URL, LINKEDIN_URL } from "../utils/test-data";
-
-// const FORMWARD_URL = "..."  ← VERWIJDERD (nu uit test-data)
+import { EMAIL, GITHUB_URL, LINKEDIN_URL } from "../utils/test-data";
 
 export interface ContactFormData {
   name?: string;
@@ -12,8 +10,6 @@ export interface ContactFormData {
 }
 
 export class ContactPage extends BasePage {
-  formwardRequests: string[] = [];
-
   constructor(page: Page) {
     super(page);
   }
@@ -26,39 +22,8 @@ export class ContactPage extends BasePage {
     return this;
   }
 
-  /**
-   * Mock de Formward POST zodat tests deterministisch zijn en er nooit een
-   * echt bericht wordt verstuurd. De route blijft actief; requests worden
-   * geregistreerd zodat een test kan asserten dat een ongeldige submit geen
-   * request veroorzaakt.
-   */
-  async mockFormSubmit(): Promise<void> {
-    await this.page.route(FORMWARD_URL, async (route) => {
-      this.formwardRequests.push(route.request().url());
-
-      const redirectUrl = new URL(THANK_YOU_PAGE, this.page.url()).toString();
-
-      await route.fulfill({
-        status: 302,
-        headers: {
-          Location: redirectUrl,
-        },
-      });
-    });
-  }
-
-  async expectFormwardRequestCount(count: number): Promise<void> {
-    expect(
-      this.formwardRequests,
-      `Verwacht ${count} Formward-request(s), ontvangen ${this.formwardRequests.length}`,
-    ).toHaveLength(count);
-  }
-
   async expectFormInvalid(): Promise<void> {
-    // De form heeft geen stabiele semantische locator of testid; deze
-    // DOM-check is daarom een bewuste uitzondering op de raw-locator-regel.
-    // eslint-disable-next-line playwright/no-raw-locators
-    const form = this.page.locator("form");
+    const form = this.page.getByTestId("contact-form");
     const isValid = await form.evaluate((element) =>
       (element as HTMLFormElement).checkValidity(),
     );
@@ -76,7 +41,8 @@ export class ContactPage extends BasePage {
   }
 
   async expectTitleContains(title: string): Promise<void> {
-    await expect(this.page).toHaveTitle(new RegExp(title));
+    const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    await expect(this.page).toHaveTitle(new RegExp(escapedTitle));
   }
 
   async fillForm(data: ContactFormData): Promise<void> {

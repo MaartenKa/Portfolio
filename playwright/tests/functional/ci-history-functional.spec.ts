@@ -99,7 +99,27 @@ test.describe("CI-resultaten - kaarten en geschiedenis", () => {
     await ciHistoryPage.mockHistory(threeRuns);
     await ciHistoryPage.navigate();
 
-    await expect(ciHistoryPage.historyRows()).toHaveCount(3);
+    const rows = ciHistoryPage.historyRows();
+    await expect(rows).toHaveCount(3);
+
+    const expectedRows = [
+      { run: "Run 42", status: "Geslaagd", total: "40", pass: "100%", flaky: "0" },
+      { run: "Run 41", status: "Gefaald", total: "40", pass: "95%", flaky: "1" },
+      { run: "Run 40", status: "Gefaald", total: "40", pass: "75%", flaky: "0" },
+    ];
+
+    for (let index = 0; index < expectedRows.length; index += 1) {
+      const cells = rows.nth(index).getByRole("cell");
+      const expected = expectedRows[index];
+
+      await expect(cells.nth(0)).toContainText(expected.run);
+      await expect(cells.nth(1)).toHaveText(/\d{1,2} [a-z]+ 2026, \d{2}:\d{2}/);
+      await expect(cells.nth(2)).toHaveText(expected.status);
+      await expect(cells.nth(3)).toHaveText(expected.total);
+      await expect(cells.nth(4)).toHaveText(expected.pass);
+      await expect(cells.nth(5)).toHaveText(expected.flaky);
+    }
+
     await expect(
       ciHistoryPage
         .value("ci-history-body")
