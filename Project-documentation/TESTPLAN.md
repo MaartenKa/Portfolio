@@ -180,9 +180,11 @@ checks**. De "unit-laag" wordt gedeeltelijk vervangen door directe DOM/ARIA-asse
 - **Non-functional:** viewport/a11y/SEO/links/visual/perf — eigen spec-bestanden.
 - **E2E/acceptance:** volledige gebruikersflows (navigatie, formulier-gebruik, menu).
 
-> **Conventie (bestaand, behouden):** gebruik Page Objects voor UI-interactie;
-> alleen de lightweight smoke-laag mag rechtstreeks `page` gebruiken
-> (netwerk/infrastructuurcheck).
+> **Conventie:** gebruik Page Objects voor UI-interactie; alleen de lightweight
+> smoke-laag mag rechtstreeks `page` gebruiken (netwerk/infrastructuurcheck).
+> Page Objects en de Formward-mock worden via typed fixtures in
+> `playwright/fixtures/test-fixtures.ts` geleverd; de specs importeren
+> `test`/`expect` daaruit.
 
 ### 4.1 Verhouding tot ISTQB-testniveaus
 
@@ -299,25 +301,26 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
 ### 6.1 Testdata
 
 - **Bestaand:** `playwright/utils/test-data.ts` bevat vaste constanten
-  (`FORMWARD_URL`, `THANK_YOU_PAGE`, `EMAIL`, `GITHUB_URL`, `LINKEDIN_URL` en
-  `OTHER_PAGES_TO_TEST`). `smoke.spec.ts` gebruikt deze lijst voor de
-  lightweight pagina-check. Formulierwaarden staan voorlopig inline in
-  `ContactPage.fillForm` en in de spec-bestanden.
+  (`FORMWARD_URL`, `THANK_YOU_PAGE`, `EMAIL`, `GITHUB_URL`, `LINKEDIN_URL`,
+  `OTHER_PAGES_TO_TEST`) en de formulierdatasets `VALID_CONTACT` en
+  `INVALID_EMAIL_CONTACT`. `smoke.spec.ts` gebruikt de paginalijst;
+  `contact-functional.spec.ts` gebruikt de formulierdatasets.
 - **Centraal formulier-dataset (gepland, fase 3):** in `playwright/utils/test-data.ts`
   met datasets die 1-op-1 op de F-matrix (§7) mappen:
 
-  | Dataset                               | Gebruik     | Status  |
-  | ------------------------------------- | ----------- | ------- |
-  | `valid`                               | F1, F9, F10 | Gepland |
-  | `missingRequired`                     | F2          | Gepland |
-  | `invalidEmail`                        | F3          | Gepland |
-  | `optionalSubjectEmpty`                | F4          | Gepland |
-  | `boundary` (1 char / 500+ char)       | F6          | Gepland |
-  | `specialChars` (unicode/emoji/quotes) | F7          | Gepland |
-  | `honeypotFilled`                      | F5          | Gepland |
+  | Dataset | Gebruik | Status |
+  | --- | --- | --- |
+  | `VALID_CONTACT` | F1, F9 | Bestaand |
+  | `INVALID_EMAIL_CONTACT` | F3 | Bestaand |
+  | `missingRequired` | F2 | Gepland (F2 gebruikt lege velden) |
+  | `optionalSubjectEmpty` | F4 | Gepland |
+  | `boundary` (1 char / 500+ char) | F6 | Gepland |
+  | `specialChars` (unicode/emoji/quotes) | F7 | Gepland |
+  | `honeypotFilled` | F5 | Gepland |
 
-  Tot fase 3 gebruiken F1–F3 inline waarden; de tabel hierboven is dus een
-  **target**, niet de huidige testdata-organisatie.
+  `VALID_CONTACT` en `INVALID_EMAIL_CONTACT` bestaan al in
+  `playwright/utils/test-data.ts`; de andere datasets zijn target voor fase 3.
+
 
 ### 6.2 Omgeving & determinisme
 
@@ -703,6 +706,7 @@ Een testcase is klaar wanneer (BestPractices §31, samengevat):
 - locators zijn semantisch/stabiel (`getByRole`/`getByLabel`/`getByTestId`);
 - géén onnodige sleeps; web-first assertions gebruikt;
 - test is geïsoleerd, deterministisch en parallel-draaibaar;
+- Page Objects en mocks worden via typed fixtures opgezet waar van toepassing;
 - externe dependencies (Formward) zijn bewust gemockt waar relevant;
 - `tsc --noEmit` + lint schoon; lokaal herhaald groen.
 
