@@ -1,6 +1,9 @@
-import { test } from "../../fixtures/test-fixtures";
+﻿import { test } from "../../fixtures/test-fixtures";
 import {
+  BOUNDARY_CONTACT,
   INVALID_EMAIL_CONTACT,
+  OPTIONAL_SUBJECT_CONTACT,
+  SPECIAL_CHARS_CONTACT,
   VALID_CONTACT,
 } from "../../utils/test-data";
 
@@ -11,7 +14,7 @@ test.describe("Contactpagina - functionele tests", () => {
   });
 
   test.describe("Pagina-structuur", () => {
-    test("titel bevat 'Contact'", async ({ contactPage }) => {
+    test("titel bevat Contact", async ({ contactPage }) => {
       await contactPage.expectTitleContains("Contact");
     });
 
@@ -79,6 +82,49 @@ test.describe("Contactpagina - functionele tests", () => {
       await contactPage.expectFormInvalid();
       await contactPage.expectFieldInvalid("E-mailadres");
       await formwardMock.expectRequestCount(0);
+    });
+
+    test("F4: geldige submit zonder optioneel subject", async ({
+      contactPage,
+      formwardMock,
+    }) => {
+      await contactPage.fillForm(OPTIONAL_SUBJECT_CONTACT);
+      await contactPage.submitForm();
+      await contactPage.expectRedirectToThankYouPage();
+      await formwardMock.expectRequestCount(1);
+    });
+
+    test("F6: boundary-waarden worden geaccepteerd", async ({
+      contactPage,
+      formwardMock,
+    }) => {
+      await contactPage.fillForm(BOUNDARY_CONTACT);
+      await contactPage.submitForm();
+      await contactPage.expectRedirectToThankYouPage();
+      await formwardMock.expectRequestCount(1);
+    });
+
+    test("F7: speciale tekens worden geaccepteerd", async ({
+      contactPage,
+      formwardMock,
+    }) => {
+      await contactPage.fillForm(SPECIAL_CHARS_CONTACT);
+      await contactPage.submitForm();
+      await contactPage.expectRedirectToThankYouPage();
+      await formwardMock.expectRequestCount(1);
+    });
+
+    test("F10: browser back na redirect werkt", async ({
+      contactPage,
+      formwardMock,
+      page,
+    }) => {
+      await contactPage.fillForm(VALID_CONTACT);
+      await contactPage.submitForm();
+      await contactPage.expectRedirectToThankYouPage();
+      await page.goBack();
+      await contactPage.expectNotRedirected();
+      await formwardMock.expectRequestCount(1);
     });
   });
 });

@@ -43,3 +43,26 @@ export const OTHER_PAGES_TO_TEST = [
   "privacy.html",
   "bedankt.html",
 ] as const;
+
+/** F4: geldige submit zonder optioneel subject. */
+export const OPTIONAL_SUBJECT_CONTACT = {
+  name: "Test Gebruiker",
+  email: "test@example.com",
+  message: "Dit is een testbericht.",
+};
+
+/** F6: minimale naam en lange berichttekst. */
+export const BOUNDARY_CONTACT = {
+  name: "A",
+  email: "test@example.com",
+  subject: "Boundary",
+  message: "x".repeat(500),
+};
+
+/** F7: unicode, emoji en speciale tekens. */
+export const SPECIAL_CHARS_CONTACT = {
+  name: "Test 🚀",
+  email: "test@example.com",
+  subject: "Speciale tekens 🚀",
+  message: "emoji 🚀 en <tag> tekst",
+};
