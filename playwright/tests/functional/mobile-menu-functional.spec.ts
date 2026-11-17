@@ -65,6 +65,34 @@ test.describe("Mobiele menu-toggle", () => {
       await navPage.expectMenuClosedOnMobile();
     });
 
+    test("Escape sluit het menu en geeft focus terug", async ({ navPage, page }) => {
+      await navPage.toggleMenu();
+      await navPage.expectMenuOpen();
+      await page.keyboard.press("Escape");
+      await navPage.expectMenuClosedOnMobile();
+      await expect(navPage.menuToggle).toBeFocused();
+    });
+
+    test("klik buiten het menu sluit het menu en geeft focus terug", async ({ navPage }) => {
+      await navPage.toggleMenu();
+      await navPage.expectMenuOpen();
+      await navPage.clickOutsideMenu();
+      await navPage.expectMenuClosedOnMobile();
+      await expect(navPage.menuToggle).toBeFocused();
+    });
+
+    test("focus na openen gaat naar de eerste nav-link", async ({ navPage }) => {
+      await navPage.toggleMenu();
+      await expect(navPage.firstNavLink).toBeFocused();
+    });
+
+    test("Escape op gesloten menu verandert de focus niet", async ({ navPage, page }) => {
+      await navPage.menuToggle.focus();
+      await page.keyboard.press("Escape");
+      await expect(navPage.menuToggle).toBeFocused();
+      await navPage.expectMenuClosedOnMobile();
+    });
+
     test.describe("Alle nav-links navigeren naar de juiste pagina", () => {
       for (const testId of NAV_ITEM_TEST_IDS) {
         test(`nav-link "${testId}" navigeert naar ${NAV_ITEM_URLS[testId]}`, async ({

@@ -47,6 +47,19 @@ export class NavigationPage extends BasePage {
     return this.page.getByTestId("nav-links");
   }
 
+  get navItems() {
+    return this.navLinks.getByRole("link");
+  }
+
+  get firstNavLink() {
+    return this.navItems.first();
+  }
+
+  /** Klik op een element buiten het menu, om de click-outside-handler te testen. */
+  async clickOutsideMenu() {
+    await this.page.getByRole("contentinfo").click({ position: { x: 5, y: 5 } });
+  }
+
   /** Klik op de mobiele menu-toggle. */
   async toggleMenu() {
     await this.menuToggle.click();
