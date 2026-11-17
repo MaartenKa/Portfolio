@@ -1,6 +1,7 @@
 // Portfolio / playwright / fixtures / test-fixtures.ts
 import { test as base } from "@playwright/test";
 import { BasePage } from "../pages/base.page";
+import { FooterPage } from "../pages/footer.page";
 import { FormwardMock } from "./formward.mock";
 import { CiHistoryPage } from "../pages/ci-history.page";
 import { ContactPage } from "../pages/contact.page";
@@ -20,6 +21,7 @@ type Fixtures = {
   navPage: NavigationPage;
   ciHistoryPage: CiHistoryPage;
   basePage: BasePage;
+  footerPage: FooterPage;
   formwardMock: FormwardMock;
 };
 
@@ -45,6 +47,10 @@ export const test = base.extend<Fixtures>({
   ciHistoryPage: async ({ page }, use) => {
     // Bewust geen navigate(): de test mockt eerst de history-endpoint.
     await use(new CiHistoryPage(page));
+  },
+
+  footerPage: async ({ page }, use) => {
+    await use(new FooterPage(page));
   },
 
   basePage: async ({ page }, use) => {
