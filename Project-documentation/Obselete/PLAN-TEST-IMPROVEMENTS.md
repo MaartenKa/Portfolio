@@ -3,7 +3,7 @@
 > **Status:** uitgevoerd — november 2026.
 > **Doel:** de bestaande suite professioneler maken zonder het aantal tests of de
 > gebruikersflows te veranderen.
-> **Baseline:** 41 tests in 5 spec-bestanden; `npm run test:local` is groen;
+> **Baseline:** oorspronkelijk 41 tests in 5 spec-bestanden; na de coverage-stap 53 tests in 6 spec-bestanden;
 > `npm run check` is groen.
 
 ## 1. Scope
@@ -17,8 +17,8 @@ De wijzigingen richten zich op:
 - CIH-03 sterker maken;
 - kleine consistentiepunten opruimen.
 
-Niet in scope: nieuwe coverage (SM-03, MENU-07…10, NAV-04/05, F4–F8/F10) en
-non-functionele suites.
+De coverage-uitbreiding staat in `PLAN-FUNCTIONAL-COVERAGE.md`; de
+non-functionele suites blijven buiten scope.
 
 ## 2. Voorgenomen wijzigingen
 
@@ -120,16 +120,20 @@ Na de wijzigingen:
 - README, PLAYWRIGHT.md, CI-OVERVIEW.md, TESTPLAN.md en BESTPRACTICES.md zijn
   bijgewerkt.
 
-**Nog open (buiten deze plan-scope):**
+**Uitgebreid in de coverage-stap:**
 
-- SM-03 (404-fallback).
-- MENU-07…10 (Escape, klik-buiten, focus).
-- NAV-04/05 (footer-links).
-- F4–F8 en F10.
+- SM-03 (404-fallback, lokaal via `404.html`; live unknown-path blijft handmatig).
+- MENU-07…10.
+- NAV-04/05.
+- F4, F6, F7 en F10.
+
+**Nog open:**
+
+- F5 is deels gedekt en F8 is gepland.
 - RESP/A11Y/SEO/LINK/IMG/VIS/PERF-suites.
 - CIH-06/07/08.
 
 Binnen de bestaande suite zijn geen open reviewpunten meer. De validatie is:
-`npm run test:local` → **41/41 groen**, `npm run check` → groen en
-`npx playwright test --list` → **41 tests in 5 bestanden**.
+`npm run test:local` → **53/53 groen**, `npm run check` → groen en
+`npx playwright test --list` → **53 tests in 6 bestanden**.
 

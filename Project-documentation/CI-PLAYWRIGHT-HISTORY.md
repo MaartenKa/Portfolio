@@ -1,4 +1,4 @@
-﻿# CI Playwright History — technische documentatie
+# CI Playwright History — technische documentatie
 
 > **Doel van dit bestand:** exact documenteren hoe de Playwright CI-resultaten,
 > de history-tabel en de QA-aggregaatcijfers op `docs/automation.html` werken.
@@ -484,21 +484,21 @@ npm run test:local   # = playwright test -c playwright.local.config.ts (webServe
 node scripts/ci-summary.mjs --report=playwright/test-results/report.json --history=playwright/test-results/local-history.json --max=30
 ```
 
-De lokale run met de uitgebreide suite gaf:
+De lokale run met de huidige suite gaf:
 
 ```text
-41 passed
+53 passed
 ```
 
-(36 bestaande tests plus de 5 CI-history tests uit
+(48 bestaande tests plus de 5 CI-history tests uit
 `playwright/tests/functional/ci-history-functional.spec.ts`.)
 
 Daarna genereerde `scripts/ci-summary.mjs` uit die lokale JSON-report een
 tijdelijke history-entry met:
 
 ```text
-total: 36
-passed: 36
+total: 53
+passed: 53
 failed: 0
 flaky: 0
 passRate: 100
@@ -517,7 +517,8 @@ De eerdere ad-hoc UI-check met een handmatig geplaatste dummy
 `data/playwright-history.json` via `page.route()`, dus de verwachte cijfers
 staan vast en hangen niet af van wat er toevallig in de CI is gedraaid. De
 dummy history zelf staat niet in de repo: `docs/data/playwright-history.json`
-blijft de lege startstatus tot de eerste CI-run een entry schrijft.
+wordt door de CI gevuld; de CI-history-test mockt die data onafhankelijk van de
+live geschiedenis.
 
 De mock met drie runs (40/40, 40/38 en 40/30) geeft in de UI:
 

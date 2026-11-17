@@ -65,6 +65,7 @@ network mocking, CI-ready configuratie).
 │   │   ├── contact.page.ts   # ContactPage
 │   │   ├── ci-history.page.ts # CiHistoryPage: mock + kaarten/tabel van automation.html
 │   │   ├── mobile.page.ts    # NavigationPage (mobiele menu-toggle)
+│   │   ├── footer.page.ts    # FooterPage (globale footer-links)
 │   │
 │   ├── fixtures/
 │   │   ├── formward.mock.ts  # FormwardMock: route + request-registratie
@@ -77,6 +78,7 @@ network mocking, CI-ready configuratie).
 │       ├── functional/contact-functional.spec.ts
 │       ├── functional/mobile-menu-functional.spec.ts
 │       ├── functional/ci-history-functional.spec.ts
+│       ├── functional/footer-functional.spec.ts
 │       ├── accessibility/     # leeg — TESTPLAN fase 4 (A11Y-01…04)
 │       ├── compatibility/     # leeg — TESTPLAN fase 7 (Firefox/WebKit)
 │       ├── e2e/               # leeg — gebruikersflows
@@ -206,10 +208,12 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
      (toggle verborgen, nav inline).
    - `ci-history-functional.spec.ts`: de CI-resultatensectie op
      `automation.html`. Mockt `data/playwright-history.json` via `page.route()`,
-     zodat de verwachte kaarncijfers vaststaan en niet afhangen van wat er in de
+     zodat de verwachte kaartcijfers vaststaan en niet afhangen van wat er in de
      CI draaide: suite-omvang, testruns, laatste-run kaarten, Σ totalen, pooled
      ratio, streak, flaky/failed, run-link in de tabel, runs zonder noemer en de
      lege state. Page object: `pages/ci-history.page.ts`.
+    - `footer-functional.spec.ts`: footer-links, externe attributen en de
+      actieve footer-link op contact/privacy. Page object: `pages/footer.page.ts`.
 
 ### Config (playwright.config.ts)
 
@@ -301,15 +305,15 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   `tsconfig.json` → de gezende `tsc`-run **type-checkt alleen** (no `dist/`
   output). `tsconfig.site.json` overrules met `noEmit: false` voor de site-JS.
 - **`fixtures/test-fixtures.ts`** — typed custom fixtures (`test.extend`) voor
-  `homePage`, `contactPage`, `navPage`, `ciHistoryPage`, `basePage` en
-  `formwardMock`. Navigatie en mock zijn expliciet in de test of in een
+  `homePage`, `contactPage`, `navPage`, `ciHistoryPage`, `basePage`, `footerPage`
+  en `formwardMock`. Navigatie en mock zijn expliciet in de test of in een
   `beforeEach`; de fixtures zelf navigeren niet.
 - **`fixtures/formward.mock.ts`** — `FormwardMock`: route-mock met
   request-registratie; `expectRequestCount(count)` bewijst dat invalid submits
   geen request veroorzaken.
 - **`utils/test-data.ts`** — gedeelde statische constanten (`FORMWARD_URL`,
   `THANK_YOU_PAGE`, `EMAIL`, externe links, `OTHER_PAGES_TO_TEST`) en
-  formulierdatasets `VALID_CONTACT` en `INVALID_EMAIL_CONTACT`.
+  formulierdatasets `VALID_CONTACT`, `INVALID_EMAIL_CONTACT`, `OPTIONAL_SUBJECT_CONTACT`, `BOUNDARY_CONTACT` en `SPECIAL_CHARS_CONTACT`.
 - De website is **Nederlands**; test-namen en UI-teksten zijn dus in het
   Nederlands.
 
@@ -431,7 +435,7 @@ dezelfde wijziging** als de oorzaak, niet later.
 
 | README-claim | Bron van waarheid | Bijwerken wanneer |
 | --- | --- | --- |
-| Aantal tests per suite + totaal (41) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
+| Aantal tests per suite + totaal (53) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
 | Playwright-versie (1.65) | `package.json` → `devDependencies` | versie-upgrade |
 | ESLint-versie (10) | `package.json` → `devDependencies.eslint` | versie-upgrade |
 | Node-grens (`>=24.8 <25`) | `package.json` → `engines.node` | Node-upgrade |

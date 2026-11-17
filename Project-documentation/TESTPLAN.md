@@ -7,7 +7,7 @@
 | **Eigenaar**   | QA Engineer (zie §13)                                                                       |
 | **Testobject** | Statische portfolio-site in `docs/` (10 HTML-bestanden) + Playwright-suite in `playwright/` |
 | **Testbasis**  | §3.3                                                                                        |
-| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 41 tests in 5 spec-bestanden          |
+| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 53 tests in 6 spec-bestanden          |
 
 **Scope:** de statische portfolio-website in `docs/` — 9 contentpagina's plus de
 `404.html`-fallback (10 HTML-bestanden), het CSS-design-systeem, één klein
@@ -33,13 +33,12 @@ kwaliteitsrisico's liggen daarom op vier vlakken:
 3. **Client-side gedrag** — de mobiele menu-toggle (de enige echte site-JS).
 4. **Non-functioneel** — responsive, accessibility, SEO, performance, cross-browser.
 
-De huidige suite dekt (1) **grotendeels** (9 van de 10 HTML-bestanden; de
-`404.html`-fallback is nog niet geautomatiseerd), (2) **gedeeltelijk** en
-(3) **grotendeels** —
-de mobiele menu-toggle is geautomatiseerd in `mobile-menu-functional.spec.ts`
-(incl. ARIA-asserts en state-transitions), maar de focus-, `Escape`- en
-klik-buiten-cases (MENU-07…10) ontbreken nog. Het formulier is gedekt voor F1–F3
-en F9; F4–F8 en F10 zijn gepland (§7). De site bevat inmiddels P2-accessibility fixes (skip-link,
+De huidige suite dekt (1) **grotendeels** (10 HTML-bestanden, inclusief de
+`404.html`-pagina; de unknown-path-fallback blijft een live-check), (2)
+**grotendeels** en (3) **volledig** — de mobiele menu-toggle is geautomatiseerd
+in `mobile-menu-functional.spec.ts` (incl. ARIA, state-transitions, focus,
+`Escape` en klik-buiten). Het formulier is gedekt voor F1–F4, F6, F7, F9 en F10;
+F5 is deels gedekt en F8 is gepland (§7). De site bevat inmiddels P2-accessibility fixes (skip-link,
 decoratieve `aria-hidden`-iconen, Nederlandse section-labels, placeholder-
 contrast en `forced-colors` fallback), maar deze zijn nog niet als structurele
 Playwright-suite gedekt. De resterende gaten liggen op vlak **(4)**:
@@ -219,15 +218,13 @@ uitgevoerde UAT.
 
 ### 5.1 Functioneel
 
-- **Smoke / sanity:** elke pagina laadt (HTTP 200), geen console/page errors. _(bestaand; 9 tests)_
-- **Navigatie:** elke `nav-*`-link, CTA en card-link opent de juiste URL. _(deels bestaand; NAV-02 bestaand, NAV-01/03 deels, NAV-04/05 gepland)_
-- **Formulier:** zie §7 (validatie, honeypot, submit, redirect).
+- **Smoke / sanity:** elke pagina laadt (HTTP 200), geen console/page errors. _(bestaand; 10 tests)_
+- **Navigatie:** elke `nav-*`-link, CTA en card-link opent de juiste URL. _(deels bestaand; NAV-02/04/05 bestaand, NAV-01/03 deels)_
+- **Formulier:** zie §7 (validatie, honeypot, submit, redirect). F1–F4, F6, F7, F9 en F10 zijn gedekt; F5 is deels gedekt en F8 is gepland.
 - **CI-history dashboard:** kaarten en Geschiedenis-tabel op `automation.html` — zie §8.5 _(bestaand, 5 tests)_.
-- **Menu-toggle (MOBIEEL — deels bestaand, stabiliseren/uitbreiden):** zie TC-MENU
-  in §8.3 (`mobile-menu-functional.spec.ts`). De site-code bevat naast
-  open/sluiten ook focusbeheer, `Escape`-sluiten en klik-buiten-het-menu;
-  deze gedragingen zijn ad-hoc lokaal geverifieerd en moeten nog als
-  structurele Playwright-cases worden opgenomen.
+- **Menu-toggle (MOBIEEL — bestaand):** zie TC-MENU in §8.3
+  (`mobile-menu-functional.spec.ts`). Open/sluiten, focusbeheer, `Escape` en
+  klik-buiten zijn geautomatiseerd.
 
 ### 5.2 Non-functioneel
 
@@ -305,21 +302,20 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
   `OTHER_PAGES_TO_TEST`) en de formulierdatasets `VALID_CONTACT` en
   `INVALID_EMAIL_CONTACT`. `smoke.spec.ts` gebruikt de paginalijst;
   `contact-functional.spec.ts` gebruikt de formulierdatasets.
-- **Centraal formulier-dataset (gepland, fase 3):** in `playwright/utils/test-data.ts`
-  met datasets die 1-op-1 op de F-matrix (§7) mappen:
+- **Formulierdatasets:** in `playwright/utils/test-data.ts`, met datasets die op de F-matrix (§7) mappen:
 
   | Dataset | Gebruik | Status |
   | --- | --- | --- |
-  | `VALID_CONTACT` | F1, F9 | Bestaand |
+  | `VALID_CONTACT` | F1, F9, F10 | Bestaand |
   | `INVALID_EMAIL_CONTACT` | F3 | Bestaand |
+  | `OPTIONAL_SUBJECT_CONTACT` | F4 | Bestaand |
+  | `BOUNDARY_CONTACT` | F6 | Bestaand |
+  | `SPECIAL_CHARS_CONTACT` | F7 | Bestaand |
   | `missingRequired` | F2 | Gepland (F2 gebruikt lege velden) |
-  | `optionalSubjectEmpty` | F4 | Gepland |
-  | `boundary` (1 char / 500+ char) | F6 | Gepland |
-  | `specialChars` (unicode/emoji/quotes) | F7 | Gepland |
   | `honeypotFilled` | F5 | Gepland |
 
-  `VALID_CONTACT` en `INVALID_EMAIL_CONTACT` bestaan al in
-  `playwright/utils/test-data.ts`; de andere datasets zijn target voor fase 3.
+  De bestaande datasets worden door de contacttests gebruikt; `missingRequired`
+  en `honeypotFilled` zijn target voor de resterende F5/F2-uitwerking.
 
 
 ### 6.2 Omgeving & determinisme
@@ -366,29 +362,31 @@ De belangrijkste data-flow. Verwacht-gedrag per scenario:
 | F1  | Geldige submit                    | alle velden geldig                    | POST → redirect naar `bedankt.html` + tekst "Bedankt, uw bericht is ontvangen"                                    | Bestaand (mock; 1 request)                                                  |
 | F2  | Lege verplichte velden            | name/email/bericht leeg               | géén submit (native validatie), blijft op `contact.html`, validatiemelding                                        | Bestaand (checkValidity + invalid fields + 0 requests)                     |
 | F3  | Ongeldige e-mail                  | `ongeldig-email`                      | géén submit, e-mail-validatiemelding                                                                              | Bestaand (checkValidity + invalid field + 0 requests)                       |
-| F4  | Alleen optioneel veld ontbreekt   | `subject` leeg                        | WEL geldige submit (subject is niet `required`)                                                                   | Gepland                                                                    |
+| F4  | Alleen optioneel veld ontbreekt   | `subject` leeg                        | WEL geldige submit (subject is niet `required`)                                                                   | Bestaand (mock; 1 request)                                                  |
 | F5  | Honeypot ingevuld (bot)           | `_gotcha` gevuld                      | spamfilter: géén geldig bericht (Formward verwijdert; lokaal: assert veld blijft hidden + tabindex -1)            | Deels (verborgen honeypot bestaat; ingevulde honeypot niet)                |
-| F6  | Boundary: minimale/ extreme tekst | naam = 1 teken, bericht = 500+ tekens | WEL geldige submit; geen fouten/truncatie in UI (boundary value analysis)                                         | Gepland                                                                    |
-| F7  | Speciale tekens / unicode         | emoji, quotes, accents                | WEL geldige submit; tekst wordt veilig gerenderd (geen HTML-injectie op static page)                              | Gepland                                                                    |
+| F6  | Boundary: minimale/ extreme tekst | naam = 1 teken, bericht = 500+ tekens | WEL geldige submit; geen fouten/truncatie in UI (boundary value analysis)                                         | Bestaand (mock; 1 request)                                                  |
+| F7  | Speciale tekens / unicode         | emoji, quotes, accents                | WEL geldige submit; tekst wordt veilig gerenderd (geen HTML-injectie op static page)                              | Bestaand (mock; 1 request)                                                  |
 | F8  | Dubbel submit                     | snel dubbel klikken op verstuurknop   | Maximaal één POST naar Formward; redirect blijft idempotent                                                       | Gepland                                                                    |
 | F9  | Redirect-target is correct        | geldige submit                        | eind-URL = `bedankt.html` (subpath `/Portfolio/` behouden) + bedankt-tekst zichtbaar (geen lege/pagina-not-found) | Bestaand (met mock; bewijst afhandeling, niet de echte `_redirect`-waarde) |
-| F10 | Terugnavigatie na redirect        | geldige submit → back                 | browser back werkt naar `contact.html` zonder crash; formulier is gereset/leeg (nieuwe context per test)          | Gepland                                                                    |
+| F10 | Terugnavigatie na redirect        | geldige submit → back                 | browser back werkt naar `contact.html` zonder crash; formulier is gereset/leeg (nieuwe context per test)          | Bestaand (back + 1 request)                                                 |
 
-> **Testdata-koppeling:** `VALID_CONTACT` en `INVALID_EMAIL_CONTACT` bestaan
-> in `playwright/utils/test-data.ts`; de andere datasets zijn target voor
-> fase 3. F1 en F3 gebruiken de bestaande datasets.
+> **Testdata-koppeling:** de datasets staan in `playwright/utils/test-data.ts`:
+> `VALID_CONTACT` (F1/F9/F10), `INVALID_EMAIL_CONTACT` (F3),
+> `OPTIONAL_SUBJECT_CONTACT` (F4), `BOUNDARY_CONTACT` (F6) en
+> `SPECIAL_CHARS_CONTACT` (F7).
 > De Formward-mock (`FormwardMock`-fixture) blijft actief en registreert
 > requests; F2/F3 asserten dat invalid submits **0 Formward-requests**
 > veroorzaken. Er is geen `clearFormMock()` meer nodig.
 >
-> **Status:** F1–F3 en F9 zijn geautomatiseerd; F4–F8 en F10 zijn gepland.
+> **Status:** F1–F4, F6, F7, F9 en F10 zijn geautomatiseerd; F5 is deels
+> gedekt en F8 is gepland.
 > Deze matrix is een specificatie, geen bewijs van volledige dekking.
 >
 > **Aandachtspunt redirect (`_redirect`):** `contact.html` verstuurt
 > `value="bedankt.html"` (bewust **relatief**, zodat Formward de redirect ten
 > opzichte van de verzendende URL resolve en de `/Portfolio/`-subpath behouden
-> blijft). De mock in F1/F9 asserts de door de mock zelf gezette absolute
-> `Location`-header, dus F1/F9 bewijzen de _afhandeling_ van de redirect, niet
+> blijft). De mock in F1/F9 gebruikt een relatieve `Location`, resolved tegen de huidige
+> pagina-URL; F1/F9 bewijzen de _afhandeling_ van de redirect, niet
 > de waarde van `_redirect` bij de echte Formward-redirect. Dekking daarvan:
 > handmatige live-check na deploy (zie ook PLAYWRIGHT §8).
 
@@ -401,9 +399,9 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 
 De statuskolommen gebruiken de legenda uit §5. **Bestaand** betekent dat er een
 test in een spec-bestand staat; **Deels** betekent dat slechts een subset is
-geautomatiseerd. De huidige suite telt **41 tests in 5 spec-bestanden**:
-smoke 9, homepage 5, contact 10, mobiel menu 12 en CI-history 5. Deze matrix
-beschrijft de volledige target-set; niet elke rij is al geïmplementeerd.
+geautomatiseerd. De huidige suite telt **53 tests in 6 spec-bestanden**: smoke 10,
+homepage 5, contact 14, mobiel menu 16, CI-history 5 en footer 3. Deze matrix
+beschrijft de target-set; F5 is deels en F8 is nog gepland.
 
 ### 8.1 Smoke / sanity (G1) — `playwright/tests/smoke/smoke.spec.ts` _(bestaand)_
 
@@ -411,19 +409,19 @@ beschrijft de volledige target-set; niet elke rij is al geïmplementeerd.
 | ----- | --------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------- |
 | SM-01 | Home (`index.html`) laadt                     | HTTP 200, `.navbar`/`.hero`/`.footer` zichtbaar, geen console/page errors | Bestaand                           |
 | SM-02 | Overige pagina's laden (curriculum … bedankt) | per pagina: HTTP 200 + geen console/page errors (8 pagina's)              | Bestaand                           |
-| SM-03 | `404.html` fallback is bereikbaar             | onbekend pad → HTTP 404 met de fallback-pagina, geen crash                | Gepland (nog niet geautomatiseerd) |
+| SM-03 | `404.html` fallback is bereikbaar             | `404.html` laadt met de fallback-content; unknown-path-fallback is een live-check | Bestaand |
 
-### 8.2 Navigatie (G2) — `playwright/tests/functional/homepage-functional.spec.ts` _(deels bestaand)_
+### 8.2 Navigatie (G2) — `homepage-functional.spec.ts`, `mobile-menu-functional.spec.ts` en `footer-functional.spec.ts` _(deels bestaand)_
 
 | ID     | Testcase                                             | Verwacht resultaat                                                                                                                                     | Status                                                                                        |
 | ------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
 | NAV-01 | Elke `nav-*` link opent de juiste pagina             | URL matcht `NAV_ITEM_URLS[testId]`                                                                                                                     | Deels: homepage-suite dekt 2 links; mobiele suite dekt alle 7 nav-links via het geopende menu |
 | NAV-02 | CTA's (`cta-projects`, `cta-curriculum`) navigeren   | correcte bestemming                                                                                                                                    | Bestaand (2 tests)                                                                            |
 | NAV-03 | Card-links (`card-link-testing/automation/projects`) | correcte bestemming                                                                                                                                    | Deels: alleen `card-link-testing`                                                             |
-| NAV-04 | Footer-links (contact, github, linkedin, privacy)    | interne → juiste URL; externe → juiste `href`/`target`/`rel`                                                                                           | Gepland                                                                                       |
-| NAV-05 | Actieve footer-link op eigen pagina                  | `footer-contact` (contact) en `footer-privacy` (privacy): `class="active"` + kleur `rgb(134, 239, 172)`; overige pagina's: géén `.active` in de footer | Gepland                                                                                       |
+| NAV-04 | Footer-links (contact, github, linkedin, privacy)    | interne → juiste URL; externe → juiste `href`/`target`/`rel`                                                                                           | Bestaand                                                                                      |
+| NAV-05 | Actieve footer-link op eigen pagina                  | `footer-contact` (contact) en `footer-privacy` (privacy): `class="active"` + kleur `rgb(134, 239, 172)`; overige pagina's: géén `.active` in de footer | Bestaand                                                                                       |
 
-### 8.3 Mobiele menu-toggle (G4) — `playwright/tests/functional/mobile-menu-functional.spec.ts` _(deels bestaand, hoogste prioriteit)_
+### 8.3 Mobiele menu-toggle (G4) — `playwright/tests/functional/mobile-menu-functional.spec.ts` _(bestaand)_
 
 | ID      | Testcase                                           | Verwacht resultaat                                             | Status                                                          |
 | ------- | -------------------------------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------- |
@@ -433,10 +431,10 @@ beschrijft de volledige target-set; niet elke rij is al geïmplementeerd.
 | MENU-04 | State-transition closed → open → closed (herhaald) | toestand wisselt correct, geen stale state                     | Deels: één open→sluit-cyclus; geen herhaalde/stale-state-assert |
 | MENU-05 | Navigatie via geopend menu werkt                   | nav-link klikt + juiste URL; menu gesloten na navigatie        | Bestaand (7 nav-links in de loop + 1 extra contact-navigatietest) |
 | MENU-06 | Op desktop (≥850px) is toggle niet nodig/zichtbaar | menu inline zichtbaar zonder toggle                            | Bestaand                                                        |
-| MENU-07 | `Escape` sluit geopend menu                        | menu verborgen, `aria-expanded="false"`, focus terug naar toggle | Gepland                                                         |
-| MENU-08 | Klik buiten geopend menu sluit het menu            | menu verborgen, `aria-expanded="false"`, focus terug naar toggle | Gepland                                                         |
-| MENU-09 | Focus na openen gaat naar eerste nav-link          | eerste nav-link is gefocust                                    | Gepland                                                         |
-| MENU-10 | `Escape` op gesloten menu verandert de focus niet  | focus blijft op huidige actieve locator                        | Gepland                                                         |
+| MENU-07 | `Escape` sluit geopend menu                        | menu verborgen, `aria-expanded="false"`, focus terug naar toggle | Bestaand                                                        |
+| MENU-08 | Klik buiten geopend menu sluit het menu            | menu verborgen, `aria-expanded="false"`, focus terug naar toggle | Bestaand                                                        |
+| MENU-09 | Focus na openen gaat naar eerste nav-link          | eerste nav-link is gefocust                                    | Bestaand                                                        |
+| MENU-10 | `Escape` op gesloten menu verandert de focus niet  | focus blijft op huidige actieve locator                        | Bestaand                                                        |
 
 ### 8.4 Non-functioneel (G5–G10) — nieuwe spec-bestanden _(fase 4–5)_
 
@@ -475,10 +473,10 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 | CIH-04 | Runs zonder noemer (`total = 0`) vallen buiten de totalen      | alleen 2 van 3 runs geteld: `ci-total-executed` = "80", `ci-pass-ratio` = "90%", `ci-streak` = "0", `ci-status` = "Geannuleerd"; notering bevat "2 van 3 CI-runs geteld"                                                             | Bestaand |
 | CIH-05 | Lege geschiedenis: placeholders en placeholder-rij             | alle kaarten tonen "—", `ci-history-body` bevat "Geen CI-historie beschikbaar."                                                                                                                                                      | Bestaand |
 
-> **Bewijs:** `npx playwright test --list` telt 5 tests in dit spec-bestand (41 in
+> **Bewijs:** `npx playwright test --list` telt 5 tests in dit spec-bestand (53 in
 > de hele suite). De tabel heeft in de markup 6 kolommen (Run, Datum, Status,
 > Tests, Geslaagd, Flaky) en géén `data-testid` per rij; rijen worden via
-> `getByRole("row")` geteld. Er is **géén** aparte JSON-schema- of 404-fallback-test.
+> `getByRole("row")` geteld. Er is **géén** aparte JSON-schema- of 404-fallback-test **in dit spec-bestand**.
 >
 > **Roadmap:** CIH-06 (unit/component-test op `scripts/ci-summary.mjs`), CIH-07
 > (schema v2 met `suiteTests`) en CIH-08 (a11y van de CI-sectie) staan in
@@ -525,7 +523,7 @@ impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish
 | :--: | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 |  1   | Bestaande suite stabiliseren (smoke + navigatie + contact)                                                                      | Alle huidige tests groen, deterministisch, gemockt; geen flaky                                                                                                     |
 |  2   | **Mobiele menu-toggle stabiliseren & uitbreiden** (TC MENU-01…10, bestaand + nieuwe focus/Escape/klik-buiten-cases)             | Suite groen + deterministisch; extra viewports (850×1024, 360×640) toegevoegd; ARIA state-transition, focusbeheer, `Escape`-sluiten en klik-buiten-het-menu gedekt |
-|  3   | Testdata centraliseren (`utils/test-data.ts` heeft nu de pagina- en URL-constanten) + boundary/special-char cases (F4, F6, F7, F8, F10) | Formulier-testdataset centraal; F-matrix compleet gedekt                                                                                                           |
+|  3   | Testdata centraliseren (`utils/test-data.ts`) + F4/F6/F7/F10-cases; F8 blijft gepland | Formulier-testdataset centraal; F-matrix grotendeels gedekt                                                                                                        |
 |  4   | Non-functioneel: responsive, a11y, SEO, links/img checks                                                                        | RESP/A11Y/SEO/LINK/IMG groen op alle 10 pagina's                                                                                                                   |
 |  5   | Visual regression + Lighthouse-drempels                                                                                         | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                                                                            |
 |  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → test → artifacts → history   | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit                                                                         |
@@ -596,18 +594,18 @@ als **doel/aspiratie**, niet als huidige werkelijkheid.
 - De testdata en verwachtingen zijn deterministisch: gemockte endpoints, vaste
   fixtures en geen afhankelijkheid van live CI-cijfers.
 
-### Exit criteria — huidige baseline (suite zoals nu, 41 tests)
+### Exit criteria — huidige baseline (suite zoals nu, 53 tests)
 
 1. **Poorten groen** — `npm run check` (typecheck + lint + html-validate) slaagt.
-2. **Suite groen** — 41/41 tests slagen; 0 failures en 0 skipped in het JSON-report.
+2. **Suite groen** — 53/53 tests slagen; 0 failures en 0 skipped in het JSON-report.
 3. **Geen blokkerende of hoge defects** in de gedekte gebieden; bekende
    niet-blokkerende issues zijn gedocumenteerd.
 4. **Determinisme** — de suite is herhaalbaar groen: lokaal met `retries: 0`, CI met
    `retries: 2` als vangnet. Een test die alleen via een retry slaagt, telt als
    **flaky** en moet worden onderzocht (zie §12.1).
-5. **Beperkingen benoemd** — de niet-geautomatiseerde gebieden uit §5.1/§8 (SM-03,
-   NAV-04/05, MENU-07…10, F4–F8, F10 en de non-functionele fase 4–5 checks) zijn
-   als **gepland** gemarkeerd en blokkeren deze baseline niet.
+5. **Beperkingen benoemd** — F5 is deels gedekt, F8 is gepland en de
+   non-functionele fase 4–5 checks ontbreken nog. Die staan als **gepland**
+   gemarkeerd en blokkeren deze baseline niet.
 
 ### Exit criteria — release-target (na fase 1–7)
 
@@ -632,7 +630,7 @@ het acceptatieniveau van een volledige release, niet de huidige stand.
 | Vereisten-dekking       | Elk in-scope productdoel G1–G10 en G13 heeft ≥1 **bestaande** testcase; G11/G12 worden door CI-config en een CI-run bewezen, niet door een testcase; geplande cases tellen niet mee als dekking | Traceerbaarheid §15 + `npx playwright test --list`               |
 | Pass-rate               | 100% pass, 0 fail, 0 skipped, 0 unexpected                                                                                                                                                      | Playwright JSON-report                                           |
 | Flaky-aandeel           | 0% (geen test die alleen via een retry slaagt)                                                                                                                                                  | JSON-report `flaky`-veld + 5 groene runs met `retries: 0` lokaal |
-| Dekking van de F-matrix | 10/10 cases bestaand (nu 5/10)                                                                                                                                                                  | §7                                                               |
+| Dekking van de F-matrix | 8/10 cases bestaand (F5 deels, F8 gepland)                                                                                                                                                      | §7                                                               |
 | CI-history              | CIH-01…CIH-05 bestaand en groen (5/5)                                                                                                                                                           | `ci-history-functional.spec.ts`                                  |
 
 > Let op: de CI draait met `workers: 1` (`playwright.config.ts`). "Parallel" betekent
@@ -721,10 +719,10 @@ werk, niet als bewijs.
 
 | Doel | Testcases                           | Spec-bestand                                                    | Status                                                            | Bewijs / resultaat                     |
 | ---- | ----------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------- |
-| G1   | SM-01, SM-02; SM-03                 | `smoke.spec.ts`                                                 | Bestaand: SM-01/02; SM-03 gepland                                 | 9 smoke-tests                          |
-| G2   | NAV-01…NAV-05                       | `homepage-functional.spec.ts`, `mobile-menu-functional.spec.ts` | NAV-01 deels; NAV-02 bestaand; NAV-03 deels; NAV-04/05 gepland    | 5 homepage- + 12 menu-tests            |
-| G3   | F1…F10                              | `contact-functional.spec.ts`                                    | F1–F3 en F9 bestaand; F5 deels; F4/F6–F8/F10 gepland              | 10 contact-tests                       |
-| G4   | MENU-01…MENU-10                     | `mobile-menu-functional.spec.ts`                                | MENU-01–03, 05, 06 bestaand; MENU-04 deels; MENU-07–10 gepland    | 12 menu-tests                          |
+| G1   | SM-01, SM-02, SM-03                 | `smoke.spec.ts`                                                 | Bestaand                                                          | 10 smoke-tests                         |
+| G2   | NAV-01…NAV-05                       | `homepage-functional.spec.ts`, `mobile-menu-functional.spec.ts`, `footer-functional.spec.ts` | NAV-01 deels; NAV-02/04/05 bestaand; NAV-03 deels                | 5 homepage + 12 menu + 3 footer-tests  |
+| G3   | F1…F10                              | `contact-functional.spec.ts`                                    | F1–F4, F6, F7, F9, F10 bestaand; F5 deels; F8 gepland             | 14 contact-tests                       |
+| G4   | MENU-01…MENU-10                     | `mobile-menu-functional.spec.ts`                                | MENU-01–03, 05–10 bestaand; MENU-04 deels                         | 16 menu-tests                          |
 | G5   | RESP-01                             | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
 | G6   | A11Y-01…A11Y-04                     | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
 | G7   | SEO-01…SEO-04                       | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
@@ -745,20 +743,31 @@ werk, niet als bewijs.
 | --- | --- | --- |
 | SM-01 | `smoke.spec.ts` | `index pagina laadt zonder fouten en structuur is correct` |
 | SM-02 | `smoke.spec.ts` | `${url} laadt zonder kritieke fouten` (8 pagina's) |
+| SM-03 | `smoke.spec.ts` | `404.html laadt met de fallback-content` |
 | NAV-01 | `homepage-functional.spec.ts` | `navigatielink "Contact" opent de contactpagina`; `navigatielink "Projecten" opent de projectenpagina` |
 | NAV-01 | `mobile-menu-functional.spec.ts` | `nav-link "<testId>" navigeert naar <url>` (7 nav-links) |
 | NAV-02 | `homepage-functional.spec.ts` | `CTA-knop "Bekijk mijn projecten" opent de projectenpagina`; `CTA-knop "Bekijk mijn Curriculum vitae" opent de curriculumpagina` |
 | NAV-03 | `homepage-functional.spec.ts` | `card-link "Meer over testing" opent de testpagina` |
+| NAV-04 | `footer-functional.spec.ts` | `footer-links hebben de juiste bestemming en veilige externe attributen` |
+| NAV-05 | `footer-functional.spec.ts` | `actieve footer-link op contact`; `actieve footer-link op privacy` |
 | MENU-01 | `mobile-menu-functional.spec.ts` | `toggle is zichtbaar en menu is initieel gesloten` |
 | MENU-02 | `mobile-menu-functional.spec.ts` | `klik op toggle opent het menu` |
 | MENU-03 | `mobile-menu-functional.spec.ts` | `klik op toggle sluit het menu weer` |
 | MENU-04 | `mobile-menu-functional.spec.ts` | `klik op toggle sluit het menu weer` (deels; één cyclus) |
 | MENU-05 | `mobile-menu-functional.spec.ts` | `klik op nav-link in open menu sluit het menu en navigeert`; `nav-link "<testId>" navigeert naar <url>` |
 | MENU-06 | `mobile-menu-functional.spec.ts` | `menu-toggle is niet zichtbaar en nav-links staan inline` |
+| MENU-07 | `mobile-menu-functional.spec.ts` | `Escape sluit het menu en geeft focus terug` |
+| MENU-08 | `mobile-menu-functional.spec.ts` | `klik buiten het menu sluit het menu en geeft focus terug` |
+| MENU-09 | `mobile-menu-functional.spec.ts` | `focus na openen gaat naar de eerste nav-link` |
+| MENU-10 | `mobile-menu-functional.spec.ts` | `Escape op gesloten menu verandert de focus niet` |
 | F1/F9 | `contact-functional.spec.ts` | `geldig formulier redirect naar bedanktpagina` |
 | F2 | `contact-functional.spec.ts` | `formulier zonder verplichte velden redirect niet` |
 | F3 | `contact-functional.spec.ts` | `formulier met ongeldige e-mail redirect niet` |
+| F4 | `contact-functional.spec.ts` | `F4: geldige submit zonder optioneel subject` |
 | F5 | `contact-functional.spec.ts` | `honeypot-veld is verborgen` (alleen verborgenheid) |
+| F6 | `contact-functional.spec.ts` | `F6: boundary-waarden worden geaccepteerd` |
+| F7 | `contact-functional.spec.ts` | `F7: speciale tekens worden geaccepteerd` |
+| F10 | `contact-functional.spec.ts` | `F10: browser back na redirect werkt` |
 | CIH-01 | `ci-history-functional.spec.ts` | `laatste-run kaarten tonen de nieuwste CI-run` |
 | CIH-02 | `ci-history-functional.spec.ts` | `aggregate kaarten poolen alle runs en de ratio is Σ passed / Σ total` |
 | CIH-03 | `ci-history-functional.spec.ts` | `geschiedenis toont een rij per run met een werkende run-link` |
@@ -766,9 +775,8 @@ werk, niet als bewijs.
 | CIH-05 | `ci-history-functional.spec.ts` | `lege geschiedenis toont placeholders en de placeholder-rij` |
 | HTML-01 | CI-poort | `npm run validate:html` (geen Playwright-test) |
 
-> Cases zonder rij in deze tabel zijn **gepland** (SM-03, NAV-04/05, MENU-07…10,
-> F4, F6–F8, F10 en de non-functionele suites). De tabel beschrijft dus precies
-> wat de suite nu bevat, niet de target-set.
+> Cases zonder rij in deze tabel zijn nog open: F5 is deels, F8 is gepland en
+> de non-functionele suites zijn gepland. De tabel beschrijft de bestaande suite.
 
 ---
 
@@ -777,7 +785,7 @@ werk, niet als bewijs.
 | Onderdeel         | Deliverable                                     | Bron / bewijs                                                          |
 | ----------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
 | Testplan          | dit document, met status per testcase           | `Project-documentation/TESTPLAN.md`                                    |
-| Testsuite         | 5 spec-bestanden, 41 tests                      | `playwright/tests/` + `npx playwright test --list`                     |
+| Testsuite         | 6 spec-bestanden, 53 tests                      | `playwright/tests/` + `npx playwright test --list`                     |
 | Testrapportage    | HTML-report en JSON-report per run              | `playwright/playwright-report/`, `playwright/test-results/report.json` |
 | CI-history        | `docs/data/playwright-history.json` + dashboard | `scripts/ci-summary.mjs`, `automation.html`                            |
 | Kwaliteitspoorten | typecheck, lint en html-validate                | `npm run check`, `playwright.yml`                                      |

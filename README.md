@@ -18,9 +18,9 @@ met pass-rate, groene streaks en de status van de laatste runs.
 
 | Kenmerk                | Waarde                                              |
 | ---------------------- | --------------------------------------------------- |
-| Testsuite              | **41 tests** in 5 spec-bestanden                    |
+| Testsuite              | **53 tests** in 6 spec-bestanden                    |
 | Browser                | Chromium (Desktop Chrome)                           |
-| Laatste gelogde CI-run | **41/41 geslaagd** (100%)                           |
+| Laatste gelogde CI-run | **41/41 geslaagd** (100%; suite telt nu 53 tests)  |
 | CI                     | GitHub Actions — dagelijks om 18:17 UTC + handmatig |
 | Kwaliteitspoorten      | `tsc --noEmit`, ESLint 10, html-validate            |
 | Stack                  | HTML/CSS, TypeScript, Playwright 1.65, GitHub Pages |
@@ -90,7 +90,7 @@ playwright/
   fixtures/test-fixtures.ts    # typed Page Object-fixtures
   fixtures/formward.mock.ts    # Formward-mock + request-registratie
   utils/test-data.ts           # gedeelde constanten + formulierdatasets
-  tests/smoke|functional/      # de 41 tests
+  tests/smoke|functional/      # de 53 tests
   tests/accessibility|compatibility|e2e|regression/   # gereserveerd, nog leeg
 scripts/ci-summary.mjs         # JSON-report → CI-history
 Project-documentation/         # testplan, CI-documentatie, best practices, verbeterplan
@@ -100,12 +100,13 @@ Project-documentation/         # testplan, CI-documentatie, best practices, verb
 
 | Suite            | Spec-bestand                                                 |  Tests |
 | ---------------- | ------------------------------------------------------------ | -----: |
-| Smoke            | `playwright/tests/smoke/smoke.spec.ts`                       |      9 |
+| Smoke            | `playwright/tests/smoke/smoke.spec.ts`                       |     10 |
 | Homepage         | `playwright/tests/functional/homepage-functional.spec.ts`    |      5 |
-| Contactformulier | `playwright/tests/functional/contact-functional.spec.ts`     |     10 |
-| Mobiel menu      | `playwright/tests/functional/mobile-menu-functional.spec.ts` |     12 |
+| Contactformulier | `playwright/tests/functional/contact-functional.spec.ts`     |     14 |
+| Mobiel menu      | `playwright/tests/functional/mobile-menu-functional.spec.ts` |     16 |
 | CI-history UI    | `playwright/tests/functional/ci-history-functional.spec.ts`  |      5 |
-| **Totaal**       | 5 spec-bestanden                                             | **41** |
+| Footer           | `playwright/tests/functional/footer-functional.spec.ts`      |      3 |
+| **Totaal**       | 6 spec-bestanden                                             | **53** |
 
 ## Kwaliteitspoorten
 
@@ -125,7 +126,7 @@ een rode poort stopt de suite.
 | -------------------------------------------------------------------------------- | --------------------------------------------------- |
 | [PLAYWRIGHT.md](Project-documentation/PLAYWRIGHT.md)                             | Projectopbouw, Page Objects, conventies, commando's |
 | [TESTPLAN.md](Project-documentation/TESTPLAN.md)                                 | Teststrategie, testmatrix G1–G13, roadmap           |
-| [PLAN-TEST-IMPROVEMENTS.md](Project-documentation/PLAN-TEST-IMPROVEMENTS.md)     | Uitvoeringsplan en status van de testarchitectuur   |
+| [TEST-SUITE-STATUS.md](Project-documentation/TEST-SUITE-STATUS.md)               | Actuele backlog: wat gedaan is en wat nog open is   |
 | [PLAN-HERO-SOFT-3D.md](Project-documentation/PLAN-HERO-SOFT-3D.md)               | Plan en resultaat van de soft-3D homepage-card     |
 | [BESTPRACTICES.md](Project-documentation/BESTPRACTICES.md)                       | ISTQB- en Playwright-methodiek                      |
 | [CI-OVERVIEW.md](Project-documentation/CI-OVERVIEW.md)                           | CI/CD in gewoon taalgebruik + bestandsgids          |

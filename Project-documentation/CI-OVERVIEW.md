@@ -201,15 +201,17 @@ Twee dingen die opvallen:
 | `playwright/pages/home.page.ts` | Page object voor de homepagina (CTA's, navigatie) |
 | `playwright/pages/contact.page.ts` | Page object voor contact: formuliervelden, validatie-asserts, honeypot en externe links; de Formward-mock staat in `FormwardMock` |
 | `playwright/pages/mobile.page.ts` | Mobiele menu-data: `NAV_ITEM_TEST_IDS` en `NAV_ITEM_URLS` |
-| `playwright/utils/test-data.ts` | Gedeelde constanten: `FORMWARD_URL`, `THANK_YOU_PAGE`, `EMAIL`, `GITHUB_URL`, `LINKEDIN_URL`, `OTHER_PAGES_TO_TEST` (8 pagina's) en formulierdatasets `VALID_CONTACT` / `INVALID_EMAIL_CONTACT` |
+| `playwright/utils/test-data.ts` | Gedeelde constanten: `FORMWARD_URL`, `THANK_YOU_PAGE`, `EMAIL`, `GITHUB_URL`, `LINKEDIN_URL`, `OTHER_PAGES_TO_TEST` (8 pagina's) en formulierdatasets `VALID_CONTACT`, `INVALID_EMAIL_CONTACT`, `OPTIONAL_SUBJECT_CONTACT`, `BOUNDARY_CONTACT` en `SPECIAL_CHARS_CONTACT` |
 | `playwright/tests/smoke/smoke.spec.ts` | Deep check op `index.html` plus lightweight check op de overige pagina's; gebruikt de `basePage`-fixture en assert console- én page-errors |
 | `playwright/tests/functional/homepage-functional.spec.ts` | CTA's en nav-links openen de juiste pagina's |
 | `playwright/tests/functional/contact-functional.spec.ts` | Paginastructuur en formulierinzending (Formward gemockt; valide submit redirect naar `bedankt.html`; invalid submit veroorzaakt 0 Formward-requests) |
 | `playwright/tests/functional/mobile-menu-functional.spec.ts` | Menu-toggle op desktop en mobiel, `aria-expanded`, focusbeheer, alle nav-links |
 | `playwright/pages/ci-history.page.ts` | Page object `CiHistoryPage`: mockt `data/playwright-history.json` via `page.route()`, navigeert naar `automation.html`, leest kaarten per `data-testid` en de rijen van de history-tabel |
+| `playwright/pages/footer.page.ts` | Page object `FooterPage`: footer-links, externe attributen en actieve footer-link |
 | `playwright/tests/functional/ci-history-functional.spec.ts` | Vijf tests over de CI-resultatensectie: laatste-run kaarten, gepoolde totalen en ratio, één rij per run met run-link, runs zonder noemer, en de lege staat. Testsoort en afbakening: `PLAN-CI-HISTORY-TESTS.md` |
+| `playwright/tests/functional/footer-functional.spec.ts` | Footer-links, veilige externe attributen en actieve footer-links op contact/privacy |
 | `playwright/tests/accessibility/`, `compatibility/`, `e2e/`, `regression/` | Nu lege mappen: de plek waar de volgende testcategorieën komen |
-| `Project-documentation/` | `PLAYWRIGHT.md`, `TESTPLAN.md`, `PLAN-TEST-IMPROVEMENTS.md`, `BESTPRACTICES.md`, `CI-PLAYWRIGHT-HISTORY.md` en dit bestand |
+| `Project-documentation/` | `PLAYWRIGHT.md`, `TESTPLAN.md`, `TEST-SUITE-STATUS.md`, `BESTPRACTICES.md`, `CI-PLAYWRIGHT-HISTORY.md` en dit bestand |
 
 Waarom `base.page.ts` zo belangrijk is voor de CI: de runtime-error check betekent
 dat een kapotte fetch — bijvoorbeeld een ontbrekende history-JSON — de eigen tests
