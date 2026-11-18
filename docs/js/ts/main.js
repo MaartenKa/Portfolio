@@ -1,4 +1,6 @@
 "use strict";
+// Portfolio — src/ts/main.ts
+// Menu-toggle en CI-history-UI voor de statische site.
 const copyrightYear = String(new Date().getFullYear());
 document.querySelectorAll(".copyright-year").forEach((el) => {
     el.textContent = copyrightYear;
@@ -22,8 +24,8 @@ if (menuToggle && navLinks) {
     menuToggle.addEventListener("click", () => {
         const open = !isOpen();
         setOpen(open);
-        // Focus management: bij openen naar de eerste link, bij sluiten terug
-        // naar de menuknop, zodat toetsenbordgebruikers niet de draad kwijtraken.
+        // Focusbeheer: bij openen naar de eerste link, bij sluiten terug naar de
+        // menuknop, zodat toetsenbordgebruikers de focus niet verliezen.
         if (open) {
             const firstLink = navLinks.querySelector("a");
             firstLink?.focus();
@@ -142,7 +144,7 @@ const calculateStreak = (runs) => {
     return streak;
 };
 /**
- * Pools the history window into the totals shown on the QA aggregate cards.
+ * Poolt het historievenster tot de totalen op de QA-aggregatekaarten.
  */
 const calculateAggregate = (runs) => {
     const counted = runs.filter((run) => run.total > 0);
@@ -172,8 +174,8 @@ const setLatestSummary = (latest) => {
     setText(ciStatus, latest ? statusLabel(latest.conclusion) : "—");
 };
 /**
- * One-line explanation under the aggregate cards, so a reader can tell which
- * runs were pooled and which were skipped for having no denominator.
+ * Eénregel-uitleg onder de aggregatekaarten, zodat de lezer ziet welke runs
+ * zijn gepoolt en welke zonder noemer zijn overgeslagen.
  */
 const buildMetricsNote = (aggregate) => {
     if (aggregate.runs === 0) {

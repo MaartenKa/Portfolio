@@ -1,3 +1,6 @@
+// Portfolio — src/ts/main.ts
+// Menu-toggle en CI-history-UI voor de statische site.
+
 const copyrightYear = String(new Date().getFullYear());
 
 document.querySelectorAll<HTMLElement>(".copyright-year").forEach((el) => {
@@ -35,8 +38,8 @@ if (menuToggle && navLinks) {
 
     setOpen(open);
 
-    // Focus management: bij openen naar de eerste link, bij sluiten terug
-    // naar de menuknop, zodat toetsenbordgebruikers niet de draad kwijtraken.
+    // Focusbeheer: bij openen naar de eerste link, bij sluiten terug naar de
+    // menuknop, zodat toetsenbordgebruikers de focus niet verliezen.
     if (open) {
       const firstLink = navLinks.querySelector<HTMLAnchorElement>("a");
 
@@ -84,14 +87,15 @@ type NormalizedRun = {
 };
 
 /**
- * Aggregated numbers over the full history window (the last 30 CI runs).
+ * Geaggregeerde cijfers over het volledige historievenster (de laatste 30
+ * CI-runs).
  *
- * `pooledPassRate` is Σ passed / Σ total: the ratio of the two totals. That is
- * deliberately NOT the average of the per-run percentages, because averaging
- * percentages gives every run the same weight, so a run of 5 tests counts as
- * heavily as a run of 36 tests. Runs with `total === 0` (cancelled, no report)
- * have no denominator and are excluded from the totals; `countedRuns` records
- * how many runs were included.
+ * `pooledPassRate` is Σ geslaagd / Σ totaal: de verhouding van de twee
+ * totalen. Dat is bewust niet het gemiddelde van de per-runpercentages,
+ * omdat elke run bij een gemiddelde van percentages even zwaar telt; een run
+ * van 5 tests weegt dan net zo zwaar als een run van 36 tests. Runs met
+ * `total === 0` (geannuleerd, geen rapport) hebben geen noemer en worden uit
+ * de totalen uitgesloten; `countedRuns` legt vast hoeveel runs zijn geteld.
  */
 type Aggregate = {
   runs: number;
@@ -243,7 +247,7 @@ const calculateStreak = (runs: NormalizedRun[]) => {
 };
 
 /**
- * Pools the history window into the totals shown on the QA aggregate cards.
+ * Poolt het historievenster tot de totalen op de QA-aggregatekaarten.
  */
 const calculateAggregate = (runs: NormalizedRun[]): Aggregate => {
   const counted = runs.filter((run) => run.total > 0);
@@ -279,8 +283,8 @@ const setLatestSummary = (latest: NormalizedRun | null) => {
 };
 
 /**
- * One-line explanation under the aggregate cards, so a reader can tell which
- * runs were pooled and which were skipped for having no denominator.
+ * Eénregel-uitleg onder de aggregatekaarten, zodat de lezer ziet welke runs
+ * zijn gepoolt en welke zonder noemer zijn overgeslagen.
  */
 const buildMetricsNote = (aggregate: Aggregate) => {
   if (aggregate.runs === 0) {

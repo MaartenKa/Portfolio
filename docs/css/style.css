@@ -1,21 +1,24 @@
+/* Portfolio — docs/css/style.css
+   Designtokens, layout en componentstijlen voor de statische site. */
+
 /* =========================================================
-   DESIGN SYSTEM
+   DESIGN SYSTEM — designtokens
    ========================================================= */
 
 :root {
-  /* Background */
+  /* Achtergrond */
   --background: #080b16;
 
-  /* Cards */
+  /* Kaarten */
   --card: rgba(17, 24, 42, 0.75);
   --card-hover: rgba(24, 33, 56, 0.9);
 
-  /* Text */
+  /* Tekst */
   --text: #f8fafc;
   --text-muted: #a7b0c2;
   --text-subtle: #92a1be;
 
-  /* Brand */
+  /* Merkkleur */
   --primary: #8b5cf6;
   --primary-light: #e0d6ff;
   --primary-dark: #7c3aed;
@@ -27,7 +30,7 @@
   /* Status */
   --success: #4ade80;
 
-  /* Borders */
+  /* Randen */
   --border: rgba(148, 163, 184, 0.12);
   --border-hover: rgba(139, 92, 246, 0.45);
 
@@ -35,24 +38,24 @@
   --max-width: 1280px;
   --header-height: 72px;
 
-  /* Radius */
+  /* Afronding */
   --radius-sm: 7px;
   --radius-md: 12px;
   --radius-lg: 18px;
 
-  /* Shadows */
+  /* Schaduwen */
   --shadow-sm: 0 5px 20px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 15px 45px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 25px 60px rgba(0, 0, 0, 0.35);
   --shadow-glow: 0 0 50px rgba(139, 92, 246, 0.12);
 
-  /* Transitions */
+  /* Transities */
   --transition-fast: 160ms ease;
   --transition: 250ms ease;
 }
 
 /* =========================================================
-   RESET
+   RESET — basis
    ========================================================= */
 
 *,
@@ -130,7 +133,7 @@ a {
 }
 
 /* =========================================================
-   LAYOUT
+   LAYOUT — containers en secties
    ========================================================= */
 
 .container {
@@ -139,7 +142,7 @@ a {
 }
 
 /* Ruimte tussen opeenvolgende containers binnen een sectie
-   (vervangt handmatige <br /><br />-vulling, o.a. in contact/testing) */
+   (vervangt handmatige <br /><br />-vulling, onder meer op contact en testing). */
 .section > .container + .container {
   margin-top: 56px;
 }
@@ -158,7 +161,7 @@ a {
 }
 
 /* =========================================================
-   TYPOGRAPHY
+   TYPOGRAPHY — teksthiërarchie
    ========================================================= */
 
 .eyebrow {
@@ -210,14 +213,14 @@ h3 {
   font-weight: 700;
 }
 
-/* Utility pages (bedankt/404/privacy): h1 met h2-afbbe-size */
+/* Utilitypagina's (bedankt/404/privacy): h1 met de grootte van een h2. */
 section.container > h1 {
   margin-bottom: 22px;
   font-size: clamp(2.2rem, 4vw, 3.4rem);
   font-weight: 800;
 }
 
-/* Verticale spacers vervangen handmatige <br />-vulling op utility-pages */
+/* Verticale spacers vervangen handmatige <br />-vulling op utilitypagina's. */
 .thank-you,
 .utility-page {
   padding-block: 64px;
@@ -354,13 +357,13 @@ p {
   list-style-type: disc;
 }
 
-/* Afstand tussen privacy-secties (vervangt <br />-vulling in privacy.html) */
+/* Afstand tussen privacy-secties (vervangt <br />-vulling in privacy.html). */
 .privacy-policy h3 {
   margin-top: 28px;
 }
 
 /* =========================================================
-   NAVIGATION
+   NAVIGATION — header en navigatie
    ========================================================= */
 
 .site-header {
@@ -430,7 +433,7 @@ p {
 }
 
 /* =========================================================
-   HERO
+   HERO — introsectie
    ========================================================= */
 
 .hero {
@@ -441,7 +444,7 @@ p {
   overflow: hidden;
 }
 
-/* Large background glow */
+/* Grote achtergrondglow. */
 .hero::before {
   content: "";
   position: absolute;
@@ -458,7 +461,7 @@ p {
   pointer-events: none;
 }
 
-/* Blue glow */
+/* Blauwe glow. */
 .hero::after {
   content: "";
   position: absolute;
@@ -494,7 +497,7 @@ p {
   margin-bottom: 28px;
 }
 
-/* Gradient text */
+/* Gradiënttekst. */
 .hero h1 span {
   color: transparent;
 
@@ -525,7 +528,7 @@ p {
 }
 
 /* =========================================================
-   BUTTONS
+   BUTTONS — knopstijlen
    ========================================================= */
 
 .button {
@@ -581,7 +584,7 @@ p {
 }
 
 /* =========================================================
-   TERMINAL
+   TERMINAL — terminalkaart
    ========================================================= */
 
 .hero-card {
@@ -699,7 +702,7 @@ p {
 }
 
 /* =========================================================
-   CARDS
+   CARDS — kaartsecties
    ========================================================= */
 
 .card-grid {
@@ -797,7 +800,7 @@ p {
 }
 
 /* =========================================================
-   ABOUT
+   ABOUT — over-sectie
    ========================================================= */
 
 .about-grid {
@@ -807,7 +810,7 @@ p {
 }
 
 /* =========================================================
-   CTA Call to action
+   CTA — call to action
    ========================================================= */
 
 .cta {
@@ -834,7 +837,7 @@ p {
 }
 
 /* =========================================================
-   FORMS
+   FORMS — formulieren
    ========================================================= */
 
 form {
@@ -893,7 +896,7 @@ textarea {
 }
 
 /* =========================================================
-   FOOTER
+   FOOTER — voettekst
    ========================================================= */
 
 .footer {
@@ -924,13 +927,14 @@ textarea {
   color: var(--primary-light);
 }
 
-/* Actieve footernavigatie (o.a. Privacy-pagina) — bestond nog geen stijl voor */
+/* Actieve footernavigatie (onder meer op de privacypagina); hiervoor bestond
+   nog geen stijl. */
 .footer-links a.active {
   color: var(--primary-active);
 }
 
 /* =========================================================
-   ACCESSIBILITY
+   ACCESSIBILITY — toegankelijkheid
    ========================================================= */
 
 :focus-visible {
@@ -938,7 +942,7 @@ textarea {
   outline-offset: 3px;
 }
 
-/* Skip-link: verborgen tot hij met het toetsenbord wordt gefocust */
+/* Skip-link: verborgen tot hij met het toetsenbord wordt gefocust. */
 .skip-link {
   position: absolute;
   top: 12px;
@@ -970,9 +974,10 @@ textarea {
   }
 }
 
-/* Fallback voor high-contrast / forced-colors mode (o.a. Windows High Contrast):
-   de gradient-tekst gebruikt color: transparent + background-clip: text en valt
-   daardoor volledig weg. Herstel een leesbare systeemkleur. */
+/* Fallback voor high-contrast- en forced-colors-modus (onder meer Windows
+   High Contrast): de gradiënttekst gebruikt color: transparent en
+   background-clip: text, waardoor hij volledig wegvalt. Herstel een leesbare
+   systeemkleur. */
 @media (forced-colors: active) {
   .hero h1 span {
     color: CanvasText;
@@ -983,7 +988,7 @@ textarea {
 }
 
 /* =========================================================
-   TABLET
+   TABLET — tablet-breakpoint
    ========================================================= */
 
 @media (max-width: 850px) {
@@ -1054,7 +1059,7 @@ textarea {
 }
 
 /* =========================================================
-   MOBILE
+   MOBILE — mobiel breakpoint
    ========================================================= */
 
 @media (max-width: 500px) {
