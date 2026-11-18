@@ -18,7 +18,7 @@ const run = (overrides: Partial<HistoryRunFixture>): HistoryRunFixture => ({
   ...overrides,
 });
 
-// Nieuwste run eerst: ci-summary.mjs zet de nieuwe entry vooraan.
+// De nieuwste run staat vooraan; ci-summary.mjs voegt nieuwe entries vooraan toe.
 const threeRuns: HistoryRunFixture[] = [
   run({
     runId: 3,
@@ -127,7 +127,6 @@ test.describe("CI-resultaten - kaarten en geschiedenis", () => {
     ).toHaveAttribute("href", RUN_URL);
   });
 
-
   test("runs zonder noemer worden uitgesloten van de totalen", async ({
     ciHistoryPage,
   }) => {
@@ -170,7 +169,7 @@ test.describe("CI-resultaten - kaarten en geschiedenis", () => {
     await ciHistoryPage.mockHistory(withCancelled);
     await ciHistoryPage.navigate();
 
-    // Alleen de twee runs met total > 0 tellen mee: 72 van 80 = 90%.
+    // Alleen de twee runs met `total > 0` tellen mee: 72 van 80 = 90%.
     await expect(ciHistoryPage.value("ci-total-executed")).toHaveText("80");
     await expect(ciHistoryPage.value("ci-total-passed")).toHaveText(
       "72 van 80",

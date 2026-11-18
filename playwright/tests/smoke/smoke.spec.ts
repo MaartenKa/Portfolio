@@ -26,7 +26,7 @@ test.describe("Smoke test – Overige pagina's (Lightweight Check)", () => {
         `Pagina ${url} gaf een foutieve status: ${response?.status()}`,
       ).toBe(200);
 
-      // Captures zowel console-errors als pageerror.
+      // Vangt zowel console-errors als pageerror af.
       await basePage.expectNoRuntimeErrors();
     });
   }

@@ -9,7 +9,7 @@ import {
 
 test.describe("Contactpagina - functionele tests", () => {
   test.beforeEach(async ({ contactPage, formwardMock: _formwardMock }) => {
-    // De mock is via de fixture geïnstalleerd; navigeer pas daarna.
+    // De mock wordt via de fixture geïnstalleerd; navigeer daarom pas daarna.
     await contactPage.navigate();
   });
 
