@@ -2,9 +2,9 @@
 
 | Veld | Waarde |
 | --- | --- |
-| **Versie** | 1.1 — november 2026 |
+| **Versie** | 1.2 — november 2026 |
 | **Status** | Interne projectrichtlijn; geen formele ISTQB/Playwright-standaard |
-| **Bronnen** | Playwright Best Practices, Playwright Locator-guide, ISTQB CTFL-syllabus, ISO/IEC/IEEE 29119-3 |
+| **Bronnen** | Playwright Best Practices, Playwright Locator-guide, ISTQB CTFL-syllabus, ISO/IEC/IEEE 29119-3, Google TypeScript Style Guide, TSDoc, MDN CSS/HTML-comments |
 
 **Doel:** schrijf Playwright-tests die betrouwbaar, onderhoudbaar, snel, deterministisch en gebruikersgericht zijn.
 
@@ -886,12 +886,141 @@ Vermijd ad-hoc configs met eigen poorten (3000 en 3123 zijn historical; één va
 lokale poort houdt handleidingen en artifacts consistent). Tijdelijke specs zelf
 verwijderen na verifiëring, bewezen gedrag naar `playwright/tests/`.
 
+## 36. Commentaar en documentatie
+
+Commentaar is geen tweede implementatie. Het legt intentie, randvoorwaarden en
+trade-offs vast; de code blijft de bron van waarheid. Vermijd commentaar dat
+alleen herhaalt wat de code al zegt.
+
+### 36.1 Taal en toon
+
+- Nederlands, met Engelse API- en technische termen waar ze gangbaar zijn
+  (`page object`, `fixture`, `testid`, `console-error`, `CI-run`).
+- Geen Dunglish, geen eerste persoon en geen changelog-achtige teksten.
+- Volzinnen met hoofdletter en punt. Sectiebanners zijn labels en krijgen geen
+  punt.
+
+### 36.2 Bestandsheader
+
+Handgeschreven TS/JS-modules (page objects, fixtures, utils, configs, scripts en
+de site-JS) beginnen met één padregel. Test-specs krijgen geen verplichte header;
+hun testnamen zijn de documentatie.
+
+```ts
+// Portfolio — playwright/pages/base.page.ts
+```
+
+Een korte tweede regel met de verantwoordelijkheid is toegestaan:
+
+```ts
+// Portfolio — src/ts/main.ts
+// Menu-toggle en CI-history-UI voor de statische site.
+```
+
+HTML, JSON en build-output krijgen geen verplichte header.
+
+### 36.3 JSDoc/TSDoc
+
+Gebruik `/** ... */` voor geëxporteerde klassen, types/interfaces,
+betekenisvolle constanten en publieke methods waarvan de betekenis, parameters of
+returnwaarde niet vanzelfsprekend zijn:
+
+```ts
+/**
+ * Navigeert naar de contactpagina en controleert titel en status.
+ *
+ * @param path - Relatief pad binnen de site.
+ * @returns De HTTP-response van de navigatie.
+ * @throws Als de pagina niet met status 200 laadt.
+ */
+```
+
+Regels:
+
+- In TypeScript geen types in JSDoc herhalen; de signatuur is de bron.
+- `@param naam - beschrijving` en `@returns` alleen wanneer de betekenis niet
+  vanzelfsprekend is.
+- `@remarks` voor langere context, `@example` voor een verhelderend voorbeeld,
+  `@see` voor verwijzingen naar `PLAYWRIGHT.md`, `TESTPLAN.md` of
+  `CI-OVERVIEW.md`.
+- Eénregel-JSDoc is toegestaan voor simpele constanten, bijvoorbeeld:
+  `/** Testcase F1/F9: geldige formulierdataset. */`
+- In `.mjs`-scripts zijn JSDoc-types toegestaan, omdat er geen TypeScript-
+  signatuur is.
+
+### 36.4 Inline comments
+
+Gebruik `//` voor implementatiedetails, niet voor API-documentatie. Schrijf
+*waarom* iets gebeurt, welke randvoorwaarde geldt of waarom een workaround nodig
+is:
+
+```ts
+// Relatief pad (conventie PLAYWRIGHT.md §8): een absoluut "/privacy.html"
+// levert een 404 op de GitHub Pages-subpath /Portfolio/.
+```
+
+Vermijd stap-voor-stap commentaar dat elke regel herhaalt:
+
+```ts
+// Open het menu
+await navPage.toggleMenu();
+// Klik opnieuw → gesloten
+await navPage.toggleMenu();
+```
+
+In tests zijn testnamen de primaire documentatie. Commentaar alleen voor
+mockopzet, rekentechnieken of niet voor de hand liggend fixturegedrag.
+
+### 36.5 TODO, FIXME en uitgecommentarieerde code
+
+- `// TODO(<naam of issue>): <wat en waarom>`
+- `// FIXME: <wat er mis is en waarom het nog niet is opgelost>`
+- Geen kale `TODO` zonder eigenaar of issue.
+- Uitgecommentarieerde code alleen met reden en heropeningsinstructie, zoals de
+  bewust uitgeschakelde `push`-trigger in `playwright.yml` of het lokale
+  `webServer`-voorbeeld in `playwright.config.ts`.
+
+### 36.6 Per bestandstype
+
+| Type | Conventie |
+| --- | --- |
+| TypeScript/JavaScript | `//` voor implementatie; `/** ... */` voor documentatie |
+| CSS | `/* ... */`; commentaar is niet nestbaar |
+| HTML | `<!-- ... -->`; alleen voor echte toelichting, niet als sectielabel |
+| YAML | `#`; commentaar boven het blok dat het toelicht |
+| JSON | geen commentaar mogelijk; documenteer het schema elders |
+| Gegenereerd | niet handmatig bewerken; bron aanpassen en opnieuw builden |
+
+CSS-sectiebanners krijgen één vast formaat:
+
+```css
+/* =========================================================
+   DESIGN SYSTEM — designtokens
+   ========================================================= */
+```
+
+### 36.7 Definition of Done voor commentaar
+
+Een comment is klaar wanneer hij:
+
+- in correct Nederlands is geschreven;
+- intentie of randvoorwaarde uitlegt, niet alleen de code herhaalt;
+- bij een publieke API de juiste JSDoc/TSDoc-tags heeft;
+- geen verouderde verwijzing of dode code bevat;
+- in een gegenereerd bestand via de bron is aangepast.
+
 ## Bronnen
 
 - Playwright — Best Practices: <https://playwright.dev/docs/best-practices>
 - Playwright — Locators: <https://playwright.dev/docs/locators>
 - ISTQB CTFL-syllabus (actuele versie) — testniveaus, testtypes en testtechnieken
 - ISO/IEC/IEEE 29119-3 — testdocumentatie en traceerbaarheid
+- Google TypeScript Style Guide — comments and documentation: <https://google.github.io/styleguide/tsguide.html>
+- TSDoc — standaard voor TypeScript-doccomments: <https://tsdoc.org/>
+- MDN — CSS comments: <https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_syntax/Comments>
+- MDN — HTML comments: <https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Comments>
+- ESLint — regels voor commentaar: <https://eslint.org/docs/latest/rules/>
+- Airbnb JavaScript Style Guide — comments: <https://github.com/airbnb/javascript#comments>
 
 Deze lijst is een **projectrichtlijn**. Bij conflict tussen deze richtlijn en de
 officiële Playwright-documentatie geldt de officiële documentatie.
