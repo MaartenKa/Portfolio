@@ -336,8 +336,8 @@ node scripts/ci-summary.mjs --report=playwright/test-results/report.json --histo
 
 `npm test` draait standaard tegen `https://maartenka.github.io/Portfolio/`, want de
 `baseURL` in `playwright.config.ts` wijst daar naartoe. Voor lokaal werk aan `docs/`
-bestaat een ad-hoc `http-server`-variant: de `webServer`-blokken in
-`playwright.config.ts` staan daarvoor gecommenteerd.
+gebruik je `playwright.local.config.ts`; het uitgeschakelde `webServer`-voorbeeld in
+`playwright.config.ts` is alleen ter illustratie.
 
 Een lokale run geeft overigens `conclusion: "unknown"`, omdat `CI_SUMMARY_STATUS`
 daar ontbreekt, en de run-URL valt terug op de workflow-pagina. Die fallback-URL
@@ -426,5 +426,5 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
 | `PLAYWRIGHT.md` | Hoe is het testproject opgebouwd: structuur, POM, conventies, commando's |
 | `TESTPLAN.md` | Wat er getest moet worden, en wat er al is |
 | `PLAN-CI-HISTORY-TESTS.md` | Testsoort van de CI-history tests, de plaats ervan in `TESTPLAN.md` en de roadmap |
-| `BESTPRACTICES.md` | Hoe je goed test: ISTQB en Playwright methodiek |
+| `BESTPRACTICES.md` | Hoe je goed test en commentaar schrijft: ISTQB, Playwright en commentaarconventies |
 | `AGENTS.md` | Welke documentatie relevant is |

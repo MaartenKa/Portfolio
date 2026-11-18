@@ -128,7 +128,7 @@ een rode poort stopt de suite.
 | [TESTPLAN.md](Project-documentation/TESTPLAN.md)                                 | Teststrategie, testmatrix G1–G13, roadmap           |
 | [TEST-SUITE-STATUS.md](Project-documentation/TEST-SUITE-STATUS.md)               | Actuele backlog: wat gedaan is en wat nog open is   |
 | [PLAN-HERO-SOFT-3D.md](Project-documentation/PLAN-HERO-SOFT-3D.md)               | Plan en resultaat van de soft-3D homepage-card     |
-| [BESTPRACTICES.md](Project-documentation/BESTPRACTICES.md)                       | ISTQB- en Playwright-methodiek                      |
+| [BESTPRACTICES.md](Project-documentation/BESTPRACTICES.md)                       | ISTQB-, Playwright-methodiek en commentaarconventies |
 | [CI-OVERVIEW.md](Project-documentation/CI-OVERVIEW.md)                           | CI/CD in gewoon taalgebruik + bestandsgids          |
 | [CI-PLAYWRIGHT-HISTORY.md](Project-documentation/CI-PLAYWRIGHT-HISTORY.md)       | Technische CI-spec: schema's en verificatie         |
 | [PLAN-CI-HISTORY-TESTS.md](Project-documentation/PLAN-CI-HISTORY-TESTS.md)       | Testplan voor de CI-history tests                   |
