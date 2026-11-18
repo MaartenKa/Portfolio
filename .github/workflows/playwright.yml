@@ -1,18 +1,19 @@
 name: Playwright Tests
 
 on:
-  # 1 poging per dag, om 18:17 UTC.
+  # Eén run per dag, om 18:17 UTC.
   #
-  # GitHub's scheduler is best-effort en dropt jobs onder belasting, met name
-  # rond de top van het uur. Gemeten met een test-cron (4x per uur op
-  # :07/:22/:37/:52): 2 runs uit 42 verwachte triggers = ~5%. Met één dagelijkse
-  # run is een gemiste run dus goed mogelijk; gebruik workflow_dispatch om dat
-  # op te vangen.
+  # De GitHub-scheduler is best-effort en laat jobs onder belasting vallen,
+  # vooral rond het hele uur. Een meting met een test-cron (vier keer per uur op
+  # :07, :22, :37 en :52) gaf 2 runs uit 42 verwachte triggers, ongeveer 5%.
+  # Bij één dagelijkse run is een gemiste run dus goed mogelijk; gebruik
+  # workflow_dispatch om dat op te vangen.
 
   schedule:
     - cron: "17 18 * * *"
 
-  # Push-trigger staat UIT. Ik draai de tests zelf handmatig bij een push.
+  # De push-trigger staat bewust uit; de tests worden handmatig bij een push
+  # gedraaid. Onderstaand blok is een voorbeeld om de trigger weer aan te zetten.
   #
   # push:
   #   branches: [main]
@@ -29,9 +30,9 @@ on:
 
 permissions:
   contents: write
-  # upload-artifact v7 heeft het `actions`-scope nodig. Scopes die hier niet
-  # genoemd staan vallen op de stille default "read", en dan falen de
-  # upload-stappen. Vandaar deze regel expliciet.
+  # upload-artifact@v7 vereist de `actions`-scope. Niet-genoemde scopes vallen
+  # terug op de impliciete standaard `read`; de upload-stappen falen dan.
+  # Daarom staat deze scope expliciet in de workflow.
   actions: write
 
 concurrency:
@@ -44,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
 
     # Beschermt tegen een run die door een haperende browserdownload of een
-    # vastgelopen suite de 60-minutenlimiet van GitHub raakt.
+    # vastgelopen suite tegen de 60-minutenlimiet van GitHub aanloopt.
     timeout-minutes: 20
 
     env:
@@ -57,9 +58,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
-          # De Node-tak komt uit package.json (engines.node) — één veld, twee
-          # consumenten: npm toetst het, setup-node lost het op. `lts/*` schuift
-          # mee met de runner-images en wijkt dus lokaal af van de CI.
+          # De Node-versie komt uit package.json (engines.node): één veld, twee
+          # consumenten. npm toetst het en setup-node lost het op. `lts/*` schuift
+          # mee met de runner-images en wijkt daardoor lokaal af van de CI.
           # Zie PLAN-DEPENDENCY-UPGRADES.md §6.
           node-version-file: package.json
           cache: npm
@@ -68,9 +69,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Kwaliteitspoorten vóór de tests: een rode typecheck, lint of HTML-structuur
-      # moet de suite niet halen (TESTPLAN.md §11, entry-criteria). Ze draaien vóór
-      # de browserinstall, zodat een defect direct faalt zonder download-kosten.
+      # Kwaliteitspoorten vóór de tests: een rode typecheck, lint of
+      # HTML-structuur mag de suite niet halen (TESTPLAN.md §11, entry-criteria).
+      # Ze draaien vóór de browserinstallatie, zodat een defect direct faalt
+      # zonder downloadkosten.
       - name: Type-check (tsc --noEmit)
         run: npm run typecheck
 

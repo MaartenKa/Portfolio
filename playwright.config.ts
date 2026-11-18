@@ -1,3 +1,6 @@
+// Portfolio — playwright.config.ts
+// Standaardconfig: de suite draait tegen de live GitHub Pages-site.
+
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
@@ -5,8 +8,8 @@ export default defineConfig({
 
   outputDir: "./playwright/test-results",
 
-  // In CI: Playwright stopt de run zelf, in plaats van dat de runner de run afbreekt.
-  // Daardoor wordt het HTML-rapport wél gegenereerd als de suite hangt.
+  // In CI stopt Playwright de run zelf, in plaats van de runner. Daardoor wordt
+  // het HTML-rapport ook gegenereerd als de suite vastloopt.
   globalTimeout: 10 * 60 * 1000,
 
   fullyParallel: true,
@@ -23,7 +26,6 @@ export default defineConfig({
   ],
 
   use: {
-    // baseURL: "http://127.0.0.1:3000",
     baseURL: "https://maartenka.github.io/Portfolio/",
 
     trace: "on-first-retry",
@@ -43,11 +45,11 @@ export default defineConfig({
     },
   ]
 
+  // Lokaal werk gebruikt playwright.local.config.ts; dit uitgeschakelde
+  // webServer-voorbeeld is alleen ter illustratie.
   // webServer: {
-  //   command: "npx http-server docs -p 3000",
-
-  //   url: "http://127.0.0.1:3000",
-
+  //   command: "npx http-server docs -p 8080 -s",
+  //   url: "http://127.0.0.1:8080",
   //   reuseExistingServer: !process.env.CI,
-  // }
+  // },
 })

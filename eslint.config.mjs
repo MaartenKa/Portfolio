@@ -1,11 +1,13 @@
-// Portfolio / eslint.config.mjs — ESLint 10 flat config
+// Portfolio — eslint.config.mjs
+// ESLint 10 flat config voor de site- en testcode.
 //
-// Dekt: src/**, playwright/**, beide playwright-configs en scripts/**.
+// Omvat: src/**, playwright/**, beide playwright-configs en scripts/**.
 // `docs/**` blijft buiten de lint: docs/js/ts/main.js is het gebouwde resultaat
 // van src/ts/main.ts en wordt niet met de hand geschreven.
 //
-// De plugin-preset wordt twee keer uitgerold: op testbestanden (volledig) en op
-// page objects/fixtures/utils, waar de test-specifieke regels niet gelden.
+// De plugin-preset wordt op twee plaatsen toegepast: volledig op testbestanden en
+// beperkt op page objects, fixtures en utils, waar de test-specifieke regels niet
+// gelden.
 import js from "@eslint/js";
 import globals from "globals";
 import playwright from "eslint-plugin-playwright";
@@ -60,10 +62,10 @@ export default tseslint.config(
     rules: {
       ...playwrightRules,
       // Asserts leven bewust in de page objects (PLAYWRIGHT.md §8); de specs
-      // roepen those methods aan, dus de spec zelf bevat geen eigen expect.
+      // roepen die methods aan, dus de spec zelf bevat geen eigen expect.
       "playwright/expect-expect": "off",
       // Testnamen zijn Nederlandse gebruikersverhalen met hoofdletters en
-      // spaties (TESTPLAN.md §6.1) — niet in kegel-case herschrijven.
+      // spaties (TESTPLAN.md §6.1) — niet in kebab-case herschrijven.
       "playwright/prefer-lowercase-title": "off",
       // BasePage.goto() wacht bewust op networkidle: de externe shields.io-badge
       // staat lazy en onder de fold (PLAYWRIGHT.md §4 en §8).
@@ -75,7 +77,7 @@ export default tseslint.config(
   },
 
   {
-    // Page objects, fixtures, utils en de Playwright-configs: geen testbestanden,
+    // page objects, fixtures, utils en de Playwright-configs: geen testbestanden,
     // dus de regels die een test-omgeving verwachten zijn hier niet van toepassing.
     files: [
       "playwright/pages/**/*.ts",
@@ -104,7 +106,7 @@ export default tseslint.config(
   },
 
   {
-    // Node-scripts: draaien buiten de TypeScript-deks van tsconfig.json.
+    // Node-scripts vallen buiten de TypeScript-scope van tsconfig.json.
     files: ["scripts/**/*.mjs"],
     languageOptions: {
       ecmaVersion: "latest",
