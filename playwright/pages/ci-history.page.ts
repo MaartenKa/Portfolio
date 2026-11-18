@@ -1,13 +1,15 @@
+// Portfolio — playwright/pages/ci-history.page.ts
 import { Page, expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
 /**
- * Playwright CI-history page (automation.html).
+ * Page object voor de CI-history op automation.html.
  *
  * De CI-kaarten worden client-side gevuld uit data/playwright-history.json.
  * Tests mocken die endpoint, zodat de verwachte cijfers vaststaan en niet
  * afhangen van wat er toevallig in de CI is gedraaid.
  */
+/** Fixturevorm van één CI-history-run. */
 export type HistoryRunFixture = {
   runId: number;
   runNumber: number | null;
@@ -35,6 +37,9 @@ export class CiHistoryPage extends BasePage {
 
   /**
    * Mockt de history-endpoint vóór het navigeren.
+   *
+   * @param runs - Fixture-runs die de endpoint moet teruggeven.
+   * @returns Dit page object, zodat de mock en navigate() samenwerken.
    */
   async mockHistory(runs: HistoryRunFixture[]): Promise<CiHistoryPage> {
     const payload = {
@@ -61,16 +66,18 @@ export class CiHistoryPage extends BasePage {
     expect(response!.status()).toBe(200);
     await expect(this.page).toHaveTitle(/Test Automatisering/);
 
-    // De body wordt altijd gerenderd: rijen of de placeholder-tekst.
+    // De body wordt altijd gerenderd: met rijen of met de placeholdertekst.
     await expect(this.page.getByTestId("ci-history-body")).not.toBeEmpty();
 
     return this;
   }
 
+  /** Wrapper rond getByTestId voor de CI-kaarten en de CI-tabel. */
   value(testId: string) {
     return this.page.getByTestId(testId);
   }
 
+  /** Rijen in de CI-history-tabel. */
   historyRows() {
     return this.page.getByTestId("ci-history-body").getByRole("row");
   }

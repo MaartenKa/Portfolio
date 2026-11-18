@@ -1,8 +1,10 @@
+// Portfolio — playwright/fixtures/formward.mock.ts
+
 import { Page, expect } from "@playwright/test";
 import { FORMWARD_URL, THANK_YOU_PAGE } from "../utils/test-data";
 
 /**
- * Geïsoleerde Formward-mock met request-registratie.
+ * Geïsoleerde Formward-mock met registratie van requests.
  *
  * De route blijft actief zolang de test duurt. Een ongeldige submit mag geen
  * request veroorzaken; tests kunnen dat expliciet asserten.

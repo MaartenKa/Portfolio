@@ -1,4 +1,4 @@
-// Portfolio / playwright / fixtures / test-fixtures.ts
+// Portfolio — playwright/fixtures/test-fixtures.ts
 import { test as base } from "@playwright/test";
 import { BasePage } from "../pages/base.page";
 import { FooterPage } from "../pages/footer.page";
@@ -9,9 +9,9 @@ import { HomePage } from "../pages/home.page";
 import { NavigationPage } from "../pages/mobile.page";
 
 /**
- * Typed Playwright fixtures voor de portfolio-suite.
+ * Getypeerde Playwright-fixtures voor de portfolio-suite.
  *
- * Fixtures leveren runtime-resources (Page Objects, mocks, setup) en zorgen
+ * Fixtures leveren runtime-voorzieningen (page objects, mocks, setup) en zorgen
  * voor een verse instantie per test. Testwaarden blijven in
  * `playwright/utils/test-data.ts`.
  */
@@ -45,7 +45,8 @@ export const test = base.extend<Fixtures>({
   },
 
   ciHistoryPage: async ({ page }, use) => {
-    // Bewust geen navigate(): de test mockt eerst de history-endpoint.
+    // Bewust geen navigate(): de test mockt eerst de history-endpoint en
+    // navigeert daarna zelf.
     await use(new CiHistoryPage(page));
   },
 
@@ -54,7 +55,7 @@ export const test = base.extend<Fixtures>({
   },
 
   basePage: async ({ page }, use) => {
-    // Voor de lightweight smoke-checks op pagina's zonder eigen Page Object.
+    // Voor de lichte smoke-checks op pagina's zonder eigen page object.
     await use(new BasePage(page));
   },
 });

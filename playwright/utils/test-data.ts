@@ -1,23 +1,25 @@
+// Portfolio — playwright/utils/test-data.ts
+
 /**
- * Gedeelde statische test data & constants.
+ * Gedeelde statische testdata en constanten.
  */
 
-/** Formward submit URL (gebruikt voor mocking). */
+/** Formward-submit-URL, gebruikt voor mocking. */
 export const FORMWARD_URL =
   "https://forms.formward.eu/f/269c7657-9b51-4404-b3c8-0f3acd13c0d7";
 
-/** Bedankt-pagina pad. */
+/** Pad naar de bedanktpagina. */
 export const THANK_YOU_PAGE = "bedankt.html";
 
-/** E-mail adres (gebruikt in contact tests / footer checks). */
+/** E-mailadres, gebruikt in contacttests en footerchecks. */
 export const EMAIL = "Maarten.kamps.bee@outlook.com";
 
-/** Externe links. */
+/** Externe links naar GitHub en LinkedIn. */
 export const GITHUB_URL = "https://github.com/MaartenKa/Portfolio";
 export const LINKEDIN_URL =
   "https://www.linkedin.com/in/maarten-kamps-a6909527/";
 
-/** Geldige formulierdataset voor F1/F9. */
+/** Testcase F1/F9: geldige formulierdataset. */
 export const VALID_CONTACT = {
   name: "Test Gebruiker",
   email: "test@example.com",
@@ -25,14 +27,14 @@ export const VALID_CONTACT = {
   message: "Dit is een testbericht.",
 };
 
-/** Ongeldige e-maildataset voor F3. */
+/** Testcase F3: ongeldige e-maildataset. */
 export const INVALID_EMAIL_CONTACT = {
   name: "Test Gebruiker",
   email: "ongeldig-email",
   message: "Dit is een testbericht.",
 };
 
-/** Pagina's voor de smoke lightweight check. */
+/** Pagina's voor de lichte smoke-check. */
 export const OTHER_PAGES_TO_TEST = [
   "curriculum.html",
   "testing.html",
@@ -44,14 +46,14 @@ export const OTHER_PAGES_TO_TEST = [
   "bedankt.html",
 ] as const;
 
-/** F4: geldige submit zonder optioneel subject. */
+/** Testcase F4: geldige submit zonder optioneel subject. */
 export const OPTIONAL_SUBJECT_CONTACT = {
   name: "Test Gebruiker",
   email: "test@example.com",
   message: "Dit is een testbericht.",
 };
 
-/** F6: minimale naam en lange berichttekst. */
+/** Testcase F6: minimale naam en lange berichttekst. */
 export const BOUNDARY_CONTACT = {
   name: "A",
   email: "test@example.com",
@@ -59,7 +61,7 @@ export const BOUNDARY_CONTACT = {
   message: "x".repeat(500),
 };
 
-/** F7: unicode, emoji en speciale tekens. */
+/** Testcase F7: unicode, emoji en speciale tekens. */
 export const SPECIAL_CHARS_CONTACT = {
   name: "Test 🚀",
   email: "test@example.com",

@@ -1,6 +1,9 @@
+// Portfolio — playwright/pages/footer.page.ts
+
 import { Page, expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
+/** Page object voor de footerlinks en de actieve footerstatus. */
 export class FooterPage extends BasePage {
   constructor(page: Page) {
     super(page);

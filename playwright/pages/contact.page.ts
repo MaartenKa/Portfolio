@@ -1,7 +1,10 @@
+// Portfolio — playwright/pages/contact.page.ts
+
 import { Page, expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 import { EMAIL, GITHUB_URL, LINKEDIN_URL } from "../utils/test-data";
 
+/** Invoer voor het contactformulier; elk veld is optioneel. */
 export interface ContactFormData {
   name?: string;
   email?: string;
@@ -9,6 +12,7 @@ export interface ContactFormData {
   message?: string;
 }
 
+/** Page object voor de contactpagina en het Formward-formulier. */
 export class ContactPage extends BasePage {
   constructor(page: Page) {
     super(page);
@@ -41,6 +45,7 @@ export class ContactPage extends BasePage {
   }
 
   async expectTitleContains(title: string): Promise<void> {
+    // Escape regex-metatekens, zodat de titel als letterlijke tekst wordt gezocht.
     const escapedTitle = title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     await expect(this.page).toHaveTitle(new RegExp(escapedTitle));
   }
@@ -89,8 +94,8 @@ export class ContactPage extends BasePage {
   async expectPrivacyLink(): Promise<void> {
     const link = this.page.getByRole("link", { name: "privacyverklaring" });
     await expect(link).toBeVisible();
-    // Relatieve pad (conventie PLAYWRIGHT.md §8): een absolute "/privacy.html"
-    // would 404 op de GitHub Pages /Portfolio/ subpath.
+    // Relatief pad (conventie PLAYWRIGHT.md §8): een absoluut "/privacy.html"
+    // levert een 404 op de GitHub Pages-subpath /Portfolio/.
     await expect(link).toHaveAttribute("href", /^privacy\.html$/);
   }
 

@@ -1,7 +1,10 @@
+// Portfolio — playwright/pages/mobile.page.ts
+
 import { Page, expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
-// Testable data-testid's van de nav-links in de lijst data-testid="nav-links" (op elke pagina)
+// data-testid's van de nav-links in de lijst met data-testid="nav-links"
+// (dezelfde lijst staat op elke pagina).
 export const NAV_ITEM_TEST_IDS = [
   "nav-home",
   "nav-curriculum",
@@ -12,7 +15,7 @@ export const NAV_ITEM_TEST_IDS = [
   "nav-contact",
 ] as const;
 
-/** Mapping van nav-link testid → verwachte URL regex. */
+/** Mapping van nav-link-testid naar de verwachte URL-regex. */
 export const NAV_ITEM_URLS: Record<string, RegExp> = {
   "nav-home": /index\.html$/,
   "nav-curriculum": /curriculum\.html/,
@@ -25,9 +28,9 @@ export const NAV_ITEM_URLS: Record<string, RegExp> = {
 
 /**
  * NavigationPage hergebruikt de globale navigatiebalk (header) die op elk
- * onderdeel van de site dezelfde DOM/selectors draagt: data-testid
- * menu-toggle en data-testid nav-links. Het is dus niet pagina-specifiek,
- * maar een gedeelde component.
+ * onderdeel van de site dezelfde DOM en selectors heeft: de testids
+ * `menu-toggle` en `nav-links`. Het page object is dus niet pagina-specifiek,
+ * maar vertegenwoordigt een gedeelde component.
  */
 
 export class NavigationPage extends BasePage {
@@ -35,15 +38,16 @@ export class NavigationPage extends BasePage {
     super(page);
   }
 
-  // Locators (centraal in deze page object)
+  // Locators (centraal in dit page object).
   get menuToggle() {
     return this.page.getByTestId("menu-toggle");
   }
 
   get navLinks() {
-    // De <ul> heeft geen accessible name (en role "list" is op de pagina niet
-    // uniek), dus de class-toggle-assert (.open) vraagt een eigen testid in de
-    // markup volgens het testid-contract (PLAYWRIGHT.md §8): data-testid="nav-links".
+    // De <ul> heeft geen accessible name en role "list" is niet uniek op de
+    // pagina; de class-toggle-assertie (.open) vereist daarom een eigen testid
+    // in de markup volgens het testid-contract (PLAYWRIGHT.md §8):
+    // data-testid="nav-links".
     return this.page.getByTestId("nav-links");
   }
 
@@ -55,7 +59,7 @@ export class NavigationPage extends BasePage {
     return this.navItems.first();
   }
 
-  /** Klik op een element buiten het menu, om de click-outside-handler te testen. */
+  /** Klik op een element buiten het menu om de click-outside-handler te testen. */
   async clickOutsideMenu() {
     await this.page.getByRole("contentinfo").click({ position: { x: 5, y: 5 } });
   }
@@ -65,7 +69,7 @@ export class NavigationPage extends BasePage {
     await this.menuToggle.click();
   }
 
-  /** Assert dat het menu geopend en gebruikerszichtbaar is. */
+  /** Controleer dat het menu geopend en zichtbaar is voor de gebruiker. */
   async expectMenuOpen() {
     await expect(this.navLinks).toBeVisible();
     for (const id of NAV_ITEM_TEST_IDS) {
@@ -76,19 +80,19 @@ export class NavigationPage extends BasePage {
     }
   }
 
-  /** Assert dat het menu op mobiel gesloten en verborgen is. */
+  /** Controleer dat het menu op mobiel gesloten en verborgen is. */
   async expectMenuClosedOnMobile() {
     await expect(this.navLinks).toBeHidden();
     await expect(this.menuToggle).toHaveAttribute("aria-expanded", "false");
   }
 
-  /** Assert dat de navigatie op desktop inline zichtbaar is. */
+  /** Controleer dat de navigatie op desktop inline zichtbaar is. */
   async expectMenuInlineOnDesktop() {
     await expect(this.navLinks).toBeVisible();
     await expect(this.menuToggle).toBeHidden();
   }
 
-  /** Assert de aria-expanded toestand van de toggle. */
+  /** Controleer de aria-expanded-toestand van de toggle. */
   async expectToggleAriaExpanded(expanded: boolean) {
     await expect(this.menuToggle).toHaveAttribute(
       "aria-expanded",
@@ -96,7 +100,12 @@ export class NavigationPage extends BasePage {
     );
   }
 
-  /** Navigeer via een nav-link (data-testid) naar de verwachte URL. */
+  /**
+   * Navigeer via een nav-link naar de verwachte URL.
+   *
+   * @param testId - data-testid van de nav-link.
+   * @param expectedUrl - Regex waarmee de target-URL moet matchen.
+   */
   async clickNavLink(testId: string, expectedUrl: RegExp) {
     await this.page.getByTestId(testId).click();
     await expect(this.page).toHaveURL(expectedUrl);

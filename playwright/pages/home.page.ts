@@ -1,6 +1,9 @@
+// Portfolio — playwright/pages/home.page.ts
+
 import { Page, expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
+/** Page object voor de homepage en de belangrijkste navigatie-CTA's. */
 export class HomePage extends BasePage {
   constructor(page: Page) {
     super(page);
@@ -15,16 +18,17 @@ export class HomePage extends BasePage {
   }
 
   async expectStructureVisible() {
-    // Semantische locators op basis van de bestaande accessible namen:
-    // <nav class="navbar" aria-label="Hoofdnavigatie">,
-    // <section class="hero" aria-label="Intro"> (section met naam => role region)
-    // en <footer class="footer"> (landmark contentinfo).
+    // Semantische locators op basis van de bestaande toegankelijke namen:
+    // - <nav class="navbar" aria-label="Hoofdnavigatie">
+    // - <section class="hero" aria-label="Intro">: een benoemde section heeft
+    //   role "region"
+    // - <footer class="footer">: landmark role "contentinfo"
     await expect(this.page.getByRole("navigation", { name: "Hoofdnavigatie" })).toBeVisible();
     await expect(this.page.getByRole("region", { name: "Intro" })).toBeVisible();
     await expect(this.page.getByRole("contentinfo")).toBeVisible();
   }
 
-  // Functionele navigatie (gebruikersgedrag)
+  // Functionele navigatie: gebruikersgedrag.
 
   async clickProjectsCta() {
     await this.page.getByTestId("cta-projects").click();
