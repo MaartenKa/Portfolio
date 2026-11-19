@@ -10,6 +10,7 @@
     "lint:fix": "eslint . --fix",
     "validate:html": "html-validate \"docs/**/*.html\"",
     "check": "npm run typecheck && npm run lint && npm run validate:html",
+    "check:site": "node scripts/site-check.mjs",
     "test:local": "playwright test -c playwright.local.config.ts",
     "test:localUi": "playwright test -c playwright.local.config.ts --ui",
     "test": "playwright test",

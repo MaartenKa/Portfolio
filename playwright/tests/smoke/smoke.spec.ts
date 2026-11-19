@@ -1,6 +1,10 @@
 import { expect, test } from "../../fixtures/test-fixtures";
 import { OTHER_PAGES_TO_TEST } from "../../utils/test-data";
 
+// Smoke is een live-hostcontrole: een blijvende hostfout moet failen, niet via
+// een Playwright-retry als flaky worden gemaskeerd. De preflight is de gate.
+test.describe.configure({ retries: 0 });
+
 test.describe("Smoke test – Index pagina (Deep Check)", () => {
   test("index pagina laadt zonder fouten en structuur is correct", async ({
     homePage,
@@ -14,7 +18,8 @@ test.describe("Smoke test – Index pagina (Deep Check)", () => {
 test.describe("Smoke test – Overige pagina's (Lightweight Check)", () => {
   for (const url of OTHER_PAGES_TO_TEST) {
     test(`${url} laadt zonder kritieke fouten`, async ({ basePage }) => {
-      const response = await basePage.goto(url);
+      // Host-retry: een 503 van de live site is een omgevingsfout, geen testflake.
+      const response = await basePage.gotoWithRetry(url);
 
       expect(
         response,

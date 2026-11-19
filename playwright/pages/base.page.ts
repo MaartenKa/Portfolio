@@ -32,6 +32,29 @@ export class BasePage {
   }
 
   /**
+   * Navigeert naar een pad en retryt op 5xx- of netwerkfouten.
+   *
+   * De live-site-preflight (`npm run check:site`) is de primaire gate; deze
+   * helper voorkomt dat een tijdelijke host-503 als testflake wordt geteld.
+   *
+   * @param path - Relatief pad binnen de site.
+   * @param attempts - Maximaal aantal navigatiepogingen.
+   * @returns De laatste HTTP-response, of null bij een blijvende netwerkfout.
+   */
+  async gotoWithRetry(path: string, attempts = 3) {
+    for (let attempt = 1; attempt <= attempts; attempt += 1) {
+      const response = await this.goto(path);
+
+      if (response && response.status() < 500) return response;
+      if (attempt === attempts) return response;
+
+      await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+    }
+
+    return null;
+  }
+
+  /**
    * Controleert dat de pagina geen console-errors of page-errors heeft
    * opgeleverd.
    */

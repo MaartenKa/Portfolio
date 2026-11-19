@@ -82,6 +82,13 @@ jobs:
       - name: HTML-validate (docs/**/*.html)
         run: npm run validate:html
 
+      # Preflight: een 503/timeout van GitHub Pages is een omgevingsfout,
+      # geen testflake. De tests starten pas als alle live pagina's 200 geven.
+      - name: Check live site availability
+        run: npm run check:site
+        env:
+          SITE_BASE_URL: https://maartenka.github.io/Portfolio/
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
@@ -90,7 +97,7 @@ jobs:
 
       - name: Upload Playwright HTML report
         uses: actions/upload-artifact@v7
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && hashFiles('playwright/playwright-report/**') != '' }}
         with:
           name: playwright-report
           path: playwright/playwright-report/
