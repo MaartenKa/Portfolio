@@ -3,6 +3,20 @@
 import { Page, expect } from "@playwright/test";
 import { BasePage } from "./base.page";
 
+/** Testids van de card-links op de homepage (NAV-03). */
+export const CARD_LINK_TEST_IDS = [
+  "card-link-testing",
+  "card-link-automation",
+  "card-link-projects",
+] as const;
+
+/** Mapping van card-link-testid naar de verwachte URL. */
+export const CARD_LINK_URLS: Record<string, RegExp> = {
+  "card-link-testing": /testing\.html/,
+  "card-link-automation": /automation\.html/,
+  "card-link-projects": /projects\.html/,
+};
+
 /** Page object voor de homepage en de belangrijkste navigatie-CTA's. */
 export class HomePage extends BasePage {
   constructor(page: Page) {
@@ -40,18 +54,14 @@ export class HomePage extends BasePage {
     await expect(this.page).toHaveURL(/curriculum\.html/);
   }
 
-  async clickContactNavLink() {
-    await this.page.getByTestId("nav-contact").click();
-    await expect(this.page).toHaveURL(/contact\.html/);
-  }
-
-  async clickProjectsNavLink() {
-    await this.page.getByTestId("nav-projects").click();
-    await expect(this.page).toHaveURL(/projects\.html/);
-  }
-
-  async clickTestingCardLink() {
-    await this.page.getByTestId("card-link-testing").click();
-    await expect(this.page).toHaveURL(/testing\.html/);
+  /**
+   * Klik op een card-link en controleer de bestemming.
+   *
+   * @param testId - data-testid van de card-link.
+   * @param expectedUrl - Regex waarmee de target-URL moet matchen.
+   */
+  async clickCardLink(testId: string, expectedUrl: RegExp) {
+    await this.page.getByTestId(testId).click();
+    await expect(this.page).toHaveURL(expectedUrl);
   }
 }
