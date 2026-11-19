@@ -3,9 +3,10 @@ import {
   NAV_ITEM_TEST_IDS,
   NAV_ITEM_URLS,
 } from "../../pages/mobile.page";
-
-const DESKTOP_VIEWPORT = { width: 1920, height: 1080 }; // >850px breedte → nav inline
-const MOBILE_VIEWPORT = { width: 390, height: 844 }; // ≤850px breedte → menu-toggle zichtbaar
+import {
+  DESKTOP_VIEWPORT,
+  MOBILE_VIEWPORT,
+} from "../../utils/test-data";
 
 test.describe("Mobiele menu-toggle", () => {
   test.beforeEach(async ({ navPage }) => {
@@ -49,6 +50,30 @@ test.describe("Mobiele menu-toggle", () => {
       await navPage.toggleMenu();
 
       await navPage.expectMenuClosedOnMobile();
+    });
+
+    test("MENU-04: herhaalde open-sluit-cyclus houdt de state correct", async ({
+      navPage,
+    }) => {
+      // Twee volledige cyclussen plus een laatste open/sluit-paar: hiermee
+      // wordt een stale toestand of een vastgelopen toggle zichtbaar.
+      for (let cycle = 0; cycle < 2; cycle++) {
+        await navPage.toggleMenu();
+        await navPage.expectMenuOpen();
+        await navPage.expectToggleAriaExpanded(true);
+
+        await navPage.toggleMenu();
+        await navPage.expectMenuClosedOnMobile();
+        await navPage.expectToggleAriaExpanded(false);
+      }
+
+      await navPage.toggleMenu();
+      await navPage.expectMenuOpen();
+      await navPage.expectToggleAriaExpanded(true);
+
+      await navPage.toggleMenu();
+      await navPage.expectMenuClosedOnMobile();
+      await navPage.expectToggleAriaExpanded(false);
     });
 
     test("klik op nav-link in open menu sluit het menu en navigeert", async ({

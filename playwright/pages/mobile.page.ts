@@ -83,7 +83,18 @@ export class NavigationPage extends BasePage {
   /** Controleer dat het menu op mobiel gesloten en verborgen is. */
   async expectMenuClosedOnMobile() {
     await expect(this.navLinks).toBeHidden();
+    await this.expectMenuItemsHidden();
     await expect(this.menuToggle).toHaveAttribute("aria-expanded", "false");
+  }
+
+  /** Controleer dat geen enkel menu-item zichtbaar is (geen stale state). */
+  async expectMenuItemsHidden() {
+    for (const id of NAV_ITEM_TEST_IDS) {
+      await expect(
+        this.page.getByTestId(id),
+        `Menu-item "${id}" is nog zichtbaar`,
+      ).toBeHidden();
+    }
   }
 
   /** Controleer dat de navigatie op desktop inline zichtbaar is. */

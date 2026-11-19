@@ -34,6 +34,10 @@ export const INVALID_EMAIL_CONTACT = {
   message: "Dit is een testbericht.",
 };
 
+/** Vaste viewports voor de menu- en responsive-tests (TESTPLAN §6.3). */
+export const DESKTOP_VIEWPORT = { width: 1920, height: 1080 } as const;
+export const MOBILE_VIEWPORT = { width: 390, height: 844 } as const;
+
 /** Pagina's voor de lichte smoke-check. */
 export const OTHER_PAGES_TO_TEST = [
   "curriculum.html",
