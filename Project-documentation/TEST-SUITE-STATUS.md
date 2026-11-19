@@ -6,11 +6,11 @@
 
 ## 1. Baseline
 
-- **53 tests in 6 spec-bestanden.**
-- Smoke: 10, homepage: 5, contact: 14, mobiel menu: 16, CI-history: 5, footer: 3.
+- **61 tests in 6 spec-bestanden.**
+- Smoke: 10, homepage: 12, contact: 14, mobiel menu: 17, CI-history: 5, footer: 3.
 - `npm run check` → groen.
-- `npm run test:local` → **53/53 tests geslaagd**.
-- `npx playwright test --list` → 53 tests in 6 files.
+- `npm run test:local` → **61/61 tests geslaagd**.
+- `npx playwright test --list` → 61 tests in 6 files.
 
 ## 2. Wat is gedaan
 
@@ -20,6 +20,8 @@
 | **Formward-mock** | `FormwardMock` registreert requests; F1 assert 1 request, F2/F3 asserten 0 requests. |
 | **Native validatie** | F2/F3 asserten `checkValidity()` en ongeldige velden. |
 | **Menu** | `.open`-asserts vervangen door zichtbaarheid en ARIA; MENU-07…10 toegevoegd. |
+| **Navigatie** | NAV-01 dekt alle 7 nav-links op desktop; NAV-03 dekt alle drie card-links op de homepage. |
+| **Menu-state** | MENU-04 assert een herhaalde open-sluit-cyclus en verborgen menu-items bij sluiten. |
 | **Footer** | `FooterPage` + `footer-functional.spec.ts`; NAV-04/05 gedekt. |
 | **Contact** | F4, F6, F7 en F10 toegevoegd; nieuwe datasets in `test-data.ts`. |
 | **Smoke** | SM-03 toegevoegd voor `404.html`; `BasePage` vangt ook `pageerror`. |
@@ -30,14 +32,11 @@
 
 | # | Open punt | Bewijs / locatie | Actie |
 | --- | --- | --- | --- |
-| 1 | **MENU-04** | Eén open→sluit-cyclus; geen herhaalde/stale-state-assert. | Herhaalde state-transition toevoegen. |
-| 2 | **NAV-01** | Homepage dekt 2 links; mobiele suite dekt 7 nav-links via het menu. | Desktop-navigatie over alle nav-links expliciet maken. |
-| 3 | **NAV-03** | Alleen `card-link-testing` is gedekt. | `card-link-automation` en `card-link-projects` toevoegen. |
-| 4 | **F5** | Honeypot is verborgen, maar “honeypot ingevuld” wordt niet echt getest. | Spamfilter-/requestgedrag bij gevulde honeypot afdekken. |
-| 5 | **F8** | Dubbel submit / maximaal één POST is niet geautomatiseerd. | Dubbel-submit-scenario toevoegen. |
-| 6 | **SM-03 live fallback** | Lokaal is `404.html` direct getest; unknown-path-fallback is een live/GitHub-Pages-check. | Live fallback handmatig of via live-only test afdekken. |
-| 7 | **Non-functioneel** | RESP-01, A11Y-01…04, SEO-01…04, LINK-01/02, IMG-01, VIS-01 en PERF-01 ontbreken. | Non-functionele suites bouwen. |
-| 8 | **CI-history data/keten** | CIH-06 (ci-summary), CIH-07 (schema v2), CIH-08 (a11y CI-sectie) ontbreken. | Volgens `PLAN-CI-HISTORY-TESTS.md` bouwen. |
+| 1 | **F5** | Honeypot is verborgen, maar “honeypot ingevuld” wordt niet echt getest. | Spamfilter-/requestgedrag bij gevulde honeypot afdekken; upstream Formward-gedrag of live-check. |
+| 2 | **F8** | Dubbel submit / maximaal één POST is niet geautomatiseerd. | Productbesluit: submit-guard toevoegen, of F8 als niet-lokaal-automatiseerbaar documenteren. |
+| 3 | **SM-03 live fallback** | Lokaal is `404.html` direct getest; unknown-path-fallback is een live/GitHub-Pages-check. | Live fallback handmatig of via live-only test afdekken. |
+| 4 | **Non-functioneel** | RESP-01, A11Y-01…04, SEO-01…04, LINK-01/02, IMG-01, VIS-01 en PERF-01 ontbreken. | Non-functionele suites bouwen. |
+| 5 | **CI-history data/keten** | CIH-06 (ci-summary), CIH-07 (schema v2), CIH-08 (a11y CI-sectie) ontbreken. | Volgens `PLAN-CI-HISTORY-TESTS.md` bouwen. |
 
 ## 4. Wat niet meer op de backlog staat
 
@@ -49,13 +48,15 @@
 - Footer-links en actieve footer-link.
 - Contact F4/F6/F7/F10.
 - SM-03 lokale `404.html`-test.
+- MENU-04 herhaalde state-transition.
+- NAV-01 desktopdekking van alle 7 nav-links.
+- NAV-03 alle drie card-links.
 
 ## 5. Voorgestelde volgorde
 
-1. MENU-04 en NAV-01/03 volledig maken.
-2. F5 en F8 afronden.
-3. Non-functionele suites (RESP/A11Y/SEO/LINK/IMG/VIS/PERF).
-4. CIH-06/07/08.
+1. F5 en F8 afronden (met expliciet besluit over upstream gedrag en submit-guard).
+2. Non-functionele suites (RESP/A11Y/SEO/LINK/IMG/VIS/PERF).
+3. CIH-06/07/08.
 
 ## 6. Documentatie
 

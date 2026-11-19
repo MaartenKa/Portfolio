@@ -18,9 +18,9 @@ met pass-rate, groene streaks en de status van de laatste runs.
 
 | Kenmerk                | Waarde                                              |
 | ---------------------- | --------------------------------------------------- |
-| Testsuite              | **53 tests** in 6 spec-bestanden                    |
+| Testsuite              | **61 tests** in 6 spec-bestanden                    |
 | Browser                | Chromium (Desktop Chrome)                           |
-| Laatste gelogde CI-run | **41/41 geslaagd** (100%; suite telt nu 53 tests)  |
+| Laatste gelogde CI-run | **41/41 geslaagd** (100%; suite telt nu 61 tests)  |
 | CI                     | GitHub Actions — dagelijks om 18:17 UTC + handmatig |
 | Kwaliteitspoorten      | `tsc --noEmit`, ESLint 10, html-validate            |
 | Stack                  | HTML/CSS, TypeScript, Playwright 1.65, GitHub Pages |
@@ -90,7 +90,7 @@ playwright/
   fixtures/test-fixtures.ts    # typed Page Object-fixtures
   fixtures/formward.mock.ts    # Formward-mock + request-registratie
   utils/test-data.ts           # gedeelde constanten + formulierdatasets
-  tests/smoke|functional/      # de 53 tests
+  tests/smoke|functional/      # de 61 tests
   tests/accessibility|compatibility|e2e|regression/   # gereserveerd, nog leeg
 scripts/ci-summary.mjs         # JSON-report → CI-history
 Project-documentation/         # testplan, CI-documentatie, best practices, verbeterplan
@@ -101,12 +101,12 @@ Project-documentation/         # testplan, CI-documentatie, best practices, verb
 | Suite            | Spec-bestand                                                 |  Tests |
 | ---------------- | ------------------------------------------------------------ | -----: |
 | Smoke            | `playwright/tests/smoke/smoke.spec.ts`                       |     10 |
-| Homepage         | `playwright/tests/functional/homepage-functional.spec.ts`    |      5 |
+| Homepage         | `playwright/tests/functional/homepage-functional.spec.ts`    |     12 |
 | Contactformulier | `playwright/tests/functional/contact-functional.spec.ts`     |     14 |
-| Mobiel menu      | `playwright/tests/functional/mobile-menu-functional.spec.ts` |     16 |
+| Mobiel menu      | `playwright/tests/functional/mobile-menu-functional.spec.ts` |     17 |
 | CI-history UI    | `playwright/tests/functional/ci-history-functional.spec.ts`  |      5 |
 | Footer           | `playwright/tests/functional/footer-functional.spec.ts`      |      3 |
-| **Totaal**       | 6 spec-bestanden                                             | **53** |
+| **Totaal**       | 6 spec-bestanden                                             | **61** |
 
 ## Kwaliteitspoorten
 

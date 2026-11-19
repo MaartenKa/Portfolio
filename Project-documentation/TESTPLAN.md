@@ -7,7 +7,7 @@
 | **Eigenaar**   | QA Engineer (zie §13)                                                                       |
 | **Testobject** | Statische portfolio-site in `docs/` (10 HTML-bestanden) + Playwright-suite in `playwright/` |
 | **Testbasis**  | §3.3                                                                                        |
-| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 53 tests in 6 spec-bestanden          |
+| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 61 tests in 6 spec-bestanden          |
 
 **Scope:** de statische portfolio-website in `docs/` — 9 contentpagina's plus de
 `404.html`-fallback (10 HTML-bestanden), het CSS-design-systeem, één klein
@@ -219,7 +219,7 @@ uitgevoerde UAT.
 ### 5.1 Functioneel
 
 - **Smoke / sanity:** elke pagina laadt (HTTP 200), geen console/page errors. _(bestaand; 10 tests)_
-- **Navigatie:** elke `nav-*`-link, CTA en card-link opent de juiste URL. _(deels bestaand; NAV-02/04/05 bestaand, NAV-01/03 deels)_
+- **Navigatie:** elke `nav-*`-link, CTA en card-link opent de juiste URL. _(bestaand: NAV-01…NAV-05)_
 - **Formulier:** zie §7 (validatie, honeypot, submit, redirect). F1–F4, F6, F7, F9 en F10 zijn gedekt; F5 is deels gedekt en F8 is gepland.
 - **CI-history dashboard:** kaarten en Geschiedenis-tabel op `automation.html` — zie §8.5 _(bestaand, 5 tests)_.
 - **Menu-toggle (MOBIEEL — bestaand):** zie TC-MENU in §8.3
@@ -348,6 +348,9 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
   - Tablet: `850×1024` / `820×1180` (≤850px, menu-toggle zichtbaar)
   - Mobiel: `390×844` en `360×640` (≤500px, compacte layout, knoppen full-width)
   - Extra ondergrens: `320×568` (smalle mobiel; extra check op horizontale scroll)
+- **Vaste waarden in de suite:** de bestaande menu- en desktoptests gebruiken
+  `DESKTOP_VIEWPORT` en `MOBILE_VIEWPORT` uit
+  `playwright/utils/test-data.ts`, niet lokale literals per spec.
 - **Cross-browser (fase 7, optioneel):** Firefox + WebKit toevoegen (Playwright
   maakt dit triviaal via `devices`); prioriteit lager omdat de site simpel is.
 
@@ -399,8 +402,8 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 
 De statuskolommen gebruiken de legenda uit §5. **Bestaand** betekent dat er een
 test in een spec-bestand staat; **Deels** betekent dat slechts een subset is
-geautomatiseerd. De huidige suite telt **53 tests in 6 spec-bestanden**: smoke 10,
-homepage 5, contact 14, mobiel menu 16, CI-history 5 en footer 3. Deze matrix
+geautomatiseerd. De huidige suite telt **61 tests in 6 spec-bestanden**: smoke 10,
+homepage 12, contact 14, mobiel menu 17, CI-history 5 en footer 3. Deze matrix
 beschrijft de target-set; F5 is deels en F8 is nog gepland.
 
 ### 8.1 Smoke / sanity (G1) — `playwright/tests/smoke/smoke.spec.ts` _(bestaand)_
@@ -411,13 +414,13 @@ beschrijft de target-set; F5 is deels en F8 is nog gepland.
 | SM-02 | Overige pagina's laden (curriculum … bedankt) | per pagina: HTTP 200 + geen console/page errors (8 pagina's)              | Bestaand                           |
 | SM-03 | `404.html` fallback is bereikbaar             | `404.html` laadt met de fallback-content; unknown-path-fallback is een live-check | Bestaand |
 
-### 8.2 Navigatie (G2) — `homepage-functional.spec.ts`, `mobile-menu-functional.spec.ts` en `footer-functional.spec.ts` _(deels bestaand)_
+### 8.2 Navigatie (G2) — `homepage-functional.spec.ts`, `mobile-menu-functional.spec.ts` en `footer-functional.spec.ts` _(bestaand)_
 
 | ID     | Testcase                                             | Verwacht resultaat                                                                                                                                     | Status                                                                                        |
 | ------ | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| NAV-01 | Elke `nav-*` link opent de juiste pagina             | URL matcht `NAV_ITEM_URLS[testId]`                                                                                                                     | Deels: homepage-suite dekt 2 links; mobiele suite dekt alle 7 nav-links via het geopende menu |
+| NAV-01 | Elke `nav-*` link opent de juiste pagina             | URL matcht `NAV_ITEM_URLS[testId]`                                                                                                                     | Bestaand: homepage dekt alle 7 nav-links op desktop; mobiele suite dekt alle 7 via het geopende menu |
 | NAV-02 | CTA's (`cta-projects`, `cta-curriculum`) navigeren   | correcte bestemming                                                                                                                                    | Bestaand (2 tests)                                                                            |
-| NAV-03 | Card-links (`card-link-testing/automation/projects`) | correcte bestemming                                                                                                                                    | Deels: alleen `card-link-testing`                                                             |
+| NAV-03 | Card-links (`card-link-testing/automation/projects`) | correcte bestemming                                                                                                                                    | Bestaand (3 tests)                                                                            |
 | NAV-04 | Footer-links (contact, github, linkedin, privacy)    | interne → juiste URL; externe → juiste `href`/`target`/`rel`                                                                                           | Bestaand                                                                                      |
 | NAV-05 | Actieve footer-link op eigen pagina                  | `footer-contact` (contact) en `footer-privacy` (privacy): `class="active"` + kleur `rgb(134, 239, 172)`; overige pagina's: géén `.active` in de footer | Bestaand                                                                                       |
 
@@ -428,7 +431,7 @@ beschrijft de target-set; F5 is deels en F8 is nog gepland.
 | MENU-01 | Initiale toestand (mobiel ≤850px)                  | menu closed, `aria-expanded="false"`, nav-links niet zichtbaar | Bestaand                                                        |
 | MENU-02 | Toggle openen                                      | menu zichtbaar + alle nav-items zichtbaar, `aria-expanded="true"` | Bestaand                                                        |
 | MENU-03 | Toggle sluiten                                     | menu op mobiel verborgen, `aria-expanded="false"`               | Bestaand                                                        |
-| MENU-04 | State-transition closed → open → closed (herhaald) | toestand wisselt correct, geen stale state                     | Deels: één open→sluit-cyclus; geen herhaalde/stale-state-assert |
+| MENU-04 | State-transition closed → open → closed (herhaald) | toestand wisselt correct, geen stale state                     | Bestaand: herhaalde cyclus; alle menu-items verborgen bij sluiten |
 | MENU-05 | Navigatie via geopend menu werkt                   | nav-link klikt + juiste URL; menu gesloten na navigatie        | Bestaand (7 nav-links in de loop + 1 extra contact-navigatietest) |
 | MENU-06 | Op desktop (≥850px) is toggle niet nodig/zichtbaar | menu inline zichtbaar zonder toggle                            | Bestaand                                                        |
 | MENU-07 | `Escape` sluit geopend menu                        | menu verborgen, `aria-expanded="false"`, focus terug naar toggle | Bestaand                                                        |
@@ -473,7 +476,7 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 | CIH-04 | Runs zonder noemer (`total = 0`) vallen buiten de totalen      | alleen 2 van 3 runs geteld: `ci-total-executed` = "80", `ci-pass-ratio` = "90%", `ci-streak` = "0", `ci-status` = "Geannuleerd"; notering bevat "2 van 3 CI-runs geteld"                                                             | Bestaand |
 | CIH-05 | Lege geschiedenis: placeholders en placeholder-rij             | alle kaarten tonen "—", `ci-history-body` bevat "Geen CI-historie beschikbaar."                                                                                                                                                      | Bestaand |
 
-> **Bewijs:** `npx playwright test --list` telt 5 tests in dit spec-bestand (53 in
+> **Bewijs:** `npx playwright test --list` telt 5 tests in dit spec-bestand (61 in
 > de hele suite). De tabel heeft in de markup 6 kolommen (Run, Datum, Status,
 > Tests, Geslaagd, Flaky) en géén `data-testid` per rij; rijen worden via
 > `getByRole("row")` geteld. Er is **géén** aparte JSON-schema- of 404-fallback-test **in dit spec-bestand**.
@@ -594,10 +597,10 @@ als **doel/aspiratie**, niet als huidige werkelijkheid.
 - De testdata en verwachtingen zijn deterministisch: gemockte endpoints, vaste
   fixtures en geen afhankelijkheid van live CI-cijfers.
 
-### Exit criteria — huidige baseline (suite zoals nu, 53 tests)
+### Exit criteria — huidige baseline (suite zoals nu, 61 tests)
 
 1. **Poorten groen** — `npm run check` (typecheck + lint + html-validate) slaagt.
-2. **Suite groen** — 53/53 tests slagen; 0 failures en 0 skipped in het JSON-report.
+2. **Suite groen** — 61/61 tests slagen; 0 failures en 0 skipped in het JSON-report.
 3. **Geen blokkerende of hoge defects** in de gedekte gebieden; bekende
    niet-blokkerende issues zijn gedocumenteerd.
 4. **Determinisme** — de suite is herhaalbaar groen: lokaal met `retries: 0`, CI met
@@ -720,9 +723,9 @@ werk, niet als bewijs.
 | Doel | Testcases                           | Spec-bestand                                                    | Status                                                            | Bewijs / resultaat                     |
 | ---- | ----------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------- |
 | G1   | SM-01, SM-02, SM-03                 | `smoke.spec.ts`                                                 | Bestaand                                                          | 10 smoke-tests                         |
-| G2   | NAV-01…NAV-05                       | `homepage-functional.spec.ts`, `mobile-menu-functional.spec.ts`, `footer-functional.spec.ts` | NAV-01 deels; NAV-02/04/05 bestaand; NAV-03 deels                | 5 homepage + 12 menu + 3 footer-tests  |
+| G2   | NAV-01…NAV-05                       | `homepage-functional.spec.ts`, `mobile-menu-functional.spec.ts`, `footer-functional.spec.ts` | NAV-01–05 bestaand                                               | 12 homepage + 17 menu + 3 footer-tests |
 | G3   | F1…F10                              | `contact-functional.spec.ts`                                    | F1–F4, F6, F7, F9, F10 bestaand; F5 deels; F8 gepland             | 14 contact-tests                       |
-| G4   | MENU-01…MENU-10                     | `mobile-menu-functional.spec.ts`                                | MENU-01–03, 05–10 bestaand; MENU-04 deels                         | 16 menu-tests                          |
+| G4   | MENU-01…MENU-10                     | `mobile-menu-functional.spec.ts`                                | MENU-01–10 bestaand                                               | 17 menu-tests                          |
 | G5   | RESP-01                             | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
 | G6   | A11Y-01…A11Y-04                     | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
 | G7   | SEO-01…SEO-04                       | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
@@ -744,16 +747,16 @@ werk, niet als bewijs.
 | SM-01 | `smoke.spec.ts` | `index pagina laadt zonder fouten en structuur is correct` |
 | SM-02 | `smoke.spec.ts` | `${url} laadt zonder kritieke fouten` (8 pagina's) |
 | SM-03 | `smoke.spec.ts` | `404.html laadt met de fallback-content` |
-| NAV-01 | `homepage-functional.spec.ts` | `navigatielink "Contact" opent de contactpagina`; `navigatielink "Projecten" opent de projectenpagina` |
+| NAV-01 | `homepage-functional.spec.ts` | `NAV-01: nav-link "<testId>" opent de <pagina>` (7 nav-links, desktop) |
 | NAV-01 | `mobile-menu-functional.spec.ts` | `nav-link "<testId>" navigeert naar <url>` (7 nav-links) |
 | NAV-02 | `homepage-functional.spec.ts` | `CTA-knop "Bekijk mijn projecten" opent de projectenpagina`; `CTA-knop "Bekijk mijn Curriculum vitae" opent de curriculumpagina` |
-| NAV-03 | `homepage-functional.spec.ts` | `card-link "Meer over testing" opent de testpagina` |
+| NAV-03 | `homepage-functional.spec.ts` | `NAV-03: card-link "card-link-testing" opent de testing-pagina`; `NAV-03: card-link "card-link-automation" opent de automatiseringspagina`; `NAV-03: card-link "card-link-projects" opent de projectenpagina` |
 | NAV-04 | `footer-functional.spec.ts` | `footer-links hebben de juiste bestemming en veilige externe attributen` |
 | NAV-05 | `footer-functional.spec.ts` | `actieve footer-link op contact`; `actieve footer-link op privacy` |
 | MENU-01 | `mobile-menu-functional.spec.ts` | `toggle is zichtbaar en menu is initieel gesloten` |
 | MENU-02 | `mobile-menu-functional.spec.ts` | `klik op toggle opent het menu` |
 | MENU-03 | `mobile-menu-functional.spec.ts` | `klik op toggle sluit het menu weer` |
-| MENU-04 | `mobile-menu-functional.spec.ts` | `klik op toggle sluit het menu weer` (deels; één cyclus) |
+| MENU-04 | `mobile-menu-functional.spec.ts` | `MENU-04: herhaalde open-sluit-cyclus houdt de state correct` |
 | MENU-05 | `mobile-menu-functional.spec.ts` | `klik op nav-link in open menu sluit het menu en navigeert`; `nav-link "<testId>" navigeert naar <url>` |
 | MENU-06 | `mobile-menu-functional.spec.ts` | `menu-toggle is niet zichtbaar en nav-links staan inline` |
 | MENU-07 | `mobile-menu-functional.spec.ts` | `Escape sluit het menu en geeft focus terug` |
@@ -785,7 +788,7 @@ werk, niet als bewijs.
 | Onderdeel         | Deliverable                                     | Bron / bewijs                                                          |
 | ----------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
 | Testplan          | dit document, met status per testcase           | `Project-documentation/TESTPLAN.md`                                    |
-| Testsuite         | 6 spec-bestanden, 53 tests                      | `playwright/tests/` + `npx playwright test --list`                     |
+| Testsuite         | 6 spec-bestanden, 61 tests                      | `playwright/tests/` + `npx playwright test --list`                     |
 | Testrapportage    | HTML-report en JSON-report per run              | `playwright/playwright-report/`, `playwright/test-results/report.json` |
 | CI-history        | `docs/data/playwright-history.json` + dashboard | `scripts/ci-summary.mjs`, `automation.html`                            |
 | Kwaliteitspoorten | typecheck, lint en html-validate                | `npm run check`, `playwright.yml`                                      |

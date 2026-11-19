@@ -198,12 +198,12 @@ Twee dingen die opvallen:
 | `playwright/pages/base.page.ts` | Basisklasse voor page objects: console- én page-errors worden één keer per `page` geregistreerd, `goto()` wacht op `load` (niet op `networkidle`), `expectNoRuntimeErrors()` assert dat de lijst leeg is |
 | `playwright/fixtures/test-fixtures.ts` | Typed fixtures voor `homePage`, `contactPage`, `navPage`, `ciHistoryPage`, `basePage` en `formwardMock`; specs importeren `test`/`expect` hieruit |
 | `playwright/fixtures/formward.mock.ts` | `FormwardMock`: route-mock met request-registratie; `expectRequestCount` bewijst dat invalid submits geen request veroorzaken |
-| `playwright/pages/home.page.ts` | Page object voor de homepagina (CTA's, navigatie) |
+| `playwright/pages/home.page.ts` | Page object voor de homepagina (CTA's, navigatie en card-links) |
 | `playwright/pages/contact.page.ts` | Page object voor contact: formuliervelden, validatie-asserts, honeypot en externe links; de Formward-mock staat in `FormwardMock` |
 | `playwright/pages/mobile.page.ts` | Mobiele menu-data: `NAV_ITEM_TEST_IDS` en `NAV_ITEM_URLS` |
-| `playwright/utils/test-data.ts` | Gedeelde constanten: `FORMWARD_URL`, `THANK_YOU_PAGE`, `EMAIL`, `GITHUB_URL`, `LINKEDIN_URL`, `OTHER_PAGES_TO_TEST` (8 pagina's) en formulierdatasets `VALID_CONTACT`, `INVALID_EMAIL_CONTACT`, `OPTIONAL_SUBJECT_CONTACT`, `BOUNDARY_CONTACT` en `SPECIAL_CHARS_CONTACT` |
+| `playwright/utils/test-data.ts` | Gedeelde constanten: `FORMWARD_URL`, `THANK_YOU_PAGE`, `EMAIL`, `GITHUB_URL`, `LINKEDIN_URL`, `OTHER_PAGES_TO_TEST` (8 pagina's), viewports `DESKTOP_VIEWPORT` en `MOBILE_VIEWPORT`, en formulierdatasets `VALID_CONTACT`, `INVALID_EMAIL_CONTACT`, `OPTIONAL_SUBJECT_CONTACT`, `BOUNDARY_CONTACT` en `SPECIAL_CHARS_CONTACT` |
 | `playwright/tests/smoke/smoke.spec.ts` | Deep check op `index.html` plus lightweight check op de overige pagina's; gebruikt de `basePage`-fixture en assert console- én page-errors |
-| `playwright/tests/functional/homepage-functional.spec.ts` | CTA's en nav-links openen de juiste pagina's |
+| `playwright/tests/functional/homepage-functional.spec.ts` | CTA's, nav-links en card-links openen de juiste pagina's |
 | `playwright/tests/functional/contact-functional.spec.ts` | Paginastructuur en formulierinzending (Formward gemockt; valide submit redirect naar `bedankt.html`; invalid submit veroorzaakt 0 Formward-requests) |
 | `playwright/tests/functional/mobile-menu-functional.spec.ts` | Menu-toggle op desktop en mobiel, `aria-expanded`, focusbeheer, alle nav-links |
 | `playwright/pages/ci-history.page.ts` | Page object `CiHistoryPage`: mockt `data/playwright-history.json` via `page.route()`, navigeert naar `automation.html`, leest kaarten per `data-testid` en de rijen van de history-tabel |

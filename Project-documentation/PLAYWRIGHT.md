@@ -312,8 +312,10 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   request-registratie; `expectRequestCount(count)` bewijst dat invalid submits
   geen request veroorzaken.
 - **`utils/test-data.ts`** — gedeelde statische constanten (`FORMWARD_URL`,
-  `THANK_YOU_PAGE`, `EMAIL`, externe links, `OTHER_PAGES_TO_TEST`) en
-  formulierdatasets `VALID_CONTACT`, `INVALID_EMAIL_CONTACT`, `OPTIONAL_SUBJECT_CONTACT`, `BOUNDARY_CONTACT` en `SPECIAL_CHARS_CONTACT`.
+  `THANK_YOU_PAGE`, `EMAIL`, externe links, `OTHER_PAGES_TO_TEST`, de viewports
+  `DESKTOP_VIEWPORT` en `MOBILE_VIEWPORT`) en formulierdatasets `VALID_CONTACT`,
+  `INVALID_EMAIL_CONTACT`, `OPTIONAL_SUBJECT_CONTACT`, `BOUNDARY_CONTACT` en
+  `SPECIAL_CHARS_CONTACT`.
 - De website is **Nederlands**; test-namen en UI-teksten zijn dus in het
   Nederlands.
 
@@ -435,7 +437,7 @@ dezelfde wijziging** als de oorzaak, niet later.
 
 | README-claim | Bron van waarheid | Bijwerken wanneer |
 | --- | --- | --- |
-| Aantal tests per suite + totaal (53) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
+| Aantal tests per suite + totaal (61) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
 | Playwright-versie (1.65) | `package.json` → `devDependencies` | versie-upgrade |
 | ESLint-versie (10) | `package.json` → `devDependencies.eslint` | versie-upgrade |
 | Node-grens (`>=24.8 <25`) | `package.json` → `engines.node` | Node-upgrade |
