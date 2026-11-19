@@ -69,6 +69,9 @@ bijhouden" én "site publiceren".
    warning is een rode poort).
 7. **HTML-validate** — `npm run validate:html` (`docs/**/*.html`): de structuur
    van alle 10 site-pagina's (testcase HTML-01).
+7a. **Live-site-preflight** — `npm run check:site`: controleert alle live
+   pagina's op HTTP 200 met retries. Een 5xx/timeout is een omgevingsfout, geen
+   testflake; bij een rode check starten de Playwright-tests niet.
 8. **Browser** — `npx playwright install --with-deps`: Chromium plus de
    Linux-bibliotheken die Chromium nodig heeft.
 9. **Tests** — `npm run test` → `playwright test`. De suite gaat naar
@@ -109,7 +112,7 @@ Paden zijn relatief aan de repo-root (`Portfolio/`).
 | `playwright.local.config.ts` | Lokale override van de speelfile-config: neemt `playwright.config.ts` over en zet `baseURL` op `http://127.0.0.1:8080/` | Draait de suite tegen de lokale `docs/`-build, wanneer de live site de nieuwe markup nog niet bevat | In CI gebruiken: dan test je lokaal in plaats van live |
 | `AGENTS.md` | Wijsplaatje naar de relevante documentatie | Verwijst naar de docs in `Project-documentation/` | — |
 
-### 5.2 De CI-kern: drie bestanden
+### 5.2 De CI-kern: vier bestanden
 
 #### `.github/workflows/playwright.yml` — de werkbeschrijving
 
@@ -124,11 +127,22 @@ en **met welke rechten**.
   twee runs pushen niet tegelijk naar dezelfde branch.
 - `env: CI: "1"` → Playwright ziet dat het CI is, dus `retries: 2`, `workers: 1` en
   `forbidOnly: true` uit `playwright.config.ts` gaan op.
-- Stappen: checkout → setup-node → `npm ci` → browsers installeren → `npm run test`
-  → drie artifact-uploads → history-script → commit/push.
+- Stappen: checkout → setup-node → `npm ci` → poorten → `check:site` →
+  browsers installeren → `npm run test` → drie artifact-uploads → history-script
+  → commit/push.
 - De commit-stap draait alleen op `refs/heads/main`, zet `github-actions[bot]` als
   auteur, doet `git pull --rebase --autostash`, voegt alleen de history-JSON toe,
   commit alleen bij echte wijziging, en pusht naar `HEAD:${{ github.ref }}`.
+
+#### `scripts/site-check.mjs` — de live-poort
+
+Dit script controleert vóór de tests of de live GitHub Pages-site gezond is.
+
+- Leest de HTML-bestanden uit `docs/` en bezoekt de bijbehorende live-URL's.
+- Gebruikt `SITE_BASE_URL` (standaard `https://maartenka.github.io/Portfolio/`).
+- Retryt 5xx/timeouts met backoff; een pagina moet HTTP 200 geven.
+- Faalt de check, dan stopt de workflow vóór de browserinstallatie en de
+  Playwright-suite. Een host-5xx is dan een **omgevingsfout**, geen testflake.
 
 #### `scripts/ci-summary.mjs` — de vertaler
 
@@ -195,7 +209,7 @@ Twee dingen die opvallen:
 
 | Bestand | Rol |
 | --- | --- |
-| `playwright/pages/base.page.ts` | Basisklasse voor page objects: console- én page-errors worden één keer per `page` geregistreerd, `goto()` wacht op `load` (niet op `networkidle`), `expectNoRuntimeErrors()` assert dat de lijst leeg is |
+| `playwright/pages/base.page.ts` | Basisklasse voor page objects: console- én page-errors worden één keer per `page` geregistreerd, `goto()` wacht op `load` (niet op `networkidle`), `gotoWithRetry()` retryt host-5xx voor de smoke-checks en `expectNoRuntimeErrors()` assert dat de lijst leeg is |
 | `playwright/fixtures/test-fixtures.ts` | Typed fixtures voor `homePage`, `contactPage`, `navPage`, `ciHistoryPage`, `basePage` en `formwardMock`; specs importeren `test`/`expect` hieruit |
 | `playwright/fixtures/formward.mock.ts` | `FormwardMock`: route-mock met request-registratie; `expectRequestCount` bewijst dat invalid submits geen request veroorzaken |
 | `playwright/pages/home.page.ts` | Page object voor de homepagina (CTA's, navigatie en card-links) |
@@ -320,13 +334,15 @@ commit-tekst op `[skip ci]`.
 | JSON kapot of ongeldige data | `main.ts` normaliseert elke run en valt terug op placeholders, zonder console errors |
 | JSON ontbreekt (404) | Het lege basisbestand staat in de repo; `main.ts` toont placeholders |
 | Pages toont een oude JSON | `cache: "no-store"` in de fetch; de Pages-deploy blijft de bron |
-| Flaky tests in CI | `retries: 2`, `workers: 1` en `trace: on-first-retry` |
+| Flaky tests in CI | `retries: 2` voor de suite, `retries: 0` voor smoke, `workers: 1` en `trace: on-first-retry` |
+| Live-site 5xx/timeout | `npm run check:site` vóór de tests; een hostfout stopt de job als infra, niet als testflake |
 | Onverwachte `runUrl` | `main.ts` toont alleen links die exact op de eigen runs-URL matchen |
 
 ## 9. Zelf draaien (lokaal)
 
 ```bash
 npm run build                     # site-JS naar docs/js/ts/main.js + type-check
+npm run check:site                # live pagina's vooraf op HTTP 200 controleren
 npm test                          # volledige suite
 npm run test_smoke                # alleen de smoke-set
 npm run test:ui                   # Playwright UI-modus
@@ -373,6 +389,9 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
 - GitHub's scheduler is best-effort. De workflow-comment meldt een meting van 2 runs
   uit 42 verwachte triggers (4 per uur), dus ongeveer 5% verlies. Met één dagelijkse
   run is een gemiste dag dus goed mogelijk.
+- **De live host kan tijdelijk 5xx/timeout geven.** `npm run check:site` controleert
+  vooraf alle pagina's; een hostfout stopt de job als infrastructuurprobleem en
+  wordt niet als testflake geteld. Run #64 (`testing.html` 503) is zo'n geval.
 - Nieuwe cijfers zijn pas na enkele minuten zichtbaar. Gemeten: de Pages-deploy
   zelf duurt rond de minuut, en GitHub Pages serveert met `max-age=600`, dus de
   JSON, de site-JS en de HTML kunnen tot tien minuten oud zijn. `cache: "no-store"`

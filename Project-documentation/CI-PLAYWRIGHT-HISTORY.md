@@ -96,6 +96,14 @@ passRate = (passed / total) * 100
 `skipped` wordt niet in de noemer van `passRate` meegenomen. Als `total` 0 is,
 wordt `passRate` 0.
 
+> **Hostfouten vs. flaky:** een 5xx/timeout van de live host is een
+> omgevingsfout, geen testflake. `scripts/site-check.mjs` (`npm run check:site`)
+> controleert de live pagina's vóór de suite; `BasePage.gotoWithRetry()` retryt
+> host-5xx in de smoke-checks. De smoke-set heeft `retries: 0`, zodat een
+> blijvende hostfout als failure telt en niet via een Playwright-retry als flaky
+> wordt gemaskeerd. Een test die alleen via een Playwright-retry slaagt, blijft
+> flaky; een hostfout wordt als infrastructuur behandeld.
+
 Die 0 is een vulwaarde, geen meting: een run met `total = 0` heeft geen noemer.
 De site-JS sluit zulke runs daarom uit van `ci-total-executed`,
 `ci-total-passed` en `ci-pass-ratio`, en `ci-metrics-note` toont hoeveel runs wél
@@ -245,12 +253,17 @@ concurrency:
 
 ### 5.3 Stappen
 
-De relevante CI-stappen na `npm run test`:
+De relevante CI-stappen:
 
+0. **Check live site availability** — `npm run check:site` (`scripts/site-check.mjs`)
+   controleert alle live `docs/*.html`-pagina's op HTTP 200 met retries. Faalt
+   deze preflight, dan starten de Playwright-tests niet; de hostfout wordt als
+   infra behandeld, niet als testflake. Er is dan geen Playwright-report;
+   `ci-summary.mjs` schrijft een failure/no-report-entry.
 1. **Upload Playwright HTML report**
    - artifact: `playwright-report`
    - path: `playwright/playwright-report/`
-   - draait als `!cancelled()`.
+   - draait als `!cancelled()` én het HTML-report bestaat.
 
 2. **Generate Playwright history**
    - draait als `!cancelled()`.

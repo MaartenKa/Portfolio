@@ -241,6 +241,7 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 | `npm run lint:fix`        | ESLint met automatische fixes                             |
 | `npm run validate:html`   | `html-validate "docs/*.html"` (testcase HTML-01)          |
 | `npm run check`           | typecheck + lint + html-validate, in één keer             |
+| `npm run check:site`      | live pagina's vóór de suite op HTTP 200 controleren       |
 | `npm test`                | `playwright test` (alle tests, live site)                 |
 | `npm run test:local`      | zelfde suite tegen `docs/` via `playwright.local.config.ts` |
 | `npm run test:ui`         | Playwright UI mode                                        |
@@ -297,6 +298,10 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
 - **Determinisme:** externe netwerkaanroepen (Formward) worden gemockt via
   `page.route(...)` zodat tests offline en betrouwbaar draaien.
 - **Console/page errors** worden centraal gevangen in `BasePage` en geassert.
+- **Live-site-preflight:** `npm run check:site` controleert de live pagina's vóór
+  de suite. `BasePage.gotoWithRetry()` retryt host-5xx in de smoke-checks; de
+  smoke-set heeft `retries: 0`, zodat een blijvende hostfout als failure telt.
+  Een hostfout is infrastructuur, geen testflake.
 - **CI-history UI:** `automation.html` fetcht alleen
   `data/playwright-history.json`; die file moet in de repo bestaan om 404
   console errors te voorkomen. De UI mag geen console errors loggen bij een

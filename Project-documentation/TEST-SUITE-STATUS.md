@@ -25,6 +25,7 @@
 | **Footer** | `FooterPage` + `footer-functional.spec.ts`; NAV-04/05 gedekt. |
 | **Contact** | F4, F6, F7 en F10 toegevoegd; nieuwe datasets in `test-data.ts`. |
 | **Smoke** | SM-03 toegevoegd voor `404.html`; `BasePage` vangt ook `pageerror`. |
+| **Live-site-preflight** | `scripts/site-check.mjs` + `npm run check:site`: alle live pagina's HTTP 200 met retries; `BasePage.gotoWithRetry()` voor smoke en smoke heeft `retries: 0`. Een host-5xx is infrastructuur, geen testflake (run #64: `testing.html` 503). |
 | **CI-history** | CIH-03 assert celwaarden per rij. |
 | **Kleine fixes** | `networkidle` verwijderd; runtime-error-helper hernoemd; titel-regex escapet input; honeypot-assert gebruikersgericht. |
 
@@ -51,6 +52,7 @@
 - MENU-04 herhaalde state-transition.
 - NAV-01 desktopdekking van alle 7 nav-links.
 - NAV-03 alle drie card-links.
+- Live-host-503 als testflake (run #64; nu preflight + host-retry).
 
 ## 5. Voorgestelde volgorde
 

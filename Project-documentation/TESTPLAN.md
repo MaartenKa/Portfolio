@@ -332,6 +332,9 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
 - **Verwachte basis van de suite:** de live-nightly (`playwright.yml`) blijft de
   functionele basis van de CI-history (max 30 runs, één writer op `main`);
   `npm run test:local` bewijst nieuwe of aangepaste site-markup vóór de deploy.
+- **Live-site-preflight:** `npm run check:site` controleert alle `docs/*.html`
+  vóór de suite op HTTP 200, met retries en timeouts. Een 5xx of timeout is een
+  omgevingsfout, geen testflake; de online suite blijft tegen GitHub Pages draaien.
 - **Externe netwerkaanroepen (Formward) worden gemockt** via `page.route(...)` zodat
   tests offline, snel en betrouwbaar draaien. **Geen** echte POST's in de suite.
 - **Externe links (GitHub/LinkedIn):** in CI alleen **link-structuur** checken
@@ -508,6 +511,8 @@ Mitigaties zijn bewust verweven in BestPractices (determinisme, mocking, isolati
 | R12 | Lege placeholder-content (logo, favicon) of lege CI-history wekt onvolledige indruk                                                                                                                                                                                              |  Laag  |       Middel       | Logo/favicon gedocumenteerd (§3.2); CI-history kan leeg zijn als er nog geen run is; CIH-05 dekt de placeholder-fallback |
 | R13 | De history-data is er, maar de weergave (kaarten/Geschiedenis-tabel) ontbreekt of is onvolledig → bezoeker ziet lege kaarten                                                                                                                                                     | Middel |    Laag-Middel     | CIH-01…05 in `ci-history-functional.spec.ts`; placeholder-fallback CIH-05; `data-testid`-contract in de HTML (PLAYWRIGHT §4)                                                                                                       |
 | R14 | Één incidentele (niet-reproduceerbare) testmislukking in de suite: bij de eerste volledige lokale run na de kwaliteitspoorten viel de homepage-CTA-test weg; in isolatie en in een volledige herhaling was 41/41 groen. Determinisme is daarmee een gemeten risico, geen aanname | Middel |        Laag        | 5 opeenvolgende groene runs als exit-metric (§11); `retries: 2` in CI maar `0` lokaal (`playwright.local.config.ts`) zodat een lokale bevinding zichtbaar blijft; bij herhaling: trace/screenshot (`retain-on-failure`) analyseren |
+| R15 | Live GitHub Pages/CDN geeft tijdelijk 5xx of timeout, waardoor een smoke-check faalt terwijl de site zelf niet defect is | Middel | Middel | `npm run check:site` als preflight; `BasePage.gotoWithRetry()` voor smoke; hostfout wordt als infra behandeld, niet als testflake (run #64: `testing.html` 503) |
+
 
 **Schaal en eigenaarschap:** Impact en waarschijnlijkheid zijn labels op een
 3-puntschaal (Laag / Middel / Hoog) en geen formele FMEA-score. Elke rij heeft
@@ -570,10 +575,11 @@ als **doel/aspiratie**, niet als huidige werkelijkheid.
 | #   | Beperking                                                                            | Gevolg                                                                                                        | Status                                                                          |
 | --- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | 1   | CI draait met `workers: 1`                                                           | De CI-run is niet parallel; `fullyParallel: true` betekent alleen dat tests parallel-draaibaar zijn ontworpen | Bewust; lokaal draait de suite met default workers                              |
-| 2   | `retries: 2` in CI                                                                   | Een retry kan flakiness maskeren                                                                              | Bewust vangnet; een test die alleen via een retry slaagt telt als flaky (§12.1) |
+| 2   | `retries: 2` in CI; de smoke-set heeft `retries: 0`                                   | Een retry kan flakiness maskeren; smoke-hostfouten moeten juist failen                        | Bewust vangnet; een test die alleen via een retry slaagt telt als flaky (§12.1) |
 | 3   | `npx playwright install --with-deps` installeert alle browsers                       | Onnodige downloadtijd                                                                                         | Verbeterpunt: alleen `chromium` installeren                                     |
 | 4   | trace/screenshot/video-bestanden in `playwright/test-results/` worden niet als artifact geüpload; alleen `report.json` wordt geüpload | Failure-debugging via trace ontbreekt in CI                                                                   | Verbeterpunt: `test-results/` uploaden bij failure                              |
 | 5   | Geen pre-deploy gate                                                                 | Een push naar `main` wordt niet automatisch op de suite gevalideerd                                           | Open beslispunt (§10.2)                                                         |
+| 6   | Live host kan tijdelijk 5xx/timeout geven                                            | Smoke-tests kunnen als flaky worden geregistreerd als de host niet beschikbaar is                             | Mitigatie: `check:site`-preflight; `BasePage.gotoWithRetry()` voor smoke; hostfout telt als infra, niet als testflake |
 
 ---
 
@@ -583,6 +589,8 @@ als **doel/aspiratie**, niet als huidige werkelijkheid.
 
 - De site is bereikbaar op de geconfigureerde `baseURL`: de live GitHub Pages-deploy
   voor de standaardsuite, of `docs/` via `playwright.local.config.ts` voor lokaal werk.
+- **Live-site-preflight:** `npm run check:site` is groen; alle live pagina's geven
+  HTTP 200. Een 5xx/timeout is een omgevingsfout en geen testflake.
 - De suite is draaibaar: `npm ci` is uitgevoerd, Chromium is geïnstalleerd en de
   Formward-mock is beschikbaar (geen echte POST's nodig).
 - Type-check en lint schoon via de CI-poorten: `npm run typecheck` (`tsc --noEmit`) en
@@ -652,6 +660,14 @@ het acceptatieniveau van een volledige release, niet de huidige stand.
 | Hoog       | kernfunctionaliteit defect, geen workaround | navigatie-link naar verkeerde URL   |
 | Middel     | functioneel gebrekkig met workaround        | focus-ordening verstoord            |
 | Laag       | kosmeetisch / typografisch                  | tyfo in tekst; kleine margin        |
+
+> **Infrastructuur vs. testflaky:** een 5xx/timeout van de live host is een
+> omgevingsfout. `npm run check:site` controleert de site vóór de suite;
+> `BasePage.gotoWithRetry()` retryt host-5xx in de smoke-checks. De smoke-set
+> heeft `retries: 0`, zodat een blijvende hostfout als failure telt en niet via
+> een Playwright-retry als flaky wordt gemaskeerd. Een test die alleen via een
+> Playwright-retry slaagt, blijft flaky; een hostfout wordt niet als testflake
+> geteld.
 
 Defects worden gerapporteerd als issue (of notitie bij het portfolio) met:
 stappen tot reproduceren, verwacht vs. daadwerkelijk resultaat, viewport/browser,

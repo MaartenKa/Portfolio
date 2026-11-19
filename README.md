@@ -55,6 +55,7 @@ npm ci                    # dependencies, exact uit package-lock.json
 npx playwright install    # Chromium voor lokale runs
 npm run build             # site-JS → docs/js/ts + typecheck van alle TS
 npm run test:local        # suite tegen de lokale docs/ op poort 8080
+npm run check:site        # live pagina's vooraf op HTTP 200 controleren
 npm run test              # suite tegen de live GitHub Pages-site
 npm run check             # typecheck + lint + HTML-validatie
 ```
@@ -93,6 +94,7 @@ playwright/
   tests/smoke|functional/      # de 61 tests
   tests/accessibility|compatibility|e2e|regression/   # gereserveerd, nog leeg
 scripts/ci-summary.mjs         # JSON-report → CI-history
+scripts/site-check.mjs         # live-site-preflight vóór de tests
 Project-documentation/         # testplan, CI-documentatie, best practices, verbeterplan
 ```
 
@@ -138,7 +140,9 @@ een rode poort stopt de suite.
 
 - **Live-site-afhankelijk.** De standaardsuite draait tegen GitHub Pages; nieuwe
   UI-tests slagen pas na deploy en de Pages-cache (tot 10 minuten). Daarom bestaat
-  `npm run test:local`, dat tegen de lokale `docs/` draait.
+  `npm run test:local`, dat tegen de lokale `docs/` draait. Een 5xx/timeout van de
+  host wordt door `npm run check:site` vóór de suite afgevangen en geldt als
+  infrastructuurprobleem, niet als testflake.
 - **Non-functionele suites zijn nog niet gebouwd.** `accessibility/`, `compatibility/`,
   `e2e/` en `regression/` zijn gereserveerd; A11Y-, SEO-, LINK- en
   compatibiliteitstests staan als fase 4–7 in het testplan.
