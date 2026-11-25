@@ -1,9 +1,12 @@
 ﻿import { test } from "../../fixtures/test-fixtures";
 import {
   BOUNDARY_CONTACT,
+  FORM_POST_FIELDS,
+  HONEYPOT_FILLED,
   INVALID_EMAIL_CONTACT,
   OPTIONAL_SUBJECT_CONTACT,
   SPECIAL_CHARS_CONTACT,
+  THANK_YOU_PAGE,
   VALID_CONTACT,
 } from "../../utils/test-data";
 
@@ -92,6 +95,30 @@ test.describe("Contactpagina - functionele tests", () => {
       await contactPage.submitForm();
       await contactPage.expectRedirectToThankYouPage();
       await formwardMock.expectRequestCount(1);
+    });
+
+    test("F5: honeypot-waarde zit in de submit-payload", async ({
+      contactPage,
+      formwardMock,
+    }) => {
+      // De mock redirectt altijd, dus de spam-verwijdering zelf is Formward-upstream
+      // (TESTPLAN.md §3.2). Het lokale contract is de POST: de honeypot-waarde en
+      // de redirect-target gaan mee in de payload.
+      await contactPage.fillForm(VALID_CONTACT);
+      await contactPage.fillHoneypot(HONEYPOT_FILLED);
+      await contactPage.submitForm();
+
+      await formwardMock.expectRequestCount(1);
+      await formwardMock.expectRequestMethod("POST");
+      await formwardMock.expectPostedFieldNames(FORM_POST_FIELDS);
+      await formwardMock.expectPostedValue("_gotcha", HONEYPOT_FILLED);
+      await formwardMock.expectPostedValue("_redirect", THANK_YOU_PAGE);
+    });
+
+    test("F5: tabvolgorde laat het honeypot-veld overslaan", async ({
+      contactPage,
+    }) => {
+      await contactPage.expectTabOrderSkipsHoneypot();
     });
 
     test("F6: boundary-waarden worden geaccepteerd", async ({

@@ -72,3 +72,16 @@ export const SPECIAL_CHARS_CONTACT = {
   subject: "Speciale tekens 🚀",
   message: "emoji 🚀 en <tag> tekst",
 };
+
+/** Testcase F5: honeypot-waarde (een bot-waarde, niet door een mens getypt). */
+export const HONEYPOT_FILLED = "http://spam.example — bulkbericht";
+
+/** Testcase F5: de Formward-velden die in een volledige submit horen. */
+export const FORM_POST_FIELDS = [
+  "name",
+  "email",
+  "subject",
+  "message",
+  "_gotcha",
+  "_redirect",
+] as const;
