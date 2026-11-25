@@ -180,10 +180,11 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
     (`.navbar` / `.hero` / `.footer`) + functionele navigatie-mappen
     (`clickProjectsCta`, `clickCurriculumCta`, `clickContactNavLink`,
     `clickProjectsNavLink`, `clickTestingCardLink`).
-  - `ContactPage extends BasePage` — `navigate()`, `fillForm()`, `submitForm()`,
-    `expectFormInvalid()`, `expectFieldInvalid()` en assertions op velden,
-    honeypot en externe links. De Formward-mock staat in `FormwardMock`, niet
-    in dit Page Object.
+  - `ContactPage extends BasePage` — `navigate()`, `fillForm()`,
+    `fillHoneypot()` (de bot-simulatie, omdat het veld `display:none` is),
+    `submitForm()`, `expectFormInvalid()`, `expectFieldInvalid()` en assertions op
+    velden, honeypot, tabvolgorde en externe links. De Formward-mock staat in
+    `FormwardMock`, niet in dit Page Object.
   - `NavigationPage extends BasePage` (in `mobile.page.ts`) — mobiele
     menu-toggle interactie: `toggleMenu()`, `expectMenuOpen()`,
     `expectMenuClosedOnMobile()`, `expectMenuInlineOnDesktop()`,
@@ -202,7 +203,9 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    - `homepage-functional.spec.ts`: CTA's + nav-links openen de juiste pagina's.
    - `contact-functional.spec.ts`: pagina-structuur + formulier-inzending
      (mockt Formward; valide submit → redirect naar `bedankt.html`;
-     ongeldige/lege submit → géén redirect dankzij native validatie).
+     ongeldige/lege submit → géén redirect dankzij native validatie; F5 asserteert
+     de honeypot-waarde in de POST-payload en de tabvolgorde die het honeypot-veld
+     overslaat).
    - `mobile-menu-functional.spec.ts`: mobiele menu-toggle opent/sluit het
      menu, assert `aria-expanded`, navigeert via nav-links en checkt desktop
      (toggle verborgen, nav inline).
@@ -314,13 +317,17 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   en `formwardMock`. Navigatie en mock zijn expliciet in de test of in een
   `beforeEach`; de fixtures zelf navigeren niet.
 - **`fixtures/formward.mock.ts`** — `FormwardMock`: route-mock met
-  request-registratie; `expectRequestCount(count)` bewijst dat invalid submits
-  geen request veroorzaken.
+  request-registratie inclusief de urlencoded POST-payload.
+  `expectRequestCount(count)` bewijst dat invalid submits geen request veroorzaken;
+  `expectRequestMethod`, `expectPostedValue` en `expectPostedFieldNames` asserten
+  de payload van de submit (F5). De mock redirectt altijd, dus de
+  Formward-verwerking zelf staat niet in de suite.
 - **`utils/test-data.ts`** — gedeelde statische constanten (`FORMWARD_URL`,
   `THANK_YOU_PAGE`, `EMAIL`, externe links, `OTHER_PAGES_TO_TEST`, de viewports
   `DESKTOP_VIEWPORT` en `MOBILE_VIEWPORT`) en formulierdatasets `VALID_CONTACT`,
-  `INVALID_EMAIL_CONTACT`, `OPTIONAL_SUBJECT_CONTACT`, `BOUNDARY_CONTACT` en
-  `SPECIAL_CHARS_CONTACT`.
+  `INVALID_EMAIL_CONTACT`, `OPTIONAL_SUBJECT_CONTACT`, `BOUNDARY_CONTACT`,
+  `SPECIAL_CHARS_CONTACT`, de honeypot-waarde `HONEYPOT_FILLED` en de
+  F5-veldlijst `FORM_POST_FIELDS`.
 - De website is **Nederlands**; test-namen en UI-teksten zijn dus in het
   Nederlands.
 
