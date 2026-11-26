@@ -18,9 +18,9 @@ met pass-rate, groene streaks en de status van de laatste runs.
 
 | Kenmerk                | Waarde                                              |
 | ---------------------- | --------------------------------------------------- |
-| Testsuite              | **63 tests** in 6 spec-bestanden                    |
+| Testsuite              | **80 tests** in 7 spec-bestanden                    |
 | Browser                | Chromium (Desktop Chrome)                           |
-| Laatste gelogde CI-run | **41/41 geslaagd** (100%; suite telt nu 63 tests)  |
+| Laatste gelogde CI-run | **41/41 geslaagd** (100%; suite telt nu 80 tests)  |
 | CI                     | GitHub Actions — dagelijks om 18:17 UTC + handmatig |
 | Kwaliteitspoorten      | `tsc --noEmit`, ESLint 10, html-validate            |
 | Stack                  | HTML/CSS, TypeScript, Playwright 1.65, GitHub Pages |
@@ -36,7 +36,9 @@ met pass-rate, groene streaks en de status van de laatste runs.
   geautomatiseerde history-update.
 - **Rapportage** — Playwright HTML- en JSON-reports, samengevat tot een CI-dashboard.
 - **Toegankelijke markup** — skip-link, `aria`-attributen en `data-testid`-haken,
-  bewaakt door een strikte HTML-validator.
+  bewaakt door een strikte HTML-validator én door de accessibility-suite
+  (tabvolgorde, focus-indicator, skip-link-focus, `lang`, landmarks, `alt`-teksten,
+  gemeten placeholder-contrast en `forced-colors`-fallback).
 
 ## Het dashboard
 
@@ -55,6 +57,7 @@ npm ci                    # dependencies, exact uit package-lock.json
 npx playwright install    # Chromium voor lokale runs
 npm run build             # site-JS → docs/js/ts + typecheck van alle TS
 npm run test:local        # suite tegen de lokale docs/ op poort 8080
+npm run test:localVideo   # dezelfde suite in de kijkmodus: video/trace van élke run
 npm run check:site        # live pagina's vooraf op HTTP 200 controleren
 npm run test              # suite tegen de live GitHub Pages-site
 npm run check             # typecheck + lint + HTML-validatie
@@ -91,8 +94,9 @@ playwright/
   fixtures/test-fixtures.ts    # typed Page Object-fixtures
   fixtures/formward.mock.ts    # Formward-mock + request-registratie
   utils/test-data.ts           # gedeelde constanten + formulierdatasets
-  tests/smoke|functional/      # de 63 tests
-  tests/accessibility|compatibility|e2e|regression/   # gereserveerd, nog leeg
+  tests/smoke|functional/      # 63 tests (smoke + functioneel)
+  tests/accessibility/accessibility.spec.ts  # A11Y-01…A11Y-04, 17 tests
+  tests/compatibility|e2e|regression/        # gereserveerd, nog leeg
 scripts/ci-summary.mjs         # JSON-report → CI-history
 scripts/site-check.mjs         # live-site-preflight vóór de tests
 Project-documentation/         # testplan, CI-documentatie, best practices, verbeterplan
@@ -108,7 +112,8 @@ Project-documentation/         # testplan, CI-documentatie, best practices, verb
 | Mobiel menu      | `playwright/tests/functional/mobile-menu-functional.spec.ts` |     17 |
 | CI-history UI    | `playwright/tests/functional/ci-history-functional.spec.ts`  |      5 |
 | Footer           | `playwright/tests/functional/footer-functional.spec.ts`      |      3 |
-| **Totaal**       | 6 spec-bestanden                                             | **63** |
+| Accessibility    | `playwright/tests/accessibility/accessibility.spec.ts`       |     17 |
+| **Totaal**       | 7 spec-bestanden                                             | **80** |
 
 ## Kwaliteitspoorten
 
@@ -143,9 +148,12 @@ een rode poort stopt de suite.
   `npm run test:local`, dat tegen de lokale `docs/` draait. Een 5xx/timeout van de
   host wordt door `npm run check:site` vóór de suite afgevangen en geldt als
   infrastructuurprobleem, niet als testflake.
-- **Non-functionele suites zijn nog niet gebouwd.** `accessibility/`, `compatibility/`,
-  `e2e/` en `regression/` zijn gereserveerd; A11Y-, SEO-, LINK- en
-  compatibiliteitstests staan als fase 4–7 in het testplan.
+- **Non-functionele suites zijn slechts gedeeltelijk gebouwd.** De accessibility-suite
+  (A11Y-01…A11Y-04, 17 tests) draait in Chromium met eigen DOM-asserts; axe-core en
+  Lighthouse zijn niet opgenomen (`package.json` heeft geen extra dependency), dus
+  screenreader-gedrag blijft een handmatige check. `compatibility/`, `e2e/` en
+  `regression/` zijn nog gereserveerd; SEO-, LINK-, responsive-, visual- en
+  performance-tests staan als fase 4–7 in het testplan.
 - **De producerende kant is ongetest.** `scripts/ci-summary.mjs` heeft geen eigen
   geautomatiseerde test; de weergavelaag is wél gedekt door vijf UI-tests met gemockte
   data. De kaart "Suite omvang" is voorlopig een proxy (`max(total)`).

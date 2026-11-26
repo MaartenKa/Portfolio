@@ -66,12 +66,14 @@ network mocking, CI-ready configuratie).
 │   │   ├── ci-history.page.ts # CiHistoryPage: mock + kaarten/tabel van automation.html
 │   │   ├── mobile.page.ts    # NavigationPage (mobiele menu-toggle)
 │   │   ├── footer.page.ts    # FooterPage (globale footer-links)
+│   │   ├── a11y.page.ts      # AccessibilityPage (A11Y-01…A11Y-04 asserts)
 │   │
 │   ├── fixtures/
 │   │   ├── formward.mock.ts  # FormwardMock: route + request-registratie
 │   │   └── test-fixtures.ts  # Typed Page Object-fixtures (test.extend)
 │   ├── utils/
-│   │   └── test-data.ts      # Gedeelde statische data & constants
+│   │   ├── test-data.ts      # Gedeelde statische data & constants
+│   │   └── contrast.ts       # WCAG-kleurberekeningen (compositie + ratio)
 │   └── tests/
 │       ├── smoke/smoke.spec.ts          # smoke tests (huidig)
 │       ├── functional/homepage-functional.spec.ts
@@ -79,7 +81,7 @@ network mocking, CI-ready configuratie).
 │       ├── functional/mobile-menu-functional.spec.ts
 │       ├── functional/ci-history-functional.spec.ts
 │       ├── functional/footer-functional.spec.ts
-│       ├── accessibility/     # leeg — TESTPLAN fase 4 (A11Y-01…04)
+│       ├── accessibility/accessibility.spec.ts  # A11Y-01…A11Y-04 (17 tests)
 │       ├── compatibility/     # leeg — TESTPLAN fase 7 (Firefox/WebKit)
 │       ├── e2e/               # leeg — gebruikersflows
 │       └── regression/        # leeg — LINK/IMG/HTML-integriteit
@@ -160,14 +162,18 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   de `alt` is overal identiek: `Logo van Maarten Kamps (terug naar homepage)`.
 - **Toegankelijkheid (P2-fixes):** alle 10 pagina's hebben een skip-link
   `<a href="#hoofdinhoud" class="skip-link">Ga naar hoofdinhoud</a>` vóór de
-  header, met `main id="hoofdinhoud"` als doel. De 44 decoratieve
+  header, met `main id="hoofdinhoud" tabindex="-1"` als doel — de `tabindex` is
+  nodig omdat een niet-focusbaar element geen focus van de skip-link kan overnemen.
+  De 44 decoratieve
   `.card-icon`-emoji’s en decoratieve pijl-`span`-elementen zijn
   `aria-hidden="true"`. Section-`aria-label`s zijn ver-Nederlands (o.a.
   `Intro`, `Meer weten`, `Naar GitHub`, `Naar projecten`, `Contact`,
   `Volgende stap`, `Vaardigheden`; `Testresultaten` blijft zoals het is).
   Placeholder-tekst in het contactformulier heeft contrastkleur `#94a3b8`, en
   `.hero h1 span` heeft een `forced-colors` fallback met `CanvasText` zodat
-  high-contrastmodus de gradient-tekst niet verliest.
+  high-contrastmodus de gradient-tekst niet verliest. Alleen
+  `section.privacy-policy` heeft bewust géén `aria-label`: zonder accessible name
+  is zo'n section geen landmark.
 
 ## 5. Testautomatisering (`playwright/`)
 
@@ -190,6 +196,18 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
     `expectMenuClosedOnMobile()`, `expectMenuInlineOnDesktop()`,
     `expectToggleAriaExpanded()`, `clickNavLink()`. Exporteert ook
     `NAV_ITEM_TEST_IDS` en `NAV_ITEM_URLS` als page-specifieke constants.
+  - `AccessibilityPage extends BasePage` (in `a11y.page.ts`) — asserts voor de
+    accessibility-suite: `navigateTo(path)`, `expectLangDutch()`,
+    `expectLandmarksNamed()`, `expectMenuToggleCollapsed()`,
+    `expectImagesHaveAlt()`, `expectSectionLabels(expected)`,
+    `expectDecorativeIconsHidden()`, `expectFormLabelsMatchFields()`,
+    `countFocusables()`, `readTabTrail(steps)`, `expectKeyboardTrail(expected)`,
+    `expectVisibleFocusIndicator()`, `expectSkipLinkContract()`,
+    `expectSkipLinkMovesFocusToMain()`, `expectPlaceholderContrast()` en
+    `expectForcedColorsHeroReadable()`. De WCAG-kleurberekeningen (compositie van
+    een semi-transparante achtergrond en contrastratio) staan in
+    `utils/contrast.ts`; de tab- en label-contractlijsten staan in
+    `utils/test-data.ts`.
 
 ### Test-categorieën (huidig)
 
@@ -217,6 +235,19 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
      lege state. Page object: `pages/ci-history.page.ts`.
     - `footer-functional.spec.ts`: footer-links, externe attributen en de
       actieve footer-link op contact/privacy. Page object: `pages/footer.page.ts`.
+3. **Accessibility** — `tests/accessibility/accessibility.spec.ts` (17 tests,
+   A11Y-01…A11Y-04, in Chromium):
+   - structurele check per pagina (10 pagina's): `lang="nl"`, de benoemde
+     landmarks, `aria-expanded` op de toggle, niet-lege `alt`-teksten, de
+     Nederlandse section-labels, `aria-hidden` op decoratieve iconen en het
+     skip-link-contract (`href="#hoofdinhoud"` + focusbaar target);
+   - toetsenbord: de tabvolgorde-contracten van homepage en contactformulier
+     (honeypot overgeslagen) en de focus-indicator (2px outline, offset 3px);
+   - skip-link: Enter op de skip-link zet de focus op `main#hoofdinhoud`;
+   - contrast: de gemeten `::placeholder`-kleur en de WCAG-ratio ≥ 4,5:1 tegen
+     de samengestelde invoerachtergrond, plus de `forced-colors`-fallback van de
+     hero-tekst via `page.emulateMedia({ forcedColors: "active" })`.
+   Page object: `pages/a11y.page.ts`; rekenwerk: `utils/contrast.ts`.
 
 ### Config (playwright.config.ts)
 
@@ -231,6 +262,9 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 - Reporter: HTML → `./playwright/playwright-report`; JSON →
   `./playwright/test-results/report.json`
 - Op failure: screenshot; op retry: trace; op failure: video (retained)
+- Kijkmodus in de hulp-config (`PW_VIEW=1` → `npm run test:localVideo`): video,
+  trace en screenshot van **élke** run, headed browser en open HTML-rapport.
+  Standaard (`npm run test:local`) blijft de lichte retain-on-failure-stand.
 - `fullyParallel: true`; CI: 2 retries + 1 worker + `forbidOnly`
 - Eén project: **chromium** (Desktop Chrome)
 
@@ -247,6 +281,8 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 | `npm run check:site`      | live pagina's vóór de suite op HTTP 200 controleren       |
 | `npm test`                | `playwright test` (alle tests, live site)                 |
 | `npm run test:local`      | zelfde suite tegen `docs/` via `playwright.local.config.ts` |
+| `npm run test:localVideo`  | kijkmodus: video/trace/screenshot van élke run (`PW_VIEW=1`) |
+| `npm run test:localUi`     | UI mode op de lokale hulp-config (`--ui`)        |
 | `npm run test:ui`         | Playwright UI mode                                        |
 | `npm run test:headed`     | Headed browser                                            |
 | `npm run testChromium`    | Alleen chromium project                                   |
@@ -255,6 +291,8 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 | `npm run test_debug`      | Debug mode                                                |
 | `npm run test_list_tests` | `--list` (tests opsommen)                                 |
 | `npm run test_codegen`    | `playwright codegen`                                      |
+| `npm run show:report`     | HTML-rapport openen (`playwright/playwright-report`)   |
+| `npm run show:trace`      | trace-viewer openen (trace-bestand aanwijzen)         |
 
 ## 7. Hoe starten & testen
 
@@ -289,6 +327,16 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
 > De hulpm-config verandert niets aan de standaard-suite, die blijft op de live
 > GitHub Pages-site draaien.
 
+**Kijken naar de tests:** `npm run test:localVideo` is de kijkmodus van diezelfde
+hulp-config (de vlag `PW_VIEW=1`). Dan draait de browser zichtbaar en houdt élke run
+— geslaagd of niet — een video (`playwright/test-results/<test>/video.webm`), een
+trace (`trace.zip`) en een screenshot achter; het HTML-rapport gaat na de run open,
+met video en trace als bijlage bij de test. De standaard `npm run test:local` blijft
+`retain-on-failure`, dus licht en zonder artifacten bij een groene run. Live kijken
+kan ook: `npm run test:localUi` (UI mode met watch mode) of `--debug`
+(`npm run test_debug`). Rapport en traces later openen: `npm run show:report` en
+`npx playwright show-trace playwright/test-results/<test>/trace.zip`.
+
 ## 8. Belangrijke conventies & aandachtspunten
 
 - **Gebruik Page Objects** (`playwright/pages/`) voor UI-interactie; roep ze
@@ -313,8 +361,8 @@ npm run build               # TS: site-JS → docs/js/ts, al het rest type-check
   `tsconfig.json` → de gezende `tsc`-run **type-checkt alleen** (no `dist/`
   output). `tsconfig.site.json` overrules met `noEmit: false` voor de site-JS.
 - **`fixtures/test-fixtures.ts`** — typed custom fixtures (`test.extend`) voor
-  `homePage`, `contactPage`, `navPage`, `ciHistoryPage`, `basePage`, `footerPage`
-  en `formwardMock`. Navigatie en mock zijn expliciet in de test of in een
+  `homePage`, `contactPage`, `navPage`, `ciHistoryPage`, `basePage`, `footerPage`,
+  `a11yPage` en `formwardMock`. Navigatie en mock zijn expliciet in de test of in een
   `beforeEach`; de fixtures zelf navigeren niet.
 - **`fixtures/formward.mock.ts`** — `FormwardMock`: route-mock met
   request-registratie inclusief de urlencoded POST-payload.
