@@ -13,6 +13,7 @@
     "check:site": "node scripts/site-check.mjs",
     "test:local": "playwright test -c playwright.local.config.ts",
     "test:localUi": "playwright test -c playwright.local.config.ts --ui",
+    "test:localVideo": "node scripts/view-tests.mjs",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
@@ -21,7 +22,9 @@
     "test_smoke": "playwright test smoke.spec.ts",
     "test_debug": "playwright test --debug",
     "test_list_tests": "npx playwright test --list",
-    "test_codegen": "playwright codegen"
+    "test_codegen": "playwright codegen",
+    "show:report": "playwright show-report playwright/playwright-report",
+    "show:trace": "playwright show-trace"
   },
   "engines": {
     "node": ">=24.8.0 <25"
