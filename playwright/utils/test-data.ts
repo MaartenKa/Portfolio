@@ -85,3 +85,118 @@ export const FORM_POST_FIELDS = [
   "_gotcha",
   "_redirect",
 ] as const;
+
+/** Alle HTML-pagina's van de site (10 bestanden), voor site-wide checks. */
+export const ALL_PAGES = [
+  "index.html",
+  "curriculum.html",
+  "testing.html",
+  "automation.html",
+  "projects.html",
+  "personal.html",
+  "contact.html",
+  "privacy.html",
+  "bedankt.html",
+  "404.html",
+] as const;
+
+/**
+ * A11Y-03: de `aria-label` van elke benoemde `<section>` per pagina, in de
+ * volgorde van de markup. Een `<section>` zonder accessible name is geen
+ * landmark en staat hier dus niet.
+ */
+export const PAGE_SECTION_LABELS: Record<string, readonly string[]> = {
+  "index.html": ["Intro", "Expertise", "Over mij", "Meer weten"],
+  "curriculum.html": [
+    "Curriculum",
+    "Profiel",
+    "Werkervaring",
+    "Opleiding",
+    "Vaardigheden",
+    "Meer weten",
+  ],
+  "testing.html": [
+    "Software Testen",
+    "Mijn aanpak",
+    "Testmethoden",
+    "Mijn toolkit",
+    "Volgende stap",
+  ],
+  "automation.html": [
+    "Test Automatisering",
+    "Automatisering",
+    "Mijn automation stack",
+    "Wat ik automatiseer",
+    "Testresultaten",
+    "Naar projecten",
+  ],
+  "projects.html": ["Intro", "Projecten", "Toekomstige projecten", "Naar GitHub"],
+  "personal.html": [
+    "Persoonlijke Projecten",
+    "Interesses",
+    "Persoonlijke ontwikkeling",
+    "Contact",
+  ],
+  "contact.html": ["Contact", "Vind mij online"],
+  "privacy.html": ["Privacyverklaring"],
+  "bedankt.html": ["Bedankt"],
+  "404.html": ["Pagina niet gevonden"],
+};
+
+/**
+ * A11Y-01: de tabvolgorde van de `data-testid`-elementen op de homepage, in
+ * desktopviewport. De skip-link en de logo-link hebben geen testid, dus de
+ * page object leest die als `skip-link` en `logo`.
+ */
+export const HOME_TAB_TRAIL = [
+  "nav-home",
+  "nav-curriculum",
+  "nav-testing",
+  "nav-automation",
+  "nav-projects",
+  "nav-personal",
+  "nav-contact",
+  "cta-projects",
+  "cta-curriculum",
+  "card-link-testing",
+  "card-link-automation",
+  "card-link-projects",
+  "card-link-scrum",
+  "cta-projects-bottom",
+  "footer-contact",
+  "footer-github",
+  "footer-linkedin",
+  "footer-privacy",
+] as const;
+
+/**
+ * A11Y-01: de tabvolgorde op de contactpagina. Het honeypot-veld heeft
+ * `tabindex="-1"` en `display:none`, dus de tabbar laat het veld overslaan;
+ * dat is hier expliciet als contract opgenomen.
+ */
+export const CONTACT_TAB_TRAIL = [
+  "nav-home",
+  "nav-curriculum",
+  "nav-testing",
+  "nav-automation",
+  "nav-projects",
+  "nav-personal",
+  "nav-contact",
+  "field-name",
+  "field-email",
+  "field-subject",
+  "field-message",
+  "form-submit",
+  "cta-github-social",
+  "cta-linkedin-social",
+  "footer-contact",
+  "footer-github",
+  "footer-linkedin",
+  "footer-privacy",
+] as const;
+
+/** A11Y-04: de placeholderkleur uit het design-systeem. */
+export const PLACEHOLDER_COLOR = "rgb(148, 163, 184)";
+
+/** A11Y-04: WCAG 2.1 drempel voor normale tekst (niveau AA). */
+export const MIN_CONTRAST_AA = 4.5;
