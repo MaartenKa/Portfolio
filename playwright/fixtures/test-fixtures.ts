@@ -2,6 +2,7 @@
 import { test as base } from "@playwright/test";
 import { BasePage } from "../pages/base.page";
 import { FooterPage } from "../pages/footer.page";
+import { AccessibilityPage } from "../pages/a11y.page";
 import { FormwardMock } from "./formward.mock";
 import { CiHistoryPage } from "../pages/ci-history.page";
 import { ContactPage } from "../pages/contact.page";
@@ -22,6 +23,7 @@ type Fixtures = {
   ciHistoryPage: CiHistoryPage;
   basePage: BasePage;
   footerPage: FooterPage;
+  a11yPage: AccessibilityPage;
   formwardMock: FormwardMock;
 };
 
@@ -52,6 +54,12 @@ export const test = base.extend<Fixtures>({
 
   footerPage: async ({ page }, use) => {
     await use(new FooterPage(page));
+  },
+
+  a11yPage: async ({ page }, use) => {
+    // De accessibility-suite navigeert zelf per pagina; de fixture levert alleen
+    // het page object met de a11y-asserts.
+    await use(new AccessibilityPage(page));
   },
 
   basePage: async ({ page }, use) => {
