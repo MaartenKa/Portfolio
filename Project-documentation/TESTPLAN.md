@@ -7,7 +7,7 @@
 | **Eigenaar**   | QA Engineer (zie §13)                                                                       |
 | **Testobject** | Statische portfolio-site in `docs/` (10 HTML-bestanden) + Playwright-suite in `playwright/` |
 | **Testbasis**  | §3.3                                                                                        |
-| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 63 tests in 6 spec-bestanden          |
+| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 80 tests in 7 spec-bestanden          |
 
 **Scope:** de statische portfolio-website in `docs/` — 9 contentpagina's plus de
 `404.html`-fallback (10 HTML-bestanden), het CSS-design-systeem, één klein
@@ -38,11 +38,12 @@ De huidige suite dekt (1) **grotendeels** (10 HTML-bestanden, inclusief de
 **grotendeels** en (3) **volledig** — de mobiele menu-toggle is geautomatiseerd
 in `mobile-menu-functional.spec.ts` (incl. ARIA, state-transitions, focus,
 `Escape` en klik-buiten). Het formulier is gedekt voor F1–F7, F9 en F10 (F5 op
-payload- en tabvolgorde-contract); F8 is gepland (§7). De site bevat inmiddels P2-accessibility fixes (skip-link,
-decoratieve `aria-hidden`-iconen, Nederlandse section-labels, placeholder-
-contrast en `forced-colors` fallback), maar deze zijn nog niet als structurele
-Playwright-suite gedekt. De resterende gaten liggen op vlak **(4)**:
-responsive, geautomatiseerde accessibility-checks, SEO, visual-regression en
+payload- en tabvolgorde-contract); F8 is gepland (§7). De P2-accessibility fixes
+op de site (skip-link, decoratieve `aria-hidden`-iconen, Nederlandse
+section-labels, placeholder-contrast en `forced-colors` fallback) zijn sinds
+november 2026 gedekt door de accessibility-suite: 17 tests in
+`accessibility.spec.ts` (A11Y-01…A11Y-04). De resterende gaten liggen op vlak
+**(4)**: responsive, SEO, content-integriteit (LINK/IMG), visual-regression en
 performance ontbreken nog als geautomatiseerde tests.
 
 Een CI-keten bestaat wél: `.github/workflows/playwright.yml` draait nightly
@@ -234,10 +235,14 @@ uitgevoerde UAT.
 - **Accessibility:** keyboard-reikbare navigatie, focus-ordening, skip-link,
   `aria-expanded`, `aria-label`, decoratieve iconen met `aria-hidden`,
   Nederlandse section-labels, contrast, `lang`, afbeelding-`alt` en
-  `forced-colors` fallback. Geautomatiseerd bewijs via axe-core (0 serious/critical
-  violations) en Lighthouse Accessibility ≥ 95; handmatige keyboardcheck blijft
-  verplicht. Een CSS-kleurassert (zoals A11Y-04) is aanvullend bewijs, geen
-  WCAG-conformiteit.
+  `forced-colors` fallback. **Bestaand:** de accessibility-suite (17 tests)
+  bewijst dit structureel in Chromium — tabvolgorde-contract per pagina,
+  focus-outline, skip-link-focus op `main`, `lang="nl"`, landmarks, `alt`-teksten,
+  section-labels, gemeten placeholder-contrast en de `forced-colors`-fallback.
+  axe-core (0 serious/critical violations) en Lighthouse Accessibility ≥ 95 blijven
+  een **optioneel doel**: die staan niet in `package.json` en zijn niet opgenomen.
+  De handmatige keyboardcheck blijft verplicht, en een kleurassert (zoals A11Y-04)
+  is aanvullend bewijs, geen WCAG-conformiteit.
 - **SEO:** unieke `<title>`, `meta description`, `lang="nl"`, `robots`-tag,
   één `h1` per pagina, geen duplicaat `id`.
 - **Content-integriteit:** geen gebroken interne/externe links, geen 404-afbeeldingen,
@@ -407,9 +412,9 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 
 De statuskolommen gebruiken de legenda uit §5. **Bestaand** betekent dat er een
 test in een spec-bestand staat; **Deels** betekent dat slechts een subset is
-geautomatiseerd. De huidige suite telt **63 tests in 6 spec-bestanden**: smoke 10,
-homepage 12, contact 16, mobiel menu 17, CI-history 5 en footer 3. Deze matrix
-beschrijft de target-set; F8 is nog gepland.
+geautomatiseerd. De huidige suite telt **80 tests in 7 spec-bestanden**: smoke 10,
+homepage 12, contact 16, mobiel menu 17, CI-history 5, footer 3 en accessibility 17.
+Deze matrix beschrijft de target-set; F8 is nog gepland.
 
 ### 8.1 Smoke / sanity (G1) — `playwright/tests/smoke/smoke.spec.ts` _(bestaand)_
 
@@ -449,10 +454,10 @@ beschrijft de target-set; F8 is nog gepland.
 | ID      | Categorie           | Testcase                                                           | Verwacht resultaat (concreet)                                                                                                                                                         | Status                                          |
 | ------- | ------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
 | RESP-01 | Responsive          | Layout per breakpoint (desktop/tablet/mobiel)                      | juiste nav-stijl; geen horizontale scroll op 1280×800, 850×1024, 390×844, 360×640 en de extra grens 320px breed                                                                       | Gepland (fase 4)                                |
-| A11Y-01 | Accessibility       | Keyboard-only navigatie + focus-visible                            | alle interactieve elementen toetsbaar bereikbaar; zichtbare focus-indicator (WCAG 2.4.7)                                                                                              | Gepland (fase 4)                                |
-| A11Y-02 | Accessibility       | `aria-expanded` / labels / `lang="nl"` / img `alt`                 | attributen aanwezig en correct; `lang="nl"` op elke pagina; decoratieve `<img>` met lege `alt` + `aria-hidden`                                                                        | Gepland (fase 4)                                |
-| A11Y-03 | Accessibility       | Skip-link, decoratieve iconen en section-labels                    | skip-link → `#hoofdinhoud` met focus op het doel; decoratieve emoji/pijlen `aria-hidden="true"`; section-labels in het Nederlands                                                     | Gepland (fase 4)                                |
-| A11Y-04 | Accessibility       | Placeholder-contrast en `forced-colors` fallback                   | computed `::placeholder`-kleur `rgb(148, 163, 184)`; contrast ≥ 4.5:1 tegen de invoerachtergrond (meting, geen alleen CSS-waarde); in forced-colors `CanvasText`, geen gradient-clip  | Gepland (fase 4)                                |
+| A11Y-01 | Accessibility       | Keyboard-only navigatie + focus-visible                            | alle interactieve elementen toetsbaar bereikbaar; zichtbare focus-indicator (WCAG 2.4.7)                                                                                              | **Bestaand** (`accessibility.spec.ts`)                                |
+| A11Y-02 | Accessibility       | `aria-expanded` / labels / `lang="nl"` / img `alt`                 | attributen aanwezig en correct; `lang="nl"` op elke pagina; elk formulierveld heeft een eigen label; elke `<img>` heeft een niet-lege `alt`                                                                        | **Bestaand** (`accessibility.spec.ts`)                                |
+| A11Y-03 | Accessibility       | Skip-link, decoratieve iconen en section-labels                    | skip-link → `#hoofdinhoud` met focus op het doel; decoratieve emoji/pijlen `aria-hidden="true"`; section-labels in het Nederlands                                                     | **Bestaand** (`accessibility.spec.ts`)                                |
+| A11Y-04 | Accessibility       | Placeholder-contrast en `forced-colors` fallback                   | computed `::placeholder`-kleur `rgb(148, 163, 184)`; contrast ≥ 4.5:1 tegen de invoerachtergrond (meting, geen alleen CSS-waarde); in forced-colors `CanvasText`, geen gradient-clip  | **Bestaand** (`accessibility.spec.ts`)                                |
 | SEO-01  | SEO                 | unieke `<title>` + meta description per pagina                     | geen duplicaten, NL-taal                                                                                                                                                              | Gepland (fase 4)                                |
 | SEO-02  | SEO                 | één `h1` per pagina, geen duplicaat `id`, robots.txt               | structuur correct; `docs/robots.txt` aanwezig en geldig                                                                                                                               | Gepland (fase 4)                                |
 | SEO-03  | SEO                 | canonical + Open Graph/Twitter cards per pagina                    | canonical = eigen absolute URL; `og:title`/`og:url` = eigen `<title>`/URL; `og:image` absolute; `twitter:card=summary`                                                                | Gepland (fase 4)                                |
@@ -481,7 +486,7 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 | CIH-04 | Runs zonder noemer (`total = 0`) vallen buiten de totalen      | alleen 2 van 3 runs geteld: `ci-total-executed` = "80", `ci-pass-ratio` = "90%", `ci-streak` = "0", `ci-status` = "Geannuleerd"; notering bevat "2 van 3 CI-runs geteld"                                                             | Bestaand |
 | CIH-05 | Lege geschiedenis: placeholders en placeholder-rij             | alle kaarten tonen "—", `ci-history-body` bevat "Geen CI-historie beschikbaar."                                                                                                                                                      | Bestaand |
 
-> **Bewijs:** `npx playwright test --list` telt 5 tests in dit spec-bestand (63 in
+> **Bewijs:** `npx playwright test --list` telt 5 tests in dit spec-bestand (80 in
 > de hele suite). De tabel heeft in de markup 6 kolommen (Run, Datum, Status,
 > Tests, Geslaagd, Flaky) en géén `data-testid` per rij; rijen worden via
 > `getByRole("row")` geteld. Er is **géén** aparte JSON-schema- of 404-fallback-test **in dit spec-bestand**.
@@ -534,7 +539,7 @@ impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish
 |  1   | Bestaande suite stabiliseren (smoke + navigatie + contact)                                                                      | Alle huidige tests groen, deterministisch, gemockt; geen flaky                                                                                                     |
 |  2   | **Mobiele menu-toggle stabiliseren & uitbreiden** (TC MENU-01…10, bestaand + nieuwe focus/Escape/klik-buiten-cases)             | Suite groen + deterministisch; extra viewports (850×1024, 360×640) toegevoegd; ARIA state-transition, focusbeheer, `Escape`-sluiten en klik-buiten-het-menu gedekt |
 |  3   | Testdata centraliseren (`utils/test-data.ts`) + F4/F6/F7/F10-cases; F8 blijft gepland | Formulier-testdataset centraal; F-matrix grotendeels gedekt                                                                                                        |
-|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks                                                                        | RESP/A11Y/SEO/LINK/IMG groen op alle 10 pagina's                                                                                                                   |
+|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks — **a11y af** (17 tests in `accessibility.spec.ts`) | A11Y-01…04 groen op alle 10 pagina's; RESP/SEO/LINK/IMG nog te bouwen                                                                                             |
 |  5   | Visual regression + Lighthouse-drempels                                                                                         | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                                                                            |
 |  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → test → artifacts → history   | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit                                                                         |
 |  7   | Optioneel: pre-deploy/PR-gate (push-trigger op de poorten), cross-browser (Firefox/WebKit) + exploratoire device-sessies        | Gate-besluit (§10.2), browser-coverage & handmatige findings geformaliseerd                                                                                        |
@@ -607,17 +612,18 @@ als **doel/aspiratie**, niet als huidige werkelijkheid.
 - De testdata en verwachtingen zijn deterministisch: gemockte endpoints, vaste
   fixtures en geen afhankelijkheid van live CI-cijfers.
 
-### Exit criteria — huidige baseline (suite zoals nu, 63 tests)
+### Exit criteria — huidige baseline (suite zoals nu, 80 tests)
 
 1. **Poorten groen** — `npm run check` (typecheck + lint + html-validate) slaagt.
-2. **Suite groen** — 63/63 tests slagen; 0 failures en 0 skipped in het JSON-report.
+2. **Suite groen** — 80/80 tests slagen; 0 failures en 0 skipped in het JSON-report.
 3. **Geen blokkerende of hoge defects** in de gedekte gebieden; bekende
    niet-blokkerende issues zijn gedocumenteerd.
 4. **Determinisme** — de suite is herhaalbaar groen: lokaal met `retries: 0`, CI met
    `retries: 2` als vangnet. Een test die alleen via een retry slaagt, telt als
    **flaky** en moet worden onderzocht (zie §12.1).
-5. **Beperkingen benoemd** — F8 is gepland en de
-   non-functionele fase 4–5 checks ontbreken nog. Die staan als **gepland**
+5. **Beperkingen benoemd** — F8 is gepland, de accessibility-suite (A11Y-01…04,
+   17 tests) is bestaand, en de responsive-, SEO-, content-integriteit-, visual-
+   en performance-checks uit fase 4–5 ontbreken nog. Die staan als **gepland**
    gemarkeerd en blokkeren deze baseline niet.
 
 ### Exit criteria — release-target (na fase 1–7)
@@ -745,7 +751,7 @@ werk, niet als bewijs.
 | G3   | F1…F10                              | `contact-functional.spec.ts`                                    | F1–F7, F9, F10 bestaand; F8 gepland                               | 16 contact-tests                       |
 | G4   | MENU-01…MENU-10                     | `mobile-menu-functional.spec.ts`                                | MENU-01–10 bestaand                                               | 17 menu-tests                          |
 | G5   | RESP-01                             | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
-| G6   | A11Y-01…A11Y-04                     | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
+| G6   | A11Y-01…A11Y-04                     | `accessibility.spec.ts`                                         | Bestaand                                                          | 17 accessibility-tests             |
 | G7   | SEO-01…SEO-04                       | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
 | G8   | LINK-01, LINK-02, IMG-01, HTML-01   | HTML-01 via CI-poort; rest fase 4                               | HTML-01 bestaand; LINK/IMG gepland                                | `npm run validate:html`                |
 | G9   | VIS-01                              | nog te maken (fase 5)                                           | Gepland                                                           | —                                      |
@@ -794,10 +800,16 @@ werk, niet als bewijs.
 | CIH-03 | `ci-history-functional.spec.ts` | `geschiedenis toont een rij per run met een werkende run-link` |
 | CIH-04 | `ci-history-functional.spec.ts` | `runs zonder noemer worden uitgesloten van de totalen` |
 | CIH-05 | `ci-history-functional.spec.ts` | `lege geschiedenis toont placeholders en de placeholder-rij` |
+| A11Y-02/A11Y-03 | `accessibility.spec.ts` | `A11Y-02 en A11Y-03: <pagina> heeft taal, landmarks, alt-teksten, Nederlandse labels en een skip-link` (10 pagina's) |
+| A11Y-01 | `accessibility.spec.ts` | `A11Y-01: het toetsenbord loopt de contractvolgorde over de homepage`; `A11Y-01: het toetsenbord laat het honeypot-veld in het contactformulier overslaan`; `A11Y-01: de focus-indicator is zichtbaar bij toetsenbordnavigatie` |
+| A11Y-03 | `accessibility.spec.ts` | `A11Y-03: de skip-link brengt de focus naar de hoofdinhoud` |
+| A11Y-02 | `accessibility.spec.ts` | `A11Y-02: elk veld van het contactformulier heeft een eigen label` |
+| A11Y-04 | `accessibility.spec.ts` | `A11Y-04: de placeholder heeft voldoende contrast tegen de invoerachtergrond`; `A11Y-04: de hero-tekst blijft leesbaar in forced-colors-modus` |
 | HTML-01 | CI-poort | `npm run validate:html` (geen Playwright-test) |
 
-> Cases zonder rij in deze tabel zijn nog open: F8 is gepland en
-> de non-functionele suites zijn gepland. De tabel beschrijft de bestaande suite.
+> Cases zonder rij in deze tabel zijn nog open: F8 is gepland en de overige
+> non-functionele cases (RESP, SEO, LINK, IMG, VIS, PERF) zijn gepland. De tabel
+> beschrijft de bestaande suite.
 
 ---
 
@@ -806,7 +818,7 @@ werk, niet als bewijs.
 | Onderdeel         | Deliverable                                     | Bron / bewijs                                                          |
 | ----------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
 | Testplan          | dit document, met status per testcase           | `Project-documentation/TESTPLAN.md`                                    |
-| Testsuite         | 6 spec-bestanden, 63 tests                      | `playwright/tests/` + `npx playwright test --list`                     |
+| Testsuite         | 7 spec-bestanden, 80 tests                      | `playwright/tests/` + `npx playwright test --list`                     |
 | Testrapportage    | HTML-report en JSON-report per run              | `playwright/playwright-report/`, `playwright/test-results/report.json` |
 | CI-history        | `docs/data/playwright-history.json` + dashboard | `scripts/ci-summary.mjs`, `automation.html`                            |
 | Kwaliteitspoorten | typecheck, lint en html-validate                | `npm run check`, `playwright.yml`                                      |
