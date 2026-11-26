@@ -86,6 +86,7 @@ export default tseslint.config(
       "playwright/utils/**/*.ts",
       "playwright.config.ts",
       "playwright.local.config.ts",
+      "playwright.unit.config.ts",
     ],
     plugins: { playwright },
     languageOptions: { globals: { ...globals.node } },

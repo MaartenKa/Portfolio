@@ -39,9 +39,19 @@ export default defineConfig({
     {
       name: "chromium",
 
+      // De datasuite in `tests/unit` draait in het browserloze `unit`-project;
+      // dit project loopt die map dus over.
+      testIgnore: "**/tests/unit/**",
+
       use: {
         ...devices["Desktop Chrome"],
       },
+    },
+    {
+      // CIH-06: de datasuite op scripts/ci-summary.mjs. Zonder `use` met devices
+      // start dit project geen browser, want de tests zijn Node-computatie.
+      name: "unit",
+      testDir: "./playwright/tests/unit",
     },
   ]
 

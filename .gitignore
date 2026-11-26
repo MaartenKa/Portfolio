@@ -3,6 +3,8 @@ dist/
 
 playwright/playwright-report/
 playwright/test-results/
+playwright/test-results-unit/
+
 
 .env
 .env.*

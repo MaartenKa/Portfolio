@@ -89,9 +89,16 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      // De datasuite in `tests/unit` hoort bij het browserloze `unit`-project.
+      testIgnore: "**/tests/unit/**",
       use: {
         ...devices["Desktop Chrome"],
       },
+    },
+    {
+      // CIH-06: Node-computatie op scripts/ci-summary.mjs, dus zonder browser.
+      name: "unit",
+      testDir: "./playwright/tests/unit",
     },
   ],
 

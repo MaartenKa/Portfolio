@@ -14,6 +14,7 @@
     "test:local": "playwright test -c playwright.local.config.ts",
     "test:localUi": "playwright test -c playwright.local.config.ts --ui",
     "test:localVideo": "node scripts/view-tests.mjs",
+    "test:ci-summary": "playwright test -c playwright.unit.config.ts",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:headed": "playwright test --headed",
