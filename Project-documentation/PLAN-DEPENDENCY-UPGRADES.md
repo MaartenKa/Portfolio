@@ -246,7 +246,7 @@ zodat het vindbaar blijft voor de volgende ronde.
 | --- | --- | --- |
 | ESLint 10 voegt regels toe | lint-poort faalt in CI | golf 3 pas na een lokale lint-draai; drempel herbouwen (§10) |
 | html-validate 11 schroeft de Node-vloer op (`>= 24.8.0`) | lokale poort valt weg op Node 20 | `engines.node` (golf 2) vóór golf 3; CI is al Node 24 |
-| Playwright 1.65 vraagt verse browsers | lokale runs falen | `npx playwright install`; de CI installeert al elke run (`--with-deps`) |
+| Playwright 1.65 vraagt verse browsers | lokale runs falen | `npx playwright install`; de CI installeert al elke run (`--with-deps chromium`) |
 | upload-artifact v7 zonder `actions: write` | artifact-stappen falen | §8 punt 1, in dezelfde commit |
 | `report.json`-veld `"version"` schuift (1.62.1 → 1.65.x) | de geschiedenis-data krijgt hogere versiewaarden | Gemeten na golf 1: in 1.65 staat de versie in `config.version`, niet meer op het top-level van `report.json`. `scripts/ci-summary.mjs` leest alleen `report.stats` (regels 84-93) en is er onafhankelijk van; dezelfde run via `ci-summary.mjs` leverde `total 41 / passed 41 / passRate 100 / durationMs 83268` op. Geen schema-wijziging nodig. |
 | Pages-cache na de deploy (CI-OVERVIEW §11) | nieuwe cijfers pas na ~10 min zichtbaar | normaal gedrag, geen bug; `workflow_dispatch` plus een reload |

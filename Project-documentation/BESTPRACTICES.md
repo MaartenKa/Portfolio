@@ -425,10 +425,11 @@ npx playwright test
 
 Installeer alleen browsers die de pipeline daadwerkelijk nodig heeft.
 
-> **Projectstatus:** `playwright.yml` gebruikt op dit moment
-> `npx playwright install --with-deps`, terwijl alleen het Chromium-project is
-> geconfigureerd. Dat is een bekende beperking; het verbeterpunt is alleen
-> Chromium te installeren (`--with-deps chromium`). Zie `TESTPLAN.md` §10.3.
+> **Projectstatus:** `playwright.yml` installeert alleen Chromium
+> (`npx playwright install --with-deps chromium`), want er is één `chromium`-project
+> in `playwright.config.ts` en `playwright.local.config.ts`. De vroegere beperking —
+> alle engines bij één project — is in de werkbom opgelost. Zie `TESTPLAN.md` §10.1
+> en §10.3 punt 3.
 
 Gebruik Linux voor CI waar mogelijk (goedkoper en sneller). Schaal parallelism bewust via workers/sharding; een conservatieve default is één worker voor stabiliteit.
 

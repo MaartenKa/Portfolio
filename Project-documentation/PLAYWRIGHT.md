@@ -301,6 +301,14 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    op 1280, `transform: none` op 500 en 499 (PLAN-HERO-SOFT-3D). De viewport-vertakking
    staat in `ResponsivePage.expectViewportContract()`, niet in het test-lichaam.
    Page object: `pages/responsive.page.ts`.
+6. **Node-laag (gepland, CIH-06)** — `tests/unit/` met de component-test op
+   `scripts/ci-summary.mjs`: vaste `report.json` → de vertaling → asserts op de
+   history-entry (formules uit `stats`, `passRate`-afronding, `total = 0`,
+   `no-report`, `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de CLI-args).
+   De runner draait zonder browser (geen `devices`-use, geen `page`), en
+   `npm run test:ci-summary` wordt de vierde CI-poort vóór de browserinstall.
+   **Nog niet gebouwd:** de suite telt 131 tests in 10 spec-bestanden. Plan:
+   `PLAN-CI-HISTORY-TESTS.md` §7.
 
 ### Config (playwright.config.ts)
 
@@ -319,7 +327,9 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   trace en screenshot van **élke** run, headed browser en open HTML-rapport.
   Standaard (`npm run test:local`) blijft de lichte retain-on-failure-stand.
 - `fullyParallel: true`; CI: 2 retries + 1 worker + `forbidOnly`
-- Eén project: **chromium** (Desktop Chrome)
+- Eén project: **chromium** (Desktop Chrome). Het geplande CIH-06-project (`unit`)
+  is een niet-browser project zonder `devices`-use en zonder `page`-fixture; het is
+  nog niet gedefinieerd in de configs.
 
 ## 6. npm scripts
 
@@ -332,6 +342,7 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 | `npm run validate:html`   | `html-validate "docs/*.html"` (testcase HTML-01)          |
 | `npm run check`           | typecheck + lint + html-validate, in één keer             |
 | `npm run check:site`      | live pagina's vóór de suite op HTTP 200 controleren       |
+| `npm run test:ci-summary` | **gepland (CIH-06)** — component-test op `scripts/ci-summary.mjs` zonder browser; nog niet in `package.json` |
 | `npm test`                | `playwright test` (alle tests, live site)                 |
 | `npm run test:local`      | zelfde suite tegen `docs/` via `playwright.local.config.ts` |
 | `npm run test:localVideo`  | kijkmodus: video/trace/screenshot van élke run (`PW_VIEW=1`) |
@@ -546,6 +557,7 @@ kan ook: `npm run test:localUi` (UI mode met watch mode) of `--debug`
 - HTML-validering: `npx html-validate "docs/*.html"`
 - CI-history documentatie: `Project-documentation/CI-PLAYWRIGHT-HISTORY.md`
 - CI-history data: `docs/data/playwright-history.json`
+- CIH-06 (gepland): `scripts/ci-summary.mjs` → `playwright/tests/unit/` + `npm run test:ci-summary`
 - Indexatie: `noindex, nofollow` (alle pagina's) + `docs/robots.txt`
 
 ## 10. README onderhouden

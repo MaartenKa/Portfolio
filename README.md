@@ -165,7 +165,10 @@ een rode poort stopt de suite.
   testplan. `compatibility/`, `e2e/` en `regression/` zijn nog gereserveerd.
 - **De producerende kant is ongetest.** `scripts/ci-summary.mjs` heeft geen eigen
   geautomatiseerde test; de weergavelaag is wél gedekt door vijf UI-tests met gemockte
-  data. De kaart "Suite omvang" is voorlopig een proxy (`max(total)`).
+  data. De kaart "Suite omvang" is voorlopig een proxy (`max(total)`). De
+  component-test (CIH-06) is gescopeerd — niet-browser project
+  `playwright/tests/unit/` in de Playwright-runner, met `npm run test:ci-summary` als
+  CI-poort vóór de browserinstall — en nog niet gebouwd.
 
 ## Contact & licentie
 

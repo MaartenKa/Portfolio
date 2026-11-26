@@ -15,8 +15,11 @@
 > strategie en `PLAYWRIGHT.md` is de projectdoc. Dit bestand is het **plan**: het
 > beschrijft voorstellen en aannames, geen feiten die al in de andere docs staan.
 >
-> **Status:** document. Er is in deze ronde geen code gewijzigd. De
-> TESTPLAN-wijzigingen in §6 zijn voorstellen die nog niet zijn doorgevoerd.
+> **Status:** document, november 2026. Er is in deze ronde geen code gewijzigd. De
+> TESTPLAN-wijzigingen in §6 zijn **doorgevoerd**, en de uitvoeringsvorm van CIH-06 is
+> in deze ronde vastgelegd (§7 en §10): de Playwright-runner in een niet-browser
+> project `unit` met `npm run test:ci-summary` als CI-poort vóór de browserinstall.
+> De code volgt in de volgende ronde.
 
 ## 1. De vraag en het korte antwoord
 
@@ -118,7 +121,7 @@ bot-commit in de git-log en `CI-PLAYWRIGHT-HISTORY.md` §15.
 | Fase | Werk | Waarom | Risico |
 | --- | --- | --- | --- |
 | **A — klaar** | Pooled ratio, `Totaal uitgevoerde tests`, `Totaal geslaagd`, `Suite omvang`, notering, 5 UI-tests, vaste lokale hulpm-config | De kaarten beantwoorden "mijn suite slaagt voor X%" op één consistente manier | — |
-| **B — next** | **CIH-06**: component-test op `scripts/ci-summary.mjs` | De UI is gedekt, de producerende kant niet. Een rekenfout geeft een groene suite én onjuiste kaarten | Laag — geen browser, geen CI-wijziging |
+| **B — next** | **CIH-06**: component-test op `scripts/ci-summary.mjs` — uitvoeringsvorm vastgelegd (niet-browser project `unit` + poort `test:ci-summary`), code volgende ronde | De UI is gedekt, de producerende kant niet. Een rekenfout geeft een groene suite én onjuiste kaarten | Laag — geen browser, geen CI-wijziging |
 | **C** | **Schema v2**: `suiteTests` in de entry, geteld uit de JSON-report; UI valt terug op `max(total)` voor entries zonder veld | `ci-suite-size` is nu een proxy: te hoog bij een krimpende suite, te laag als de grootste run buiten de 30-run window valt | Middel — schema-wijziging, oude entries moeten blijven renderen |
 | **D** | **CIH-08** a11y van de CI-sectie, samen met de A11Y-fase uit `TESTPLAN.md` | De CI-sectie is de meest dynamische plek van de site en dus de meest a11y-gevoelige | Laag |
 | **E** | Productiebewijs herhalen na fase B en C | De keten is één keer bewezen (run #42); na een schema-wijziging is een nieuwe dispatch-run nodig | — |
@@ -138,10 +141,16 @@ fixture report.json (temp)  ->  node scripts/ci-summary.mjs  ->  history.json (t
 Cases: `total` / `passed` / `failed` / `flaky` uit `stats`; `passRate`-afronding;
 `total = 0` → `passRate` 0 met de juiste `conclusion`; ontbrekende report →
 `no-report`; `CI_SUMMARY_STATUS` → `conclusion`; dedup op `runId`; `--max` kapt bij.
-Uitvoering: een Node-script met eigen asserts, of de Playwright-runner zonder
-`page`. Een npm-script `test:ci-summary` maakt het draibaar als poort vóór de
-E2E-suite, in lijn met `TESTPLAN.md` §11 waar typecheck en html-validate al zo'n
-poort zijn.
+Uitvoering (beslist november 2026): de **Playwright-runner zonder browser** — een
+eigen project `unit` in `playwright.config.ts` en `playwright.local.config.ts`, met
+geen `devices`-use en geen `page`-fixture, dus geen browserstart. De cases staan in
+`playwright/tests/unit/ci-summary.spec.ts`, zodat `npx playwright test --list` de
+CIH-06-cases mee telt en de traceability in `TESTPLAN.md` §15 bij één telling blijft.
+Het npm-script `test:ci-summary` draait dat project als **poort vóór de
+browserinstall** in `playwright.yml`, in lijn met `TESTPLAN.md` §11 waar typecheck,
+lint en html-validate al zo'n poort zijn. Een kaal Node-script met eigen asserts is
+het alternatief; het is niet gekozen, omdat die cases dan buiten de suite-telling en
+de traceability vallen.
 
 ## 8. Openstaande kleine punten
 
@@ -149,8 +158,8 @@ poort zijn.
 | --- | --- | --- | --- |
 | 1 | Cron-comment zei "om 06:17 UTC", cron is `17 18 * * *` | `.github/workflows/playwright.yml` regel 4 | **Opgelost** (comment zegt 18:17 UTC); zie `CI-OVERVIEW.md` §12.1 |
 | 2 | `ci-suite-size` is `max(total)`, dus een proxy | `src/ts/main.ts` | Fase C |
-| 3 | Geen test op `ci-summary.mjs` | `scripts/` | Fase B (CIH-06) |
-| 4 | Lege mappen `compatibility/`, `e2e/`, `regression/`; `accessibility/` is nu gevuld met de suite (17 tests) | `playwright/tests/` | `TESTPLAN.md` fase 4 (RESP/SEO/LINK/IMG) en fase 5–7 |
+| 3 | Geen test op `ci-summary.mjs` | `scripts/` | Fase B (CIH-06): opzet en uitvoeringsvorm vastgelegd (nov 2026), code volgende ronde |
+| 4 | Lege mappen `compatibility/`, `e2e/`, `regression/`; `accessibility/` is nu gevuld met de suite (17 tests); `unit/` is gepland voor CIH-06 | `playwright/tests/` | `TESTPLAN.md` fase 4 (RESP/SEO/LINK/IMG) en fase 5–7 |
 | 5 | Typo in de config-comment ("ont geeneret") | `playwright.config.ts` regel 9 | **Opgelost** (leesbare zin) |
 | 6 | Raw `&` in `curriculum.html` | `docs/curriculum.html` | **Opgelost** (`&amp;`); html-validate draait als CI-poort en is groen op alle 10 pagina's |
 | 7 | `docs/js/ts/main.js` moet handmatig gebouwd en gecommit worden | `npm run build` | Gedocumenteerd in `CI-OVERVIEW.md` §12.4 |
@@ -184,3 +193,5 @@ Voor werk vóór deploy: `playwright.local.config.ts` (zie `PLAYWRIGHT.md` §7).
 | Labels "(laatste run)" expliciet | De laatste-run kaart en de ratio-kaart zijn niet met elkaar te vergelijken |
 | Mock boven live data in de UI-tests | Determinisme; de verwachting mag niet afhangen van wat er die nacht draaide |
 | Datalaag en keten apart documenteren, niet in de UI-tests proppen | Eén testsoort per laag; een UI-test die ook de CI wil valideren wordt onbetrouwbaar en traag |
+| CIH-06 in de Playwright-runner, als niet-browser project `unit` | De pyramide-basis blijft in dezelfde toolchain en in dezelfde telling: `npx playwright test --list` toont de cases en `TESTPLAN.md` §15 houdt één traceability-lijst. Geen browserstart, dus geen Pages- of deploy-afhankelijkheid |
+| `test:ci-summary` als CI-poort vóór de browserinstall | De poort is geen browser-test; vóór de install valt een rekenfout goedkoop, in dezelfde keten als typecheck, lint en html-validate (`TESTPLAN.md` §11 entry-criteria) |

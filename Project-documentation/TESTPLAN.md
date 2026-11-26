@@ -172,6 +172,8 @@ checks**. De "unit-laag" wordt gedeeltelijk vervangen door directe DOM/ARIA-asse
             │  a11y, SEO, links, visual, perf)│
             ├─────────────────────────────┤
             │  Component / DOM-checks        │  ← ARIA-staat, structuur, honeypot
+            ├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┤
+            │  Node-laag (CIH-06, gepland)   │  ← scripts/ci-summary.mjs, zonder browser
             └─────────────────────────────┘
 ```
 
@@ -180,6 +182,10 @@ checks**. De "unit-laag" wordt gedeeltelijk vervangen door directe DOM/ARIA-asse
   via Page Objects.
 - **Non-functional:** viewport/a11y/SEO/links/visual/perf — eigen spec-bestanden.
 - **E2E/acceptance:** volledige gebruikersflows (navigatie, formulier-gebruik, menu).
+- **Node-laag (gepland, CIH-06):** de producerende kant van de CI-history
+  (`scripts/ci-summary.mjs`) zonder browser, als `npm run test:ci-summary`-poort vóór
+  de browserinstall. Nu nog leeg: alle 131 tests zijn browser-cases
+  (`PLAN-CI-HISTORY-TESTS.md` §7 fase B).
 
 > **Conventie:** gebruik Page Objects voor UI-interactie; alleen de lightweight
 > smoke-laag mag rechtstreeks `page` gebruiken (netwerk/infrastructuurcheck).
@@ -195,7 +201,7 @@ formulier-submit naar de externe dienst Formward. De toewijzing is daarom:
 
 | ISTQB-niveau     | Toepassing in dit project                                                                                                                  |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Component / unit | (bijna) niet van toepassing — de enige module-logic (`main.ts`) wordt via DOM/ARIA-asserts gedekt                                          |
+| Component / unit | (bijna) niet van toepassing — de enige module-logic (`main.ts`) wordt via DOM/ARIA-asserts gedekt; de Node-script-logica (`scripts/ci-summary.mjs`) krijgt de geplande CIH-06-test (PLAN-CI-HISTORY-TESTS §7) |
 | Integration      | interactie formulier ↔ Formward (**system integration** met een gemockte externe interface); geen component-integratie in de klassieke zin |
 | System           | de volledige site als geheel (Playwright E2E)                                                                                              |
 | Acceptance       | systeemtest tegen de acceptatiecriteria van §3.3/§11 — géén formele UAT met eindgebruikers                                                 |
@@ -504,9 +510,13 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 > Tests, Geslaagd, Flaky) en géén `data-testid` per rij; rijen worden via
 > `getByRole("row")` geteld. Er is **géén** aparte JSON-schema- of 404-fallback-test **in dit spec-bestand**.
 >
-> **Roadmap:** CIH-06 (unit/component-test op `scripts/ci-summary.mjs`), CIH-07
-> (schema v2 met `suiteTests`) en CIH-08 (a11y van de CI-sectie) staan in
-> `PLAN-CI-HISTORY-TESTS.md` §5 en §7; die zijn **gepland**, niet uitgevoerd.
+> **Roadmap:** CIH-06 (de component-test op `scripts/ci-summary.mjs`) is november 2026
+> **gescopeerd**: de Playwright-runner in een **niet-browser project**
+> (`playwright/tests/unit/`, geen `devices`-use en geen `page`-fixture), met
+> `npm run test:ci-summary` als CI-poort vóór de browserinstall, na `validate:html`.
+> De cases staan in `PLAN-CI-HISTORY-TESTS.md` §7. CIH-07 (schema v2 met `suiteTests`)
+> en CIH-08 (a11y van de CI-sectie) volgen daarna. **Gepland**, niet uitgevoerd: de
+> suite telt nog 131 tests in 10 spec-bestanden.
 
 ---
 
@@ -554,7 +564,7 @@ impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish
 |  3   | Testdata centraliseren (`utils/test-data.ts`) + F4/F6/F7/F10-cases; F8 blijft gepland | Formulier-testdataset centraal; F-matrix grotendeels gedekt                                                                                                        |
 |  4   | Non-functioneel: responsive, a11y, SEO, links/img checks — **af** (a11y 17, SEO 32, content-integrity 11, responsive 8) | A11Y-01…04, SEO-01…04, LINK-01/02, IMG-01 en RESP-01 groen op alle 10 pagina's; VIS-01 en PERF-01 zijn fase 5                                                                                             |
 |  5   | Visual regression + Lighthouse-drempels                                                                                         | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                                                                            |
-|  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → test → artifacts → history   | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit                                                                         |
+|  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → test → artifacts → history   | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit; Chromium-only browserinstall uitgevoerd. De history-**data** wordt pas gedekt door CIH-06 (geplande `test:ci-summary`-poort)                                |
 |  7   | Optioneel: pre-deploy/PR-gate (push-trigger op de poorten), cross-browser (Firefox/WebKit) + exploratoire device-sessies        | Gate-besluit (§10.2), browser-coverage & handmatige findings geformaliseerd                                                                                        |
 | 8  | Showcase-media: video's van de suite op de portfolio-site, wanneer de portfolio-inrichting vastligt | Kijkmodus-artifacten uit §10.4 gekozen, als site-asset opgeslagen en ingebet op automation.html; de site-copy is bijgewerkt |
 
@@ -571,16 +581,22 @@ steps:
   - run: npm run typecheck # tsc --noEmit
   - run: npm run lint # ESLint 10, eslint-plugin-playwright
   - run: npm run validate:html # HTML-01: structuur van de site-pagina's
-  - run: npx playwright install --with-deps # installeert alle browsers
+  - run: npx playwright install --with-deps chromium # alleen het ene chromium-project
   - run: npm run test # suite (1 worker in CI, 2 retries)
   - run: node scripts/ci-summary.mjs # Playwright JSON-report → CI-history
   - uses: actions/upload-artifact # HTML report + JSON report + CI-history
 ```
 
-> **Let op:** de workflow installeert met `npx playwright install --with-deps`
-> alle browsers, terwijl `playwright.config.ts` alleen het `chromium`-project
-> definieert. Alleen Chromium installeren (`... --with-deps chromium`) is een
-> gepland optimalisatiepunt (§10.3).
+> **Uitgevoerd:** de workflow installeert alleen Chromium
+> (`npx playwright install --with-deps chromium`), want `playwright.config.ts`
+> definieert alleen het `chromium`-project. De vroegere beperking — alle engines
+> installeren bij één project — is in de werkbom opgelost (§10.3 punt 3,
+> BESTPRACTICES §18).
+>
+> **Gepland:** de vierde poort `npm run test:ci-summary` — CIH-06, de component-test
+> op `scripts/ci-summary.mjs` — staat in de keten na `validate:html` en vóór de
+> browserinstall, als niet-browser-poort (PLAN-CI-HISTORY-TESTS §7 fase B). De code is
+> er nog niet, dus deze snippet toont de drie bestaande poorten.
 
 ### 10.2 Gate-besluit (open beslispunt)
 
@@ -597,7 +613,7 @@ als **doel/aspiratie**, niet als huidige werkelijkheid.
 | --- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | 1   | CI draait met `workers: 1`                                                           | De CI-run is niet parallel; `fullyParallel: true` betekent alleen dat tests parallel-draaibaar zijn ontworpen | Bewust; lokaal draait de suite met default workers                              |
 | 2   | `retries: 2` in CI; de smoke-set heeft `retries: 0`                                   | Een retry kan flakiness maskeren; smoke-hostfouten moeten juist failen                        | Bewust vangnet; een test die alleen via een retry slaagt telt als flaky (§12.1) |
-| 3   | `npx playwright install --with-deps` installeert alle browsers                       | Onnodige downloadtijd                                                                                         | Verbeterpunt: alleen `chromium` installeren                                     |
+| 3   | `npx playwright install --with-deps chromium` — alleen het `chromium`-project | Was: onnodige downloadtijd bij alle engines                                      | **Opgelost** in de werkbom (BESTPRACTICES §18, §10.1)                          |
 | 4   | trace/screenshot/video-bestanden in `playwright/test-results/` worden niet als artifact geüpload; alleen `report.json` wordt geüpload | Failure-debugging via trace ontbreekt in CI                                                                   | Verbeterpunt: `test-results/` uploaden bij failure                              |
 | 5   | Geen pre-deploy gate                                                                 | Een push naar `main` wordt niet automatisch op de suite gevalideerd                                           | Open beslispunt (§10.2)                                                         |
 | 6   | Live host kan tijdelijk 5xx/timeout geven                                            | Smoke-tests kunnen als flaky worden geregistreerd als de host niet beschikbaar is                             | Mitigatie: `check:site`-preflight; `BasePage.gotoWithRetry()` voor smoke; hostfout telt als infra, niet als testflake |
@@ -642,6 +658,10 @@ moeten definitief zijn; dan wordt deze taak uitgevoerd. Nu is er de taakomschrij
 - HTML-validiteit schoon: `npm run validate:html` → 0 errors op alle 10 pagina's (HTML-01).
   De raw `&` in `docs/curriculum.html` is opgeruimd naar `&amp;` (het was een
   openstaand, gedocumenteerd defect). De validering draait vóór de tests in `playwright.yml`.
+- **Gepland als vierde poort:** `npm run test:ci-summary` (CIH-06, de component-test op
+  `scripts/ci-summary.mjs`) draait als niet-browser-poort vóór de browserinstall, in
+  dezelfde keten als deze drie poorten. De code is er nog niet, dus de drie bestaande
+  poorten zijn de entry-criteria.
 - Geen openstaande blokkerende defects uit de vorige run.
 - De testdata en verwachtingen zijn deterministisch: gemockte endpoints, vaste
   fixtures en geen afhankelijkheid van live CI-cijfers.
@@ -660,7 +680,8 @@ moeten definitief zijn; dan wordt deze taak uitgevoerd. Nu is er de taakomschrij
    `retries: 2` als vangnet. Een test die alleen via een retry slaagt, telt als
    **flaky** en moet worden onderzocht (zie §12.1).
 5. **Beperkingen benoemd** — F8 is gepland; VIS-01 en PERF-01 uit fase 5 ontbreken nog;
-   de E2E-laag (S1–S6) en de pyramide-basis (CIH-06) zijn nog niet gebouwd. De
+   de E2E-laag (S1–S6) en de pyramide-basis (CIH-06 als `npm run test:ci-summary`-poort;
+   scoping in PLAN-CI-HISTORY-TESTS §7) zijn nog niet gebouwd. De
    accessibility-, responsive-, SEO- en content-integriteit-suite zijn bestaand en lokaal
    groen: A11Y-01…04 (17), RESP-01 (8), SEO-01…04 (32) en LINK-01/LINK-02/IMG-01 (11).
 
@@ -688,7 +709,7 @@ het acceptatieniveau van een volledige release, niet de huidige stand.
 | Pass-rate               | 100% pass, 0 fail, 0 skipped, 0 unexpected                                                                                                                                                      | Playwright JSON-report                                           |
 | Flaky-aandeel           | 0% (geen test die alleen via een retry slaagt)                                                                                                                                                  | JSON-report `flaky`-veld + 5 groene runs met `retries: 0` lokaal |
 | Dekking van de F-matrix | 9/10 cases bestaand (F8 gepland)                                                                                                                                                      | §7                                                               |
-| CI-history              | CIH-01…CIH-05 bestaand en groen (5/5)                                                                                                                                                           | `ci-history-functional.spec.ts`                                  |
+| CI-history              | CIH-01…CIH-05 bestaand en groen (5/5); CIH-06 gepland als niet-browser-poort                       | `ci-history-functional.spec.ts`; CIH-06: `playwright/tests/unit/` + `npm run test:ci-summary` (gepland) |
 
 > Let op: de CI draait met `workers: 1` (`playwright.config.ts`). "Parallel" betekent
 > hier dat tests **parallel-draaibaar ontworpen** zijn (`fullyParallel: true`), niet dat
@@ -796,7 +817,7 @@ werk, niet als bewijs.
 | G10  | PERF-01                             | nog te maken (fase 5)                                           | Gepland                                                           | —                                      |
 | G11  | procesdoel — geen producttestcase   | `playwright.config.ts`, CI-run                                  | Bewezen door CI-config, niet door een testcase                    | `fullyParallel: true`; CI `workers: 1` |
 | G12  | procesdoel — geen producttestcase   | `.github/workflows/playwright.yml`                              | Poorten + suite bestaand; pre-deploy gate open beslispunt (§10.2) | workflow-run + artifacts               |
-| G13  | CIH-01…CIH-05; CIH-06/07/08 gepland | `ci-history-functional.spec.ts`                                 | Bestaand: CIH-01…05                                               | 5 CI-history-tests                     |
+| G13  | CIH-01…CIH-05; CIH-06/07/08 gepland | `ci-history-functional.spec.ts`; CIH-06: `playwright/tests/unit/` (gepland)       | Bestaand: CIH-01…05                                               | 5 CI-history-tests; CIH-06 als `npm run test:ci-summary`-poort gepland |
 
 > G11 en G12 zijn **procesdoelen**; ze worden niet door een Playwright-testcase
 > bewezen. Daarom geldt de dekkingseis uit §11 alleen voor de productdoelen

@@ -72,8 +72,12 @@ bijhouden" én "site publiceren".
 7a. **Live-site-preflight** — `npm run check:site`: controleert alle live
    pagina's op HTTP 200 met retries. Een 5xx/timeout is een omgevingsfout, geen
    testflake; bij een rode check starten de Playwright-tests niet.
-8. **Browser** — `npx playwright install --with-deps`: Chromium plus de
-   Linux-bibliotheken die Chromium nodig heeft.
+7b. **Gepland als vierde poort** — `npm run test:ci-summary` (CIH-06): de
+   component-test op `scripts/ci-summary.mjs`, zonder browser, op dezelfde plek als
+   de drie poorten. De code is er nog niet.
+8. **Browser** — `npx playwright install --with-deps chromium`: Chromium plus de
+   Linux-bibliotheken die Chromium nodig heeft. Alleen Chromium, want de configs
+   kennen één `chromium`-project.
 9. **Tests** — `npm run test` → `playwright test`. De suite gaat naar
    `https://maartenka.github.io/Portfolio/`, dus de live site en niet lokaal.
 10. **Rapporten ontstaan** — `playwright/playwright-report/` (HTML) en
@@ -128,8 +132,8 @@ en **met welke rechten**.
 - `env: CI: "1"` → Playwright ziet dat het CI is, dus `retries: 2`, `workers: 1` en
   `forbidOnly: true` uit `playwright.config.ts` gaan op.
 - Stappen: checkout → setup-node → `npm ci` → poorten → `check:site` →
-  browsers installeren → `npm run test` → drie artifact-uploads → history-script
-  → commit/push.
+  Chromium installeren (`--with-deps chromium`, want er is één `chromium`-project) →
+  `npm run test` → drie artifact-uploads → history-script → commit/push.
 - De commit-stap draait alleen op `refs/heads/main`, zet `github-actions[bot]` als
   auteur, doet `git pull --rebase --autostash`, voegt alleen de history-JSON toe,
   commit alleen bij echte wijziging, en pusht naar `HEAD:${{ github.ref }}`.
@@ -164,6 +168,13 @@ Dit bestand bepaalt **wat er in het dagboekje komt te staan**.
   moment van genereren.
 - **Faalt niet** als `report.json` ontbreekt of geen bruikbare `stats` heeft: dan
   schrijft hij nullen met `no-report` (of `unknown` als er wél stats zijn).
+- **Gepland: eigen test (CIH-06).** De report→history-vertaling heeft nog geen
+  geautomatiseerde test. De opzet is vastgelegd in `PLAN-CI-HISTORY-TESTS.md` §7:
+  vaste `report.json` → `node scripts/ci-summary.mjs` → `history.json` → asserts op
+  de entry. Uitvoeringsvorm: de Playwright-runner in een **niet-browser project**
+  (`playwright/tests/unit/`, geen `devices`-use, geen `page`-fixture), met
+  `npm run test:ci-summary` als CI-poort vóór de browserinstall. De code volgt in de
+  volgende ronde.
 
 #### `docs/data/playwright-history.json` — het dagboekje
 
@@ -231,6 +242,7 @@ Twee dingen die opvallen:
 | `playwright/tests/seo/seo.spec.ts` | SEO-suite (SEO-01…SEO-04, 32 tests) — de waarden worden uit de DOM gelezen, omdat meta-attributes in de bron op aparte regels staan |
 | `playwright/pages/responsive.page.ts` | Page object `ResponsivePage`: geen horizontale scroll, nav-contract per viewport, compacte layout (full-width knoppen, gestapelde hero-knoppen), hero-tilt, en `expectViewportContract()` met de viewport-vertakking in het page object |
 | `playwright/tests/responsive/responsive.spec.ts` | Responsive-suite (RESP-01, 8 tests) op 7 viewports uit `RESPONSIVE_VIEWPORTS`, alle 10 pagina's per viewport, inclusief de CSS-grenzen 850/849 en 500/499 |
+| `playwright/tests/unit/ci-summary.spec.ts` | **gepland (CIH-06)**: de component-test op `scripts/ci-summary.mjs` in een niet-browser project — formules uit `stats`, `passRate`-afronding, `total = 0`, `no-report`, `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de CLI-args. Nog niet gebouwd; de telling blijft 131 tests |
 | `playwright/tests/compatibility/`, `e2e/`, `regression/` | Nu lege mappen: de plek waar cross-browser (fase 7), gebruikersflows en een latere integriteitssuite komen. De content-integriteit (LINK/IMG) en SEO staan inmiddels in eigen mappen |
 | `Project-documentation/` | `PLAYWRIGHT.md`, `TESTPLAN.md`, `TEST-SUITE-STATUS.md`, `BESTPRACTICES.md`, `CI-PLAYWRIGHT-HISTORY.md` en dit bestand |
 
@@ -435,7 +447,10 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
 6. **De producerende kant heeft geen eigen test.** `scripts/ci-summary.mjs` wordt
    lokaal ad-hoc gecontroleerd; er draait geen geautomatiseerde test op de
    report→history-vertaling. De weergavelaag is wél gedekt door
-   `ci-history-functional.spec.ts`. Plan: CIH-06 in `PLAN-CI-HISTORY-TESTS.md`.
+   `ci-history-functional.spec.ts`. **Uitvoeringsvorm november 2026 vastgelegd**
+   (`PLAN-CI-HISTORY-TESTS.md` §7 en §10): niet-browser project
+   `playwright/tests/unit/` in de Playwright-runner, `npm run test:ci-summary` als
+   CI-poort vóór de browserinstall. De code is nog niet gebouwd.
 7. **De suite draait tegen de live site.** Nieuwe UI-tests slagen pas ná deploy plus
    de cache-periode uit §11. Voor lokaal werk aan `docs/` staat er een vaste
    hulpm-config in de repo: `playwright.local.config.ts` (`npm run test:local`,
@@ -444,7 +459,10 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    (`tsc --noEmit`), `npm run lint` (ESLint 10 met `eslint.config.mjs`) en
    `npm run validate:html` (alle 10 pagina's slagen). Ze staan vóór de
    browserinstall, zodat een rode poort de run direct en goedkoop stop.
-   Zie `TESTPLAN.md` §11 (entry-criteria) en §10 fase 6.
+   Zie `TESTPLAN.md` §11 (entry-criteria) en §10 fase 6. De browserinstall is
+   teruggebracht naar **Chromium alleen** (`--with-deps chromium`), omdat de
+   configs één `chromium`-project definiëren; de vierde poort
+   `npm run test:ci-summary` (CIH-06) is gepland op dezelfde plek.
 
 
 
