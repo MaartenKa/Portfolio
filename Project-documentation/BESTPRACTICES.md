@@ -886,6 +886,14 @@ Vermijd ad-hoc configs met eigen poorten (3000 en 3123 zijn historical; één va
 lokale poort houdt handleidingen en artifacts consistent). Tijdelijke specs zelf
 verwijderen na verifiëring, bewezen gedrag naar `playwright/tests/`.
 
+Dezelfde hulp-config kent een kijkmodus met de env-vlag `PW_VIEW=1`
+(`npm run test:localVideo`): `video: { mode: 'on' }`, `trace: 'on'`,
+`screenshot: 'on'`, headed en open HTML-rapport, zodat ook een geslaagde run na te
+kijken is. `retain-on-failure` verwijdert de video van de geslaagde runs; er is dan
+niets te kijken. De standaardrun blijft die lichte variant. Artifacten staan in
+`playwright/test-results/` (gitignore-gebied) en als bijlage in het HTML-rapport;
+de CI en de `report.json`-flow (`CI-PLAYWRIGHT-HISTORY.md §11.3`) blijven onverandert.
+
 ## 36. Commentaar en documentatie
 
 Commentaar is geen tweede implementatie. Het legt intentie, randvoorwaarden en
