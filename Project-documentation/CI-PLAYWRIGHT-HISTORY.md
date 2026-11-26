@@ -255,12 +255,12 @@ concurrency:
 
 De relevante CI-stappen:
 
-- **Poorten en browserinstall vóór de suite** — `npm run typecheck`, `npm run lint`
-  en `npm run validate:html`, dan de preflight hieronder, dan
-  `npx playwright install --with-deps chromium`: alleen Chromium, want de configs
-  kennen één `chromium`-project. De geplande vierde poort is
-  `npm run test:ci-summary` (CIH-06) — zonder browser, na `validate:html` en vóór
-  de browserinstall; de code is er nog niet.
+- **Vier poorten en de browserinstall vóór de suite** — `npm run typecheck`, `npm run lint`,
+  `npm run validate:html` en `npm run test:ci-summary` (CIH-06: de datasuite van 8 tests in
+  het browserloze `unit`-project, via `playwright.unit.config.ts`), dan de preflight
+  hieronder, dan `npx playwright install --with-deps chromium`: alleen Chromium, want de
+  configs kennen één `chromium`-project. De datasuite draait dus vóór de browserinstall,
+  met een eigen `outputDir` zodat de suite-rapporten voor `ci-summary.mjs` schoon blijven.
 
 0. **Check live site availability** — `npm run check:site` (`scripts/site-check.mjs`)
    controleert alle live `docs/*.html`-pagina's op HTTP 200 met retries. Faalt
@@ -501,14 +501,18 @@ Exacte commando's:
 
 ```bash
 npm run test:local   # = playwright test -c playwright.local.config.ts (webServer start automatisch)
+npm run test:ci-summary  # = playwright test -c playwright.unit.config.ts (datasuite CIH-06, zonder webServer en browser)
 node scripts/ci-summary.mjs --report=playwright/test-results/report.json --history=playwright/test-results/local-history.json --max=30
 ```
 
-De lokale run met de huidige suite gaf:
+De lokale run met de suite van toen gaf destijds:
 
 ```text
 53 passed
 ```
+
+De meting na de CIH-06-bouw (november 2026) is **139 passed** in de lokale suite en
+**8 passed** in de datasuite (`npm run test:ci-summary`).
 
 (48 bestaande tests plus de 5 CI-history tests uit
 `playwright/tests/functional/ci-history-functional.spec.ts`.)
@@ -610,12 +614,13 @@ echte CI-cijfers tonen.
   de minuut; GitHub Pages serveert met `max-age=600`, dus JSON, site-JS en HTML
   kunnen tot tien minuten oud zijn. `cache: "no-store"` omzeilt de browsercache,
   niet de Pages-cache. Een harde reload na een deploy is verwacht gedrag.
-- **De producerende kant heeft geen eigen test.** `scripts/ci-summary.mjs` draait in
-  de CI zonder geautomatiseerde controle op de report→entry-vertaling; de
-  weergavelaag is wél gedekt door vijf UI-tests met gemockte data. De component-test
-  CIH-06 is gescopeerd — niet-browser project `playwright/tests/unit/` met poort
-  `npm run test:ci-summary` vóór de browserinstall — en nog niet gebouwd. Zie
-  `PLAN-CI-HISTORY-TESTS.md` §7 en `TEST-SUITE-STATUS.md` §3 punt 4.
+- **De producerende kant heeft eigen tests.** `scripts/ci-summary.mjs` draait sinds
+  november 2026 in de datasuite CIH-06: 8 tests in `playwright/tests/unit/ci-summary.spec.ts`
+  (formules, `passRate`-afronding, `total = 0`, `no-report`, `CI_SUMMARY_STATUS`, dedup op
+  `runId`, `--max`-kappen en de CLI-args), in het browserloze `unit`-project met de poort
+  `npm run test:ci-summary` vóór de browserinstall. De weergavelaag is gedekt door vijf
+  UI-tests met gemockte data. De CI-run met de datasuite als poort is nog niet gedraaid.
+  Zie `PLAN-CI-HISTORY-TESTS.md` §7 en `TEST-SUITE-STATUS.md` §2.
 - De gepubliceerde HTML bevat altijd de placeholders; de cijfers ontstaan pas in
   de DOM na de fetch. "Bron bekijken" is daarom nooit een bewijs van de cijfers.
 
@@ -653,15 +658,17 @@ Twee conclusies die de moeite waard zijn:
 De vijf tests in `playwright/tests/functional/ci-history-functional.spec.ts`
 testen de **weergavelaag**: `main.ts` zet een history-JSON om naar kaarten en
 tabel, met de endpoint gemockt via `page.route()` zodat de verwachting
-deterministisch is. De **datalaag** (`scripts/ci-summary.mjs`: report → entry) en
-de **CI-keten** zelf (commit → Pages → browser) hebben géén geautomatiseerde test;
-§15 is daarvan het handmatige bewijs.
+deterministisch is. De **datalaag** (`scripts/ci-summary.mjs`: report → entry) is sinds november 2026 gedekt
+door de datasuite CIH-06; de **CI-keten** zelf (commit → Pages → browser) heeft géén
+geautomatiseerde test, en §15 is daarvan het handmatige bewijs.
 
-De indeling per laag, de voorgestelde testcase-IDs (CIH-01…CIH-08), de koppeling
+De indeling per laag, de testcase-IDs (CIH-01…CIH-08), de koppeling
 aan `TESTPLAN.md` en de roadmap staan in `PLAN-CI-HISTORY-TESTS.md`.
 
-De uitvoeringsvorm van CIH-06 is november 2026 vastgelegd: de Playwright-runner in
-een **niet-browser project** `unit` (`playwright/tests/unit/ci-summary.spec.ts`,
+De uitvoeringsvorm van CIH-06 is november 2026 **gebouwd**: de Playwright-runner in het
+**niet-browser project** `unit` (`playwright/tests/unit/ci-summary.spec.ts`, 8 tests,
 geen `devices`-use, geen `page`-fixture), met `npm run test:ci-summary` als CI-poort
-vóór de browserinstall. De code is nog niet gebouwd; de suite telt 131 tests in 10
-spec-bestanden. Poort en project zijn dus nog niet in `package.json` en de configs.
+vóór de browserinstall en de gate-config `playwright.unit.config.ts` (eigen `outputDir`,
+`list`-reporter, `retries: 0`). De suite telt 139 tests in 11 spec-bestanden; project en
+poort staan in `playwright.config.ts`, `playwright.local.config.ts` en `package.json`.
+De CI-run met de datasuite als poort is nog niet gedraaid.

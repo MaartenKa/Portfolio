@@ -8,28 +8,33 @@
 
 ## 1. Baseline
 
-- **131 tests in 10 spec-bestanden.**
+- **139 tests in 11 spec-bestanden.**
 - Smoke: 10, homepage: 12, contact: 16, mobiel menu: 17, CI-history: 5, footer: 3,
-  accessibility: 17, content-integrity: 11, SEO: 32, responsive: 8.
+  accessibility: 17, content-integrity: 11, SEO: 32, responsive: 8, CIH-06 datasuite: 8.
 - `npm run check` → groen.
-- `npm run test:local` → **131/131 tests geslaagd** (gemeten na stap 2, november 2026).
-- `npx playwright test --list` → 131 tests in 10 files.
-- Sequencering: lokaal **131/131**. De laatste gemeten live-stand is **79/80** van de
+- `npm run test:ci-summary` → **8/8 geslaagd** (de datasuite van CIH-06, zonder browser).
+- `npm run test:local` → **139/139 tests geslaagd** (gemeten na de CIH-06-bouw, november 2026).
+- `npx playwright test --list` → 139 tests in 11 files.
+- Sequencering: lokaal **139/139**. De laatste gemeten live-stand is **79/80** van de
   80-suite: de skip-link-focustest (A11Y-03) faalde op GitHub Pages, omdat
   `tabindex="-1"` op `main#hoofdinhoud` nog niet gedepployed was — de werkbom bevat de
-  fix wel. De 131-suite heeft nog niet op de live site gedraaid: de suites
-  content-integrity, SEO en responsive zijn alleen lokaal gemeten. Live groen na deploy
+  fix wel. De 139-suite heeft nog niet op de live site gedraaid: de suites
+  content-integrity, SEO en responsive zijn alleen lokaal gemeten, en de datasuite van
+  CIH-06 draait lokaal zonder browser. Live groen na deploy
   + de Pages-cache (`max-age=600`).
 - **Laatste CI-record in `docs/data/playwright-history.json`:** run **71** met `total`
-  **63** (63/63, 100%). De suite telt inmiddels 131 tests: de 131-testsuite heeft dus nog
+  **63** (63/63, 100%). De suite telt inmiddels 139 tests: de 139-testsuite heeft dus nog
   **nooit in de CI** gedraaid. De history-JSON is de bron van waarheid voor de README-claim
   over de laatste run (PLAYWRIGHT §10).
-- **Werkbom na de documentatieronde (november 2026):** de browserinstall in de CI is
-  teruggebracht naar Chromium (`playwright.yml`: `--with-deps chromium`), en de
-  uitvoeringsvorm van CIH-06 is vastgelegd in `PLAN-CI-HISTORY-TESTS.md` §7 en §10,
-  `TESTPLAN.md` §4, §8.5, §10.1, §10.3, §11 en §15, `BESTPRACTICES.md` §18,
-  `CI-OVERVIEW.md` §5 en §12, `PLAYWRIGHT.md` §5 en §6 en `README.md`. De suite en de
-  poorten zijn niet veranderd: `npm run check` groen en 131 tests in 10 files.
+- **Werkbom na de CIH-06-bouw (november 2026):** de datasuite staat in
+  `playwright/tests/unit/ci-summary.spec.ts` (8 cases uit `PLAN-CI-HISTORY-TESTS.md` §7),
+  het niet-browser project `unit` staat in `playwright.config.ts`,
+  `playwright.local.config.ts` en de nieuwe gate-config `playwright.unit.config.ts`,
+  `npm run test:ci-summary` staat in `package.json`, en de CI-poort staat in
+  `playwright.yml` na `validate:html` en vóór `check:site` en de browserinstall.
+  Chromium-only install (`--with-deps chromium`) staat in de workflow. Gemeten:
+  `npm run check` groen, `npm run test:ci-summary` 8/8, `npm run test:local` 139/139 en
+  `--list` 139 tests in 11 files. De CI-run met deze stand is nog niet gedraaid.
 
 ## 2. Wat is gedaan
 
@@ -60,7 +65,7 @@
 | **Site-constanten** | `SITE_BASE_URL`, `OG_IMAGE_URL`, `TITLE_PREFIX`, `MIN_TITLE_LENGTH`/`MAX_TITLE_LENGTH`, `MIN_DESCRIPTION_LENGTH`/`MAX_DESCRIPTION_LENGTH`, `ROBOTS_CONTENT`, de OG-waarden (`OG_TYPE`, `OG_LOCALE`, `OG_SITE_NAME`, `OG_IMAGE_WIDTH`, `OG_IMAGE_HEIGHT`, `TWITTER_CARD`), `SITEMAP_PAGES` (8), `NON_SITEMAP_PAGES` (2), `SITE_ASSETS` (6) en `LOCAL_IMAGE_SOURCES`. De grenswaarden zijn gemeten op de 10 pagina's, niet geschat. |
 | **Fix stap 2** | Drie page objects (`content.page.ts`, `seo.page.ts`, `responsive.page.ts`) en drie fixtures (`contentPage`, `seoPage`, `responsivePage`). `SeoPage` krijgt de `request`-fixture voor `sitemap.xml` en `robots.txt`; de fixtures navigeren niet, de specs doen dat per pagina. De viewport-vertakking staat in `ResponsivePage.expectViewportContract()`, niet in het test-lichaam. |
 | **Chromium-only browserinstall (workflows)** | `.github/workflows/playwright.yml` installeert `npx playwright install --with-deps chromium`, omdat `playwright.config.ts` en `playwright.local.config.ts` elk één project `chromium` definiëren. Open punt §3 punt 7 en audit §4.1 punt 8 zijn damit opgelost in de werkbom (TESTPLAN §10.1 en §10.3 punt 3, BESTPRACTICES §18). De CI-run bevestigt dit pas in een run met het nieuwe workflow-bestand. |
-| **CIH-06-scoping (code volgende ronde)** | De uitvoeringsvorm is vastgelegd in `PLAN-CI-HISTORY-TESTS.md` §7 en §10: de component-test op `scripts/ci-summary.mjs` draait in de Playwright-runner in een **niet-browser project** `unit` (`playwright/tests/unit/ci-summary.spec.ts`, geen `devices`-use, geen `page`-fixture), met de 8 cases uit §7 — formules uit `stats`, `passRate`-afronding, `total = 0`, `no-report`, `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de CLI-args. Poortplaatsing: `npm run test:ci-summary` in de CI-keten na `validate:html` en vóór de browserinstall. Er is nog geen code; de suite telt daardoor nog 131 tests in 10 files. |
+| **CIH-06 datasuite** | `playwright/tests/unit/ci-summary.spec.ts` met 8 tests (CIH-06a…h) op `scripts/ci-summary.mjs`: formules uit `stats`, `passRate`-afronding op één decimaal, `total = 0` en getalnormalisatie, `no-report` bij een ontbrekend rapport, `CI_SUMMARY_STATUS`-normalisatie, dedup op `runId`, `--max`-kappen en de decoding van de CLI-args met de run-URL uit de CI-omgeving. Het project `unit` is browserloos (geen `devices`-use, geen `page`-fixture); de gate-config `playwright.unit.config.ts` heeft een eigen `outputDir` en alleen de `list`-reporter, zodat het suite-rapport voor `ci-summary.mjs` schoon blijft. `npm run test:ci-summary` is de CI-poort vóór de browserinstall. Elke test schrijft in een eigen temp-map, dus `docs/data/playwright-history.json` blijft onaangeraakt. |
 
 ## 3. Wat nog open is
 
@@ -69,9 +74,9 @@
 | 1 | **F8** | Dubbel submit / maximaal één POST is niet geautomatiseerd. | Productbesluit: submit-guard toevoegen, F8 meten met `dblclick` en een `≤ 1`-request-assert, of F8 als niet-lokaal-automatiseerbaar documenteren. |
 | 2 | **SM-03 live fallback** | Lokaal is `404.html` direct getest; unknown-path-fallback is een live/GitHub-Pages-check. | Live fallback handmatig of via live-only test afdekken. |
 | 3 | **Non-functioneel** | A11Y (17), RESP-01 (8), SEO-01…04 (32) en LINK-01/02 + IMG-01 (11) zijn gebouwd en lokaal groen. VIS-01 en PERF-01 ontbreken nog; screenreader-gedrag blijft een handmatige check. | VIS-01 en PERF-01: besluit over visual baselines en Lighthouse (stap 8 in §6). |
-| 4 | **CI-history data/keten** | CIH-06 (ci-summary), CIH-07 (schema v2) en CIH-08 (a11y CI-sectie) ontbreken. De uitvoeringsvorm van CIH-06 is november 2026 vastgelegd: niet-browser project `unit` in de Playwright-runner, `playwright/tests/unit/ci-summary.spec.ts`, 8 cases uit `PLAN-CI-HISTORY-TESTS.md` §7, en poort `npm run test:ci-summary` vóór de browserinstall. | CIH-06 bouwen op de vastgelegde opzet (plan §7 fase B), daarna CIH-07 en CIH-08. |
+| 4 | **CI-history data/keten** | CIH-06 is gebouwd: 8 datasuite-tests, het `unit`-project en de CI-poort. CIH-07 (schema v2 met `suiteTests`) en CIH-08 (a11y CI-sectie) ontbreken. | CIH-07 en CIH-08 op de opzet van `PLAN-CI-HISTORY-TESTS.md` §7 fase C en D. |
 | 5 | **Showcase-media op de portfolio** | De kijkmodus is gereed en gemeten; de video's op de site staan gepland in TESTPLAN §10.4, en `docs/automation.html` belooft ze "in een volgende stap". | Uitvoeren zodra de portfolio-inrichting vastligt: keus van de suite-onderdelen, `test.use` met `video: 'on'`, de clip naar een site-asset en de site-copy bijwerken. |
-| 6 | **Dekking van de theorie** | 2 van de 11 productdoelen (G9, G10) hebben geen test; G5, G7 en G8 zijn sinds stap 2 gedekt. De pyramide-basis is leeg; de E2E-laag is leeg; §4.2 noemt de gedeclareerde theorieonderdelen die geen test hebben. | De acties staan in §6, stap 3, 4, 5, 7 en 8. |
+| 6 | **Dekking van de theorie** | 2 van de 11 productdoelen (G9, G10) hebben geen test; G5, G7 en G8 zijn sinds stap 2 gedekt. De pyramide-basis is sinds de CIH-06-bouw gevuld (8 datasuite-tests); de E2E-laag is leeg; §4.2 noemt de gedeclareerde theorieonderdelen die geen test hebben. | De acties staan in §6, stap 4, 5, 7 en 8. |
 
 ## 4. Theorie–praktijkaudit (november 2026)
 
@@ -103,8 +108,8 @@ reconstructie uit het geheugen. De bijbehorende acties staan in §6.
 
 | Theoriebron | Wat het claimt | Wat de repo dekt | Gevolg |
 | --- | --- | --- | --- |
-| `TESTPLAN.md` §11 dekkings-metric: elk productdoel G1–G10 en G13 heeft ≥1 bestaande testcase; geplande cases tellen niet | Volledige doeldekking | G5 (responsive), G7 (SEO), G9 (visual) en G10 (performance) hebben geen test: **4 van de 11 productdoelen, 36%**. G5 staat in §2 als high; R7 is in §9 de hoogste impact × waarschijnlijkheid. | De eigen metriek is niet gehaald, en de grootste risico's (R7, R8, R9) zijn precies de open punten. |
-| `TESTPLAN.md` §4 pyramide en `BESTPRACTICES.md` §23: "Gebruik niet alles als E2E; unit/integration/API voor logica" | E2E als kern met een lagere laag eronder | Alle 131 tests zijn browser-E2E. `scripts/ci-summary.mjs` (formules, `no-report`, dedup op `runId`, `--max`) heeft geen enkele test; `src/ts/main.ts` wordt alleen via gemockte UI-cijfers gedekt (`PLAN-CI-HISTORY-TESTS.md` §2: laag B "**Nee**"). | De pyramide-basis is leeg. CIH-06 is het punt dat dit sluit: de uitvoeringsvorm (niet-browser project `unit` + `test:ci-summary`-poort vóór de browserinstall) is november 2026 vastgelegd in `PLAN-CI-HISTORY-TESTS.md` §7 en §10, de code volgt. |
+| `TESTPLAN.md` §11 dekkings-metric: elk productdoel G1–G10 en G13 heeft ≥1 bestaande testcase; geplande cases tellen niet | Volledige doeldekking | G9 (visual) en G10 (performance) hebben geen test: **2 van de 11 productdoelen**. G5, G7 en G8 zijn sinds stap 2 gedekt (responsive 8, SEO 32, content-integrity 11); G13 is gedekt door 5 UI-tests plus de datasuite CIH-06 (8 tests). | De metriek is gehaald behalve voor G9 en G10, die in fase 5 staan. |
+| `TESTPLAN.md` §4 pyramide en `BESTPRACTICES.md` §23: "Gebruik niet alles als E2E; unit/integration/API voor logica" | E2E als kern met een lagere laag eronder | Van de 139 tests zijn 131 browser-tests en 8 datasuite-tests. `scripts/ci-summary.mjs` is sinds de CIH-06-bouw gedekt (formules, `no-report`, dedup op `runId`, `--max`, `CI_SUMMARY_STATUS`, CLI-decoding) in `playwright/tests/unit/ci-summary.spec.ts`; `src/ts/main.ts` wordt alleen via gemockte UI-cijfers gedekt (`PLAN-CI-HISTORY-TESTS.md` §2: laag B "**Ja**", laag C "**Nee**"). | De pyramide-basis is gevuld; de E2E-kernlaag blijft leeg. |
 | `TESTPLAN.md` §4: "E2E/acceptance: volledige gebruikersflows" als kern van de pyramide, en `CI-OVERVIEW.md` §5 (bestandsgids) als gereserveerde map | De E2E-laag als projectkern | Geen testcase, geen doel, geen fase, geen exit-criterium, geen testnaam; `playwright/tests/e2e/` is leeg. | De kernlaag van de pyramide is leeg. |
 | `TESTPLAN.md` §5.4 Compatibility (⭐⭐⭐⭐) en §6.4/§7 cross-browser | Firefox en WebKit als risicogedekte engines | Alleen Chromium; `compatibility/` is leeg (fase 7). | Het testtype met de hoogste prioriteit heeft geen test. |
 | `TESTPLAN.md` §5.4 Security (⭐⭐) | HTTPS, honeypot-check, ongewenste navigatie | Geen security-ID in de matrix en geen security-deliverable in §16. De honeypot-structuur is wél gedekt (F5, A11Y-01). | Type met een prioriteit en zonder testcase. |
@@ -133,7 +138,7 @@ Expliciet vastgelegd, zodat de audit niet als afrekening gelezen wordt.
   handmatig met een geldige submit gecheckt (TESTPLAN §5.3, BESTPRACTICES §10: niet blind
   alles mocken).
 - **Test isolation, typed fixtures, Nederlandse testnamen met ID's, traceability (TESTPLAN
-  §15), de preflight `npm run check:site` en de drie kwaliteitspoorten vóór de tests** — in
+  §15), de preflight `npm run check:site` en de vier kwaliteitspoorten vóór de tests** — in
   lijn met de eigen richtlijnen en met de workflow.
 - **Geen `waitForTimeout` en geen raw locators in de page objects** — gemeten met grep, en
   lint groen op `--max-warnings=0`.
@@ -191,11 +196,14 @@ Expliciet vastgelegd, zodat de audit niet als afrekening gelezen wordt.
   in `robots.txt`). SEO-04 assert de onderlinge consistentie van de gepubliceerde
   bestanden en dat de indexatie-keus op elke pagina staat; de spanning zelf is een
   documentvinding (TESTPLAN §8.4, §10.2).
-- **CI-uitvoering van de 131-suite is een open punt**: de history-record staat op
-  63/63 (run 71) en de 131-suite heeft nog niet op de live site gedraaid. De
-  browserinstall in de CI is in deze ronde wél teruggebracht naar Chromium
-  (`playwright.yml`: `--with-deps chromium`), zodat een dispatch-run met het nieuwe
-  workflow-bestand de 131-suite én de Chromium-install in één keer kan bewijzen.
+- **CI-uitvoering van de 139-suite is een open punt**: de history-record staat op
+  63/63 (run 71) en de 139-suite heeft nog niet op de live site gedraaid. De
+  browserinstall in de CI is wél teruggebracht naar Chromium
+  (`playwright.yml`: `--with-deps chromium`) en de CIH-06-poort
+  (`npm run test:ci-summary`) staat vóór de browserinstall, zodat een dispatch-run met
+  het nieuwe workflow-bestand de 139-suite, de Chromium-install én de datasuite-poort in
+  één keer kan bewijzen. De CIH-06-tests in `docs/data/playwright-history.json` moeten
+  dan een `total` van 139 in de record opleveren.
 
 ## 6. Voorgestelde volgorde
 
@@ -211,13 +219,15 @@ Expliciet vastgelegd, zodat de audit niet als afrekening gelezen wordt.
    1280×800, 850×1024, 849×1024, 500×640, 499×640, 390×844 en de ondergrens 320×568. De
    `360×640` uit het eerdere plan is niet opgenomen: de partitie ≤500px wordt getest op
    499×640, 390×844 en 320×568. A11Y-01…04 was al af.
-3. **CIH-06** als `test:ci-summary`-poort op `scripts/ci-summary.mjs` — **de volgende
-   stap**: vult de lege pyramide-basis (audit §4.2) en is de eerste niet-browser test in
-   de repo. De uitvoeringsvorm is november 2026 **vastgelegd** (Playwright-runner in een
-   niet-browser project `unit`, `playwright/tests/unit/ci-summary.spec.ts`, poort vóór de
-   browserinstall — `PLAN-CI-HISTORY-TESTS.md` §7 en §10); de code is de eerstvolgende
-   bouw. In deze ronde staan de scoping en de chromium-only browserinstall in de werkbom.
-   Daarna CIH-07 (schema v2) en CIH-08 (a11y CI-sectie).
+3. **CIH-06** als `test:ci-summary`-poort op `scripts/ci-summary.mjs` — **uitgevoerd,
+   november 2026**: 8 datasuite-tests in `playwright/tests/unit/ci-summary.spec.ts` in het
+   niet-browser project `unit` (geen `devices`, geen `page`-fixture), met de eigen
+   gate-config `playwright.unit.config.ts` (eigen `outputDir`, `list`-reporter, `retries: 0`),
+   de npm-script en de CI-poort vóór de browserinstall in `playwright.yml`. Vult de
+   pyramide-basis (audit §4.2) en is de eerste niet-browser test in de repo. Gemeten:
+   `npm run check` groen, `npm run test:ci-summary` 8/8, `npm run test:local` 139/139 en
+   `--list` 139 tests in 11 files. De CI-run met deze stand is nog niet gedraaid (open punt
+   §5). Daarna CIH-07 (schema v2) en CIH-08 (a11y CI-sectie).
 4. **De E2E-laag: flow-tests voor S1–S6** in `playwright/tests/e2e/`, met een doel (G14),
    ID's, een plaats in de §15-traceability en de F-matrix als decision table. Besluit vooraf,
    omdat dit de pyramide-top vult en `functional/` deels raakt.

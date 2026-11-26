@@ -72,9 +72,12 @@ bijhouden" én "site publiceren".
 7a. **Live-site-preflight** — `npm run check:site`: controleert alle live
    pagina's op HTTP 200 met retries. Een 5xx/timeout is een omgevingsfout, geen
    testflake; bij een rode check starten de Playwright-tests niet.
-7b. **Gepland als vierde poort** — `npm run test:ci-summary` (CIH-06): de
-   component-test op `scripts/ci-summary.mjs`, zonder browser, op dezelfde plek als
-   de drie poorten. De code is er nog niet.
+7b. **Vierde poort** — `npm run test:ci-summary` (CIH-06): de datasuite op
+   `scripts/ci-summary.mjs`, gebouwd in `playwright/tests/unit/ci-summary.spec.ts`
+   (8 tests) en draaiend in het browserloze `unit`-project via
+   `playwright.unit.config.ts` (eigen `outputDir`, `list`-reporter, `retries: 0`). De
+   poort staat na `validate:html` en vóór `check:site` en de browserinstall, dus een
+   rekenfout faalt zonder downloadkosten.
 8. **Browser** — `npx playwright install --with-deps chromium`: Chromium plus de
    Linux-bibliotheken die Chromium nodig heeft. Alleen Chromium, want de configs
    kennen één `chromium`-project.
@@ -105,15 +108,16 @@ Paden zijn relatief aan de repo-root (`Portfolio/`).
 
 | Bestand | Rol in één zin | Wat het met CI te maken heeft | Risico bij aanpassen |
 | --- | --- | --- | --- |
-| `package.json` | Opdrachtenlijst en dev-afhankelijkheden (`@playwright/test`, `typescript`, `http-server`, `@types/node`) | CI roept `npm ci` en `npm run test` op; `"test": "playwright test"` is dus hét CI-commando | Commando hernoemen → de workflow-stap faalt |
+| `package.json` | Opdrachtenlijst en dev-afhankelijkheden (`@playwright/test`, `typescript`, `http-server`, `@types/node`) | CI roept `npm ci`, `npm run test:ci-summary` en `npm run test` op; `"test": "playwright test"` is het CI-commando van de suite en `"test:ci-summary"` dat van de datasuite | Commando hernoemen → de workflow-stap faalt |
 | `package-lock.json` | De exacte versie-lock | `npm ci` weigert te draaien zonder lockbestand; dit maakt CI reproduceerbaar | Handmatig aanpassen → `npm ci` crasht |
 | `playwright.config.ts` | De speelwijze van de suite: `testDir`, reporters, retries, workers, `baseURL`, timeouts, trace/screenshot/video | Bepaalt wat er draait, én dat er een JSON-report komt waar `ci-summary.mjs` uit leest | JSON-reporter of `outputFile` veranderen → het dagboekje vult niet meer |
-| `tsconfig.json` | Type-check-config (`noEmit`) voor `src/`, `playwright/tests`, `playwright/pages`, `playwright/utils`, `playwright/fixtures` en `playwright.config.ts` | Haalt tests en site in één type-check, lokaal én via `npm run build` | Map weglaten → typefouten blijven onopgemerkt |
+| `tsconfig.json` | Type-check-config (`noEmit`) voor `src/`, `playwright/tests`, `playwright/pages`, `playwright/utils`, `playwright/fixtures`, `playwright.config.ts`, `playwright.local.config.ts` en `playwright.unit.config.ts` | Haalt tests en site in één type-check, lokaal én via `npm run build` | Map weglaten → typefouten blijven onopgemerkt |
 | `tsconfig.site.json` | Bouwt uitsluitend `src/ts/` naar `docs/js/ts` | Dit is de build van de site-JS die de JSON rendert | `outDir` veranderen → `automation.html` mist zijn JS |
 | `.gitignore` | Negeert `playwright/playwright-report/`, `playwright/test-results/`, `node_modules/`, `dist/`, `.env*` | Houdt de rauwe rapporten uit de repo; `docs/data/` blijft wél getrackt | `docs/data/` per ongeluk negeren → de site krijgt een 404 op de fetch |
 | `.htmlvalidate.json` | HTML-regels (`html-validate:recommended`, lowercase doctype, selfclosing voids) | Bewaakt de HTML van `docs/*.html`, dus ook de `data-testid`-ankers van de CI-sectie | Regels versoepelen → kapotte HTML die de UI-tests niet vangen |
-| `eslint.config.mjs` | ESLint 10 flat config: `src/`, `playwright/` en `scripts/`, met de Playwright-plugin op de testbestanden | `npm run lint` is een van de drie poorten vóór de tests in de workflow | Config weglaten of rules uitzetten → de lint-poort in CI faalt of maskeert defects |
+| `eslint.config.mjs` | ESLint 10 flat config: `src/`, `playwright/` en `scripts/`, met de Playwright-plugin op de testbestanden | `npm run lint` is een van de vier poorten vóór de tests in de workflow | Config weglaten of rules uitzetten → de lint-poort in CI faalt of maskeert defects |
 | `playwright.local.config.ts` | Lokale override van de speelfile-config: neemt `playwright.config.ts` over en zet `baseURL` op `http://127.0.0.1:8080/` | Draait de suite tegen de lokale `docs/`-build, wanneer de live site de nieuwe markup nog niet bevat | In CI gebruiken: dan test je lokaal in plaats van live |
+| `playwright.unit.config.ts` | De gate-config van de datasuite CIH-06: browserloos project `unit`, `list`-reporter, eigen `outputDir` en `retries: 0` | `npm run test:ci-summary` is de vierde poort vóór de browserinstall; de suite-rapporten blijven erdoor schoon | `outputDir` of reporter veranderen → `ci-summary.mjs` leest een ander rapport dan de suite |
 | `AGENTS.md` | Wijsplaatje naar de relevante documentatie | Verwijst naar de docs in `Project-documentation/` | — |
 
 ### 5.2 De CI-kern: vier bestanden
@@ -131,7 +135,8 @@ en **met welke rechten**.
   twee runs pushen niet tegelijk naar dezelfde branch.
 - `env: CI: "1"` → Playwright ziet dat het CI is, dus `retries: 2`, `workers: 1` en
   `forbidOnly: true` uit `playwright.config.ts` gaan op.
-- Stappen: checkout → setup-node → `npm ci` → poorten → `check:site` →
+- Stappen: checkout → setup-node → `npm ci` → vier poorten (`typecheck`, `lint`,
+  `validate:html`, `test:ci-summary`) → `check:site` →
   Chromium installeren (`--with-deps chromium`, want er is één `chromium`-project) →
   `npm run test` → drie artifact-uploads → history-script → commit/push.
 - De commit-stap draait alleen op `refs/heads/main`, zet `github-actions[bot]` als
@@ -168,13 +173,16 @@ Dit bestand bepaalt **wat er in het dagboekje komt te staan**.
   moment van genereren.
 - **Faalt niet** als `report.json` ontbreekt of geen bruikbare `stats` heeft: dan
   schrijft hij nullen met `no-report` (of `unknown` als er wél stats zijn).
-- **Gepland: eigen test (CIH-06).** De report→history-vertaling heeft nog geen
-  geautomatiseerde test. De opzet is vastgelegd in `PLAN-CI-HISTORY-TESTS.md` §7:
-  vaste `report.json` → `node scripts/ci-summary.mjs` → `history.json` → asserts op
-  de entry. Uitvoeringsvorm: de Playwright-runner in een **niet-browser project**
-  (`playwright/tests/unit/`, geen `devices`-use, geen `page`-fixture), met
-  `npm run test:ci-summary` als CI-poort vóór de browserinstall. De code volgt in de
-  volgende ronde.
+- **Eigen test (CIH-06) — gebouwd november 2026.** De report→history-vertaling draait
+  in `playwright/tests/unit/ci-summary.spec.ts`: 8 tests met vaste rapportstatistiek →
+  `node scripts/ci-summary.mjs` in een temp-map → asserts op de geschreven entry
+  (formules, `passRate`-afronding, `total = 0` en getalnormalisatie, `no-report`,
+  `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de decoding van de CLI-args).
+  Uitvoeringsvorm: de Playwright-runner in het **niet-browser project** `unit`
+  (geen `devices`-use, geen `page`-fixture), met `npm run test:ci-summary` als
+  CI-poort vóór de browserinstall en de gate-config
+  `playwright.unit.config.ts` (eigen `outputDir`, alleen de `list`-reporter). De
+  CI-run met deze stand is nog niet gedraaid.
 
 #### `docs/data/playwright-history.json` — het dagboekje
 
@@ -242,7 +250,7 @@ Twee dingen die opvallen:
 | `playwright/tests/seo/seo.spec.ts` | SEO-suite (SEO-01…SEO-04, 32 tests) — de waarden worden uit de DOM gelezen, omdat meta-attributes in de bron op aparte regels staan |
 | `playwright/pages/responsive.page.ts` | Page object `ResponsivePage`: geen horizontale scroll, nav-contract per viewport, compacte layout (full-width knoppen, gestapelde hero-knoppen), hero-tilt, en `expectViewportContract()` met de viewport-vertakking in het page object |
 | `playwright/tests/responsive/responsive.spec.ts` | Responsive-suite (RESP-01, 8 tests) op 7 viewports uit `RESPONSIVE_VIEWPORTS`, alle 10 pagina's per viewport, inclusief de CSS-grenzen 850/849 en 500/499 |
-| `playwright/tests/unit/ci-summary.spec.ts` | **gepland (CIH-06)**: de component-test op `scripts/ci-summary.mjs` in een niet-browser project — formules uit `stats`, `passRate`-afronding, `total = 0`, `no-report`, `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de CLI-args. Nog niet gebouwd; de telling blijft 131 tests |
+| `playwright/tests/unit/ci-summary.spec.ts` | **gebouwd (CIH-06)**: 8 datasuite-tests op `scripts/ci-summary.mjs` in het niet-browser `unit`-project — formules uit `stats`, `passRate`-afronding, `total = 0` en getalnormalisatie, `no-report`, `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de CLI-args met de run-URL. Telling: 139 tests in 11 files |
 | `playwright/tests/compatibility/`, `e2e/`, `regression/` | Nu lege mappen: de plek waar cross-browser (fase 7), gebruikersflows en een latere integriteitssuite komen. De content-integriteit (LINK/IMG) en SEO staan inmiddels in eigen mappen |
 | `Project-documentation/` | `PLAYWRIGHT.md`, `TESTPLAN.md`, `TEST-SUITE-STATUS.md`, `BESTPRACTICES.md`, `CI-PLAYWRIGHT-HISTORY.md` en dit bestand |
 
@@ -434,8 +442,9 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    `responsive/` (8 tests), en lokaal groen. Voor cross-browser staat fase 7 in het plan;
    voor `e2e/` staat er geen testcase, geen ID en geen roadmapfase — de map is de
    placeholder voor gebruikersflows. De CI-cijfers tonen dus nog alleen smoke en functioneel:
-   de laatst gelogde CI-run is 63/63 (run 71), en de suite van 131 tests heeft nog niet in
-   de CI gedraaid. `accessibility/` is gevuld (17 tests).
+   de laatst gelogde CI-run is 63/63 (run 71), en de suite van 139 tests heeft nog niet in
+   de CI gedraaid. `accessibility/` is gevuld (17 tests) en `unit/` met de datasuite
+   CIH-06 (8 tests, zonder browser).
 4. **`docs/js/ts/main.js` is een gebouwd bestand in de repo.** Na een wijziging in
    `src/ts/main.ts` moet `npm run build` gedraaid worden en het resultaat gecommit;
    de CI bouwt het niet.
@@ -444,25 +453,24 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    suite krimpt en te laag als de grootste run buiten de 30-run window valt. Plan:
    een `suiteTests`-veld in schema v2, geteld uit de JSON-report zelf — zie
    `PLAN-CI-HISTORY-TESTS.md` §7.
-6. **De producerende kant heeft geen eigen test.** `scripts/ci-summary.mjs` wordt
-   lokaal ad-hoc gecontroleerd; er draait geen geautomatiseerde test op de
-   report→history-vertaling. De weergavelaag is wél gedekt door
-   `ci-history-functional.spec.ts`. **Uitvoeringsvorm november 2026 vastgelegd**
-   (`PLAN-CI-HISTORY-TESTS.md` §7 en §10): niet-browser project
-   `playwright/tests/unit/` in de Playwright-runner, `npm run test:ci-summary` als
-   CI-poort vóór de browserinstall. De code is nog niet gebouwd.
+6. **De producerende kant heeft eigen tests.** `scripts/ci-summary.mjs` draait in de
+   datasuite CIH-06: 8 tests in `playwright/tests/unit/ci-summary.spec.ts`, in de
+   Playwright-runner zonder browser, als CI-poort `npm run test:ci-summary` vóór de
+   browserinstall met de gate-config `playwright.unit.config.ts`. De weergavelaag is
+   gedekt door `ci-history-functional.spec.ts`. De CI-run met deze stand is nog niet
+   gedraaid: de history-record staat nog op 63/63 (run 71).
 7. **De suite draait tegen de live site.** Nieuwe UI-tests slagen pas ná deploy plus
    de cache-periode uit §11. Voor lokaal werk aan `docs/` staat er een vaste
    hulpm-config in de repo: `playwright.local.config.ts` (`npm run test:local`,
    poort 8080).
-8. **Kwaliteitspoorten draaien vóór de tests in de workflow.** `npm run typecheck`
-   (`tsc --noEmit`), `npm run lint` (ESLint 10 met `eslint.config.mjs`) en
-   `npm run validate:html` (alle 10 pagina's slagen). Ze staan vóór de
-   browserinstall, zodat een rode poort de run direct en goedkoop stop.
-   Zie `TESTPLAN.md` §11 (entry-criteria) en §10 fase 6. De browserinstall is
-   teruggebracht naar **Chromium alleen** (`--with-deps chromium`), omdat de
-   configs één `chromium`-project definiëren; de vierde poort
-   `npm run test:ci-summary` (CIH-06) is gepland op dezelfde plek.
+8. **Vier kwaliteitspoorten draaien vóór de tests in de workflow.** `npm run typecheck`
+   (`tsc --noEmit`), `npm run lint` (ESLint 10 met `eslint.config.mjs`),
+   `npm run validate:html` (alle 10 pagina's slagen) en
+   `npm run test:ci-summary` (de datasuite CIH-06: 8 tests zonder browser via
+   `playwright.unit.config.ts`). Ze staan vóór de browserinstall, zodat een rode poort
+   de run direct en goedkoop stop. Zie `TESTPLAN.md` §11 (entry-criteria) en §10 fase 6.
+   De browserinstall is teruggebracht naar **Chromium alleen**
+   (`--with-deps chromium`), omdat de configs één `chromium`-project definiëren.
 
 
 
