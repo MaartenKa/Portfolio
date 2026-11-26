@@ -3,11 +3,14 @@ import { test as base } from "@playwright/test";
 import { BasePage } from "../pages/base.page";
 import { FooterPage } from "../pages/footer.page";
 import { AccessibilityPage } from "../pages/a11y.page";
+import { ContentIntegrityPage } from "../pages/content.page";
 import { FormwardMock } from "./formward.mock";
 import { CiHistoryPage } from "../pages/ci-history.page";
 import { ContactPage } from "../pages/contact.page";
 import { HomePage } from "../pages/home.page";
 import { NavigationPage } from "../pages/mobile.page";
+import { ResponsivePage } from "../pages/responsive.page";
+import { SeoPage } from "../pages/seo.page";
 
 /**
  * Getypeerde Playwright-fixtures voor de portfolio-suite.
@@ -24,6 +27,9 @@ type Fixtures = {
   basePage: BasePage;
   footerPage: FooterPage;
   a11yPage: AccessibilityPage;
+  contentPage: ContentIntegrityPage;
+  seoPage: SeoPage;
+  responsivePage: ResponsivePage;
   formwardMock: FormwardMock;
 };
 
@@ -65,6 +71,22 @@ export const test = base.extend<Fixtures>({
   basePage: async ({ page }, use) => {
     // Voor de lichte smoke-checks op pagina's zonder eigen page object.
     await use(new BasePage(page));
+  },
+
+  contentPage: async ({ page }, use) => {
+    // De content-integrity-suite navigeert zelf per pagina.
+    await use(new ContentIntegrityPage(page));
+  },
+
+  seoPage: async ({ page, request }, use) => {
+    // De suite leest de DOM van de pagina's en de sitemap/robots via de
+    // request-fixture, zonder browserrendering voor die twee bestanden.
+    await use(new SeoPage(page, request));
+  },
+
+  responsivePage: async ({ page }, use) => {
+    // De viewport wordt per test gezet; de fixture levert het page object.
+    await use(new ResponsivePage(page));
   },
 });
 
