@@ -18,9 +18,9 @@ met pass-rate, groene streaks en de status van de laatste runs.
 
 | Kenmerk                | Waarde                                              |
 | ---------------------- | --------------------------------------------------- |
-| Testsuite              | **80 tests** in 7 spec-bestanden                    |
+| Testsuite              | **131 tests** in 10 spec-bestanden                   |
 | Browser                | Chromium (Desktop Chrome)                           |
-| Laatste gelogde CI-run | **41/41 geslaagd** (100%; suite telt nu 80 tests)  |
+| Laatste gelogde CI-run | **63/63 geslaagd** (run 71, 100%; suite telt nu 131 — de 131-suite heeft nog niet in de CI gedraaid) |
 | CI                     | GitHub Actions — dagelijks om 18:17 UTC + handmatig |
 | Kwaliteitspoorten      | `tsc --noEmit`, ESLint 10, html-validate            |
 | Stack                  | HTML/CSS, TypeScript, Playwright 1.65, GitHub Pages |
@@ -32,6 +32,10 @@ met pass-rate, groene streaks en de status van de laatste runs.
   en asserts op zichtbaarheid, attributen en URL's.
 - **Structuur** — Page Object Model met `base.page.ts` als basis, gedeelde testdata
   en herbruikbare fixtures.
+- **Non-functionele dekking** — accessibility (toetsenbord, landmarks, alt-teksten,
+  contrast), responsive meetbare checks op de echte CSS-grenzen, SEO (canonical,
+  Open Graph, Twitter card, sitemap, robots) en content-integriteit van interne links,
+  externe link-attributen en asset-referenties.
 - **CI/CD** — kwaliteitspoorten vóór de suite, daarna artifacts en een
   geautomatiseerde history-update.
 - **Rapportage** — Playwright HTML- en JSON-reports, samengevat tot een CI-dashboard.
@@ -113,7 +117,10 @@ Project-documentation/         # testplan, CI-documentatie, best practices, verb
 | CI-history UI    | `playwright/tests/functional/ci-history-functional.spec.ts`  |      5 |
 | Footer           | `playwright/tests/functional/footer-functional.spec.ts`      |      3 |
 | Accessibility    | `playwright/tests/accessibility/accessibility.spec.ts`       |     17 |
-| **Totaal**       | 7 spec-bestanden                                             | **80** |
+| Content-integrity | `playwright/tests/content-integrity/content-integrity.spec.ts` |     11 |
+| SEO              | `playwright/tests/seo/seo.spec.ts`                          |     32 |
+| Responsive       | `playwright/tests/responsive/responsive.spec.ts`            |      8 |
+| **Totaal**       | 10 spec-bestanden                                            | **131** |
 
 ## Kwaliteitspoorten
 
@@ -148,12 +155,14 @@ een rode poort stopt de suite.
   `npm run test:local`, dat tegen de lokale `docs/` draait. Een 5xx/timeout van de
   host wordt door `npm run check:site` vóór de suite afgevangen en geldt als
   infrastructuurprobleem, niet als testflake.
-- **Non-functionele suites zijn slechts gedeeltelijk gebouwd.** De accessibility-suite
-  (A11Y-01…A11Y-04, 17 tests) draait in Chromium met eigen DOM-asserts; axe-core en
-  Lighthouse zijn niet opgenomen (`package.json` heeft geen extra dependency), dus
-  screenreader-gedrag blijft een handmatige check. `compatibility/`, `e2e/` en
-  `regression/` zijn nog gereserveerd; SEO-, LINK-, responsive-, visual- en
-  performance-tests staan als fase 4–7 in het testplan.
+- **Non-functionele suites zijn nu gebouwd voor responsive, SEO en content-integriteit.**
+  De accessibility-suite (A11Y-01…A11Y-04, 17 tests), de responsive-suite (RESP-01, 8 tests
+  op 7 viewports, inclusief de CSS-grenzen 850/849 en 500/499), de SEO-suite (SEO-01…04,
+  32 tests) en de content-integriteit-suite (LINK-01, LINK-02, IMG-01, 11 tests) draaien in
+  Chromium met eigen DOM-asserts. axe-core en Lighthouse zijn niet opgenomen
+  (`package.json` heeft geen extra dependency), dus screenreader-gedrag en
+  performance-meting blijven handmatig; visual baselines (VIS-01) staan als fase 5 in het
+  testplan. `compatibility/`, `e2e/` en `regression/` zijn nog gereserveerd.
 - **De producerende kant is ongetest.** `scripts/ci-summary.mjs` heeft geen eigen
   geautomatiseerde test; de weergavelaag is wél gedekt door vijf UI-tests met gemockte
   data. De kaart "Suite omvang" is voorlopig een proxy (`max(total)`).

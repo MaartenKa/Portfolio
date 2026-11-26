@@ -210,12 +210,12 @@ Twee dingen die opvallen:
 | Bestand | Rol |
 | --- | --- |
 | `playwright/pages/base.page.ts` | Basisklasse voor page objects: console- én page-errors worden één keer per `page` geregistreerd, `goto()` wacht op `load` (niet op `networkidle`), `gotoWithRetry()` retryt host-5xx voor de smoke-checks en `expectNoRuntimeErrors()` assert dat de lijst leeg is |
-| `playwright/fixtures/test-fixtures.ts` | Typed fixtures voor `homePage`, `contactPage`, `navPage`, `ciHistoryPage`, `basePage` en `formwardMock`; specs importeren `test`/`expect` hieruit |
+| `playwright/fixtures/test-fixtures.ts` | Typed fixtures voor `homePage`, `contactPage`, `navPage`, `ciHistoryPage`, `basePage`, `footerPage`, `a11yPage`, `contentPage`, `seoPage`, `responsivePage` en `formwardMock`; specs importeren `test`/`expect` hieruit. `seoPage` krijgt de `request`-fixture voor `sitemap.xml` en `robots.txt` |
 | `playwright/fixtures/formward.mock.ts` | `FormwardMock`: route-mock met request-registratie; `expectRequestCount` bewijst dat invalid submits geen request veroorzaken |
 | `playwright/pages/home.page.ts` | Page object voor de homepagina (CTA's, navigatie en card-links) |
 | `playwright/pages/contact.page.ts` | Page object voor contact: formuliervelden, validatie-asserts, honeypot en externe links; de Formward-mock staat in `FormwardMock` |
 | `playwright/pages/mobile.page.ts` | Mobiele menu-data: `NAV_ITEM_TEST_IDS` en `NAV_ITEM_URLS` |
-| `playwright/utils/test-data.ts` | Gedeelde constanten: `FORMWARD_URL`, `THANK_YOU_PAGE`, `EMAIL`, `GITHUB_URL`, `LINKEDIN_URL`, `OTHER_PAGES_TO_TEST` (8 pagina's), viewports `DESKTOP_VIEWPORT` en `MOBILE_VIEWPORT`, en formulierdatasets `VALID_CONTACT`, `INVALID_EMAIL_CONTACT`, `OPTIONAL_SUBJECT_CONTACT`, `BOUNDARY_CONTACT` en `SPECIAL_CHARS_CONTACT` |
+| `playwright/utils/test-data.ts` | Gedeelde constanten: `FORMWARD_URL`, `THANK_YOU_PAGE`, `EMAIL`, `GITHUB_URL`, `LINKEDIN_URL`, `OTHER_PAGES_TO_TEST` (8 pagina's), `ALL_PAGES` (10 pagina's), viewports `DESKTOP_VIEWPORT` en `MOBILE_VIEWPORT`, formulierdatasets `VALID_CONTACT`, `INVALID_EMAIL_CONTACT`, `OPTIONAL_SUBJECT_CONTACT`, `BOUNDARY_CONTACT` en `SPECIAL_CHARS_CONTACT`; voor de non-functionele suites: `RESPONSIVE_VIEWPORTS` (7), `NAV_BREAKPOINT` (850), `COMPACT_BREAKPOINT` (500), `NAV_LINK_TEST_IDS`, `SITE_BASE_URL`, `OG_IMAGE_URL`, `TITLE_PREFIX`, de titel- en description-grenzen, `ROBOTS_CONTENT`, de OG-waarden, `SITEMAP_PAGES` (8), `NON_SITEMAP_PAGES` (2), `SITE_ASSETS` (6) en `LOCAL_IMAGE_SOURCES` |
 | `playwright/tests/smoke/smoke.spec.ts` | Deep check op `index.html` plus lightweight check op de overige pagina's; gebruikt de `basePage`-fixture en assert console- én page-errors |
 | `playwright/tests/functional/homepage-functional.spec.ts` | CTA's, nav-links en card-links openen de juiste pagina's |
 | `playwright/tests/functional/contact-functional.spec.ts` | Paginastructuur en formulierinzending (Formward gemockt; valide submit redirect naar `bedankt.html`; invalid submit veroorzaakt 0 Formward-requests) |
@@ -224,7 +224,14 @@ Twee dingen die opvallen:
 | `playwright/pages/footer.page.ts` | Page object `FooterPage`: footer-links, externe attributen en actieve footer-link |
 | `playwright/tests/functional/ci-history-functional.spec.ts` | Vijf tests over de CI-resultatensectie: laatste-run kaarten, gepoolde totalen en ratio, één rij per run met run-link, runs zonder noemer, en de lege staat. Testsoort en afbakening: `PLAN-CI-HISTORY-TESTS.md` |
 | `playwright/tests/functional/footer-functional.spec.ts` | Footer-links, veilige externe attributen en actieve footer-links op contact/privacy |
-| `playwright/tests/accessibility/`, `compatibility/`, `e2e/`, `regression/` | Nu lege mappen: de plek waar de volgende testcategorieën komen |
+| `playwright/tests/accessibility/accessibility.spec.ts` | Accessibility-suite (A11Y-01…A11Y-04, 17 tests): structuur per pagina, tabvolgorde-contracten, skip-link-focus, placeholder-contrast en `forced-colors`-fallback |
+| `playwright/pages/content.page.ts` | Page object `ContentIntegrityPage`: interne links tegen de set van bekende site-bestanden, in-page anchors, het externe link-contract, `alt`-teksten en asset-referenties — structureel, niet via HTTP-bereikbaarheid |
+| `playwright/tests/content-integrity/content-integrity.spec.ts` | Content-integrity-suite (LINK-01, LINK-02, IMG-01, 11 tests) op alle 10 pagina's |
+| `playwright/pages/seo.page.ts` | Page object `SeoPage`: titel en description, site-wide uniekheid, één `<h1>` en unieke id's, `robots` per pagina, canonical + Open Graph + Twitter card, en `sitemap.xml` + `robots.txt` via de `request`-fixture |
+| `playwright/tests/seo/seo.spec.ts` | SEO-suite (SEO-01…SEO-04, 32 tests) — de waarden worden uit de DOM gelezen, omdat meta-attributes in de bron op aparte regels staan |
+| `playwright/pages/responsive.page.ts` | Page object `ResponsivePage`: geen horizontale scroll, nav-contract per viewport, compacte layout (full-width knoppen, gestapelde hero-knoppen), hero-tilt, en `expectViewportContract()` met de viewport-vertakking in het page object |
+| `playwright/tests/responsive/responsive.spec.ts` | Responsive-suite (RESP-01, 8 tests) op 7 viewports uit `RESPONSIVE_VIEWPORTS`, alle 10 pagina's per viewport, inclusief de CSS-grenzen 850/849 en 500/499 |
+| `playwright/tests/compatibility/`, `e2e/`, `regression/` | Nu lege mappen: de plek waar cross-browser (fase 7), gebruikersflows en een latere integriteitssuite komen. De content-integriteit (LINK/IMG) en SEO staan inmiddels in eigen mappen |
 | `Project-documentation/` | `PLAYWRIGHT.md`, `TESTPLAN.md`, `TEST-SUITE-STATUS.md`, `BESTPRACTICES.md`, `CI-PLAYWRIGHT-HISTORY.md` en dit bestand |
 
 Waarom `base.page.ts` zo belangrijk is voor de CI: de runtime-error check betekent
@@ -409,9 +416,14 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
 2. **Comment in `playwright.config.ts` is hersteld:** de regel zegt nu dat het
    HTML-rapport wél gegenereerd wordt als de suite hangt (het was een
    onleesbare zin geworden).
-3. **`playwright/tests/accessibility/`, `compatibility/`, `e2e/` en `regression/` zijn
-   lege mappen.** `TESTPLAN.md` beschrijft er al testcases voor, dus de CI-cijfers
-   tonen nu alleen smoke en functioneel.
+3. **`compatibility/`, `e2e/` en `regression/` zijn lege mappen.** `TESTPLAN.md`
+   beschrijft testcases voor de content-integriteit en SEO (RESP/SEO/LINK/IMG) — die zijn
+   sinds stap 2 gebouwd in `content-integrity/` (11 tests), `seo/` (32 tests) en
+   `responsive/` (8 tests), en lokaal groen. Voor cross-browser staat fase 7 in het plan;
+   voor `e2e/` staat er geen testcase, geen ID en geen roadmapfase — de map is de
+   placeholder voor gebruikersflows. De CI-cijfers tonen dus nog alleen smoke en functioneel:
+   de laatst gelogde CI-run is 63/63 (run 71), en de suite van 131 tests heeft nog niet in
+   de CI gedraaid. `accessibility/` is gevuld (17 tests).
 4. **`docs/js/ts/main.js` is een gebouwd bestand in de repo.** Na een wijziging in
    `src/ts/main.ts` moet `npm run build` gedraaid worden en het resultaat gecommit;
    de CI bouwt het niet.

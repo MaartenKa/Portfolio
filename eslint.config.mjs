@@ -67,8 +67,9 @@ export default tseslint.config(
       // Testnamen zijn Nederlandse gebruikersverhalen met hoofdletters en
       // spaties (TESTPLAN.md §6.1) — niet in kebab-case herschrijven.
       "playwright/prefer-lowercase-title": "off",
-      // BasePage.goto() wacht bewust op networkidle: de externe shields.io-badge
-      // staat lazy en onder de fold (PLAYWRIGHT.md §4 en §8).
+      // De regel staat uit omdat `BasePage.goto()` op `load` wacht, niet op
+      // `networkidle` — die wait is verwijderd (BESTPRACTICES.md §3). De off is
+      // geen aanmoediging: nieuwe tests synchroniseren op web-first assertions.
       "playwright/no-networkidle": "off",
       "playwright/no-skipped-test": "warn",
       "playwright/no-focused-test": "warn",

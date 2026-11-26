@@ -67,6 +67,9 @@ network mocking, CI-ready configuratie).
 │   │   ├── mobile.page.ts    # NavigationPage (mobiele menu-toggle)
 │   │   ├── footer.page.ts    # FooterPage (globale footer-links)
 │   │   ├── a11y.page.ts      # AccessibilityPage (A11Y-01…A11Y-04 asserts)
+│   │   ├── content.page.ts   # ContentIntegrityPage (LINK-01, LINK-02, IMG-01 asserts)
+│   │   ├── seo.page.ts       # SeoPage (SEO-01…SEO-04 asserts, DOM + request)
+│   │   ├── responsive.page.ts # ResponsivePage (RESP-01 asserts per viewport)
 │   │
 │   ├── fixtures/
 │   │   ├── formward.mock.ts  # FormwardMock: route + request-registratie
@@ -82,9 +85,12 @@ network mocking, CI-ready configuratie).
 │       ├── functional/ci-history-functional.spec.ts
 │       ├── functional/footer-functional.spec.ts
 │       ├── accessibility/accessibility.spec.ts  # A11Y-01…A11Y-04 (17 tests)
+│       ├── content-integrity/content-integrity.spec.ts # LINK-01, LINK-02, IMG-01 (11 tests)
+│       ├── seo/seo.spec.ts   # SEO-01…SEO-04 (32 tests)
+│       ├── responsive/responsive.spec.ts # RESP-01 (8 tests op 7 viewports)
 │       ├── compatibility/     # leeg — TESTPLAN fase 7 (Firefox/WebKit)
 │       ├── e2e/               # leeg — gebruikersflows
-│       └── regression/        # leeg — LINK/IMG/HTML-integriteit
+│       └── regression/        # leeg — integriteitssuite voor later
 │   └── playwright-report/    # HTML rapport (ge-genereerd, in .gitignore)
 │   └── test-results/         # screenshots/traces/video's + JSON report (in .gitignore)
 ```
@@ -196,9 +202,27 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
     `expectMenuClosedOnMobile()`, `expectMenuInlineOnDesktop()`,
     `expectToggleAriaExpanded()`, `clickNavLink()`. Exporteert ook
     `NAV_ITEM_TEST_IDS` en `NAV_ITEM_URLS` als page-specifieke constants.
+  - `ContentIntegrityPage extends BasePage` (in `content.page.ts`) — asserts voor de
+    content-integrity-suite: `navigateTo(path)`, `expectInternalLinks(knownTargets)`,
+    `expectAnchorTargetsExist()`, `expectExternalLinkContract()`, `expectImages(knownAssets)`
+    en `expectAssetReferences(knownAssets)`. De checks zijn structureel en lezen de DOM
+    via `page.evaluate`, omdat markup-checks geen `data-testid` hebben en
+    `playwright/no-raw-locators` in page objects op error staat.
+  - `SeoPage extends BasePage` (in `seo.page.ts`) — asserts voor de SEO-suite:
+    `navigateTo(path)`, `expectTitleAndDescription()`,
+    `expectUniqueTitlesAndDescriptions(pages)`, `expectHeadingAndIndexation()`,
+    `expectCanonicalAndSocialCard(expectedFile)` en
+    `expectSitemapAndRobots(expectedPages, excludedPages)`. De fixture geeft de
+    `request`-context mee voor `sitemap.xml` en `robots.txt`.
+  - `ResponsivePage extends BasePage` (in `responsive.page.ts`) — asserts voor de
+    responsive-suite: `navigateTo(path)`, `setViewport(viewport)`,
+    `expectNoHorizontalScroll()`, `expectCollapsedMenu()`, `expectInlineNav()`,
+    `expectCompactLayout()`, `expectHeroTilt(tilted)` en
+    `expectViewportContract(viewport)` — de viewport-vertakking staat in het page
+    object, niet in het test-lichaam (`playwright/no-conditional-in-test`).
   - `AccessibilityPage extends BasePage` (in `a11y.page.ts`) — asserts voor de
-    accessibility-suite: `navigateTo(path)`, `expectLangDutch()`,
-    `expectLandmarksNamed()`, `expectMenuToggleCollapsed()`,
+    accessibility-suite: `navigateTo(path)`, `expectLangDutch()`, `expectLandmarksNamed()`,
+    `expectMenuToggleCollapsed()`,
     `expectImagesHaveAlt()`, `expectSectionLabels(expected)`,
     `expectDecorativeIconsHidden()`, `expectFormLabelsMatchFields()`,
     `countFocusables()`, `readTabTrail(steps)`, `expectKeyboardTrail(expected)`,
@@ -248,6 +272,35 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
      de samengestelde invoerachtergrond, plus de `forced-colors`-fallback van de
      hero-tekst via `page.emulateMedia({ forcedColors: "active" })`.
    Page object: `pages/a11y.page.ts`; rekenwerk: `utils/contrast.ts`.
+4. **Content-integrity** — `tests/content-integrity/content-integrity.spec.ts` (11 tests):
+   - LINK-01 per pagina (10 pagina's): elke interne `<a href>` targett een bekend
+     site-bestand uit `ALL_PAGES`, en elk in-page anchor (`#…`) heeft een element met die
+     id; de set van bekende bestanden is de bron, niet HTTP-bereikbaarheid (TESTPLAN §6.2);
+   - LINK-02: elke externe link heeft `target="_blank"` + `rel="noopener noreferrer"`;
+   - IMG-01: elke `<img>` heeft een niet-lege `alt`, een interne bron uit de asset-set en
+     is geladen; de asset-referenties (`img[src]`, `link[href]`, `script[src]`) zijn
+     bekende site-bestanden. De load-state van de externe shields.io-badge is niet geassert.
+   Page object: `pages/content.page.ts`.
+5. **SEO** — `tests/seo/seo.spec.ts` (32 tests, gelezen uit de DOM):
+   - SEO-01 per pagina: titel met voorvoetsel `Maarten Kamps`, lengte 10–60, description
+     15–160 tekens, plus één uniekheidstest voor de 10 titels en 10 descriptions;
+   - SEO-02 per pagina: precies één `<h1>`, geen duplicaten in `id`-attributen en
+     `robots` = `noindex, nofollow` — de indexatie-keus van de site staat op elke pagina;
+   - SEO-03 per pagina: canonical, `og:url`, `og:type`, `og:locale`, `og:site_name`,
+     `og:image` met `width`/`height`/`alt`, `twitter:card` met titel, description en image;
+   - SEO-04: `sitemap.xml` dekt exact de 8 content-pagina's (via de `request`-fixture),
+     `404.html` en `bedankt.html` staan er niet in, en `robots.txt` sluit indexering uit.
+     De sitemap-URLs zijn publiek terwijl de site niet indexeerbaar is — die spanning is
+     een gedocumenteerde vinding, geen assert.
+   Page object: `pages/seo.page.ts`.
+6. **Responsive** — `tests/responsive/responsive.spec.ts` (8 tests op 7 viewports uit
+   `RESPONSIVE_VIEWPORTS`: 1280×800, 850×1024, 849×1024, 500×640, 499×640, 390×844,
+   320×568). Elke viewport-test loopt alle 10 pagina's: geen horizontale scroll,
+   toggle-zichtbaarheid en ingeklapt menu tot en met 850px, nav inline erboven, full-width
+   knoppen en gestapelde hero-knoppen op de compacte grens. De achtste test: hero-tilt aan
+   op 1280, `transform: none` op 500 en 499 (PLAN-HERO-SOFT-3D). De viewport-vertakking
+   staat in `ResponsivePage.expectViewportContract()`, niet in het test-lichaam.
+   Page object: `pages/responsive.page.ts`.
 
 ### Config (playwright.config.ts)
 
@@ -362,8 +415,9 @@ kan ook: `npm run test:localUi` (UI mode met watch mode) of `--debug`
   output). `tsconfig.site.json` overrules met `noEmit: false` voor de site-JS.
 - **`fixtures/test-fixtures.ts`** — typed custom fixtures (`test.extend`) voor
   `homePage`, `contactPage`, `navPage`, `ciHistoryPage`, `basePage`, `footerPage`,
-  `a11yPage` en `formwardMock`. Navigatie en mock zijn expliciet in de test of in een
-  `beforeEach`; de fixtures zelf navigeren niet.
+  `a11yPage`, `contentPage`, `seoPage`, `responsivePage` en `formwardMock`. Navigatie en
+  mock zijn expliciet in de test of in een `beforeEach`; de fixtures zelf navigeren niet.
+  `seoPage` krijgt de `request`-fixture voor `sitemap.xml` en `robots.txt`.
 - **`fixtures/formward.mock.ts`** — `FormwardMock`: route-mock met
   request-registratie inclusief de urlencoded POST-payload.
   `expectRequestCount(count)` bewijst dat invalid submits geen request veroorzaken;
@@ -371,11 +425,16 @@ kan ook: `npm run test:localUi` (UI mode met watch mode) of `--debug`
   de payload van de submit (F5). De mock redirectt altijd, dus de
   Formward-verwerking zelf staat niet in de suite.
 - **`utils/test-data.ts`** — gedeelde statische constanten (`FORMWARD_URL`,
-  `THANK_YOU_PAGE`, `EMAIL`, externe links, `OTHER_PAGES_TO_TEST`, de viewports
-  `DESKTOP_VIEWPORT` en `MOBILE_VIEWPORT`) en formulierdatasets `VALID_CONTACT`,
+  `THANK_YOU_PAGE`, `EMAIL`, externe links, `OTHER_PAGES_TO_TEST`, `ALL_PAGES`, de
+  viewports `DESKTOP_VIEWPORT` en `MOBILE_VIEWPORT`) en formulierdatasets `VALID_CONTACT`,
   `INVALID_EMAIL_CONTACT`, `OPTIONAL_SUBJECT_CONTACT`, `BOUNDARY_CONTACT`,
   `SPECIAL_CHARS_CONTACT`, de honeypot-waarde `HONEYPOT_FILLED` en de
-  F5-veldlijst `FORM_POST_FIELDS`.
+  F5-veldlijst `FORM_POST_FIELDS`. Voor de non-functionele suites: `RESPONSIVE_VIEWPORTS`
+  (7 viewports), `NAV_BREAKPOINT` (850), `COMPACT_BREAKPOINT` (500),
+  `NAV_LINK_TEST_IDS`, `SITE_BASE_URL`, `OG_IMAGE_URL`, `TITLE_PREFIX`, de titel- en
+  description-lengtegrenzen, `ROBOTS_CONTENT`, de OG-waarden, `SITEMAP_PAGES` (8),
+  `NON_SITEMAP_PAGES` (2), `SITE_ASSETS` (6) en `LOCAL_IMAGE_SOURCES`. De grenswaarden zijn
+  gemeten op de 10 pagina's.
 - De website is **Nederlands**; test-namen en UI-teksten zijn dus in het
   Nederlands.
 
@@ -497,7 +556,7 @@ dezelfde wijziging** als de oorzaak, niet later.
 
 | README-claim | Bron van waarheid | Bijwerken wanneer |
 | --- | --- | --- |
-| Aantal tests per suite + totaal (61) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
+| Aantal tests per suite + totaal (131) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
 | Playwright-versie (1.65) | `package.json` → `devDependencies` | versie-upgrade |
 | ESLint-versie (10) | `package.json` → `devDependencies.eslint` | versie-upgrade |
 | Node-grens (`>=24.8 <25`) | `package.json` → `engines.node` | Node-upgrade |
