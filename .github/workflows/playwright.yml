@@ -82,6 +82,14 @@ jobs:
       - name: HTML-validate (docs/**/*.html)
         run: npm run validate:html
 
+      # Poort op de producer van de CI-history (CIH-06, TESTPLAN.md §8.5): de
+      # rekenregels van scripts/ci-summary.mjs. Het unit-project draait zonder
+      # browser, dus deze poort staat vóór de browserinstallatie — een defect
+      # faalt dan zonder downloadkosten. Een rode poort betekent dat de kaarten
+      # op automation.html een onjuiste geschiedenis kunnen krijgen (R13).
+      - name: CI-history data gate (CIH-06)
+        run: npm run test:ci-summary
+
       # Preflight: een 503/timeout van GitHub Pages is een omgevingsfout,
       # geen testflake. De tests starten pas als alle live pagina's 200 geven.
       - name: Check live site availability
