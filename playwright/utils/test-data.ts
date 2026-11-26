@@ -200,3 +200,92 @@ export const PLACEHOLDER_COLOR = "rgb(148, 163, 184)";
 
 /** A11Y-04: WCAG 2.1 drempel voor normale tekst (niveau AA). */
 export const MIN_CONTRAST_AA = 4.5;
+
+/** Basis-URL van de site, voor canonical en social-card asserts (SEO-03). */
+export const SITE_BASE_URL = "https://maartenka.github.io/Portfolio/";
+
+/** Delingsafbeelding van de site, in OG en Twitter op elke pagina identiek. */
+export const OG_IMAGE_URL = `${SITE_BASE_URL}images/logoipsum-407.png`;
+
+/** Titelvoorvoetsel dat op elke pagina in de `<title>` staat (SEO-01). */
+export const TITLE_PREFIX = "Maarten Kamps";
+
+/** SEO-01: lengtegrenzen voor `<title>` (gemeten 18–40 tekens op de 10 pagina's). */
+export const MIN_TITLE_LENGTH = 10;
+export const MAX_TITLE_LENGTH = 60;
+
+/** SEO-01: lengtegrenzen voor de meta description (gemeten 18–86 tekens). */
+export const MIN_DESCRIPTION_LENGTH = 15;
+export const MAX_DESCRIPTION_LENGTH = 160;
+
+/** SEO-02: de indexatie-keus van de site — elke pagina staat uit (PLAYWRIGHT §4). */
+export const ROBOTS_CONTENT = "noindex, nofollow";
+
+/** SEO-03: de social-card-waarden die op elke pagina identiek zijn. */
+export const OG_TYPE = "website";
+export const OG_LOCALE = "nl_NL";
+export const OG_SITE_NAME = "Maarten Kamps";
+export const OG_IMAGE_WIDTH = "400";
+export const OG_IMAGE_HEIGHT = "326";
+export const TWITTER_CARD = "summary";
+
+/** SEO-04: de pagina's die in de sitemap horen (8 content-pagina's). */
+export const SITEMAP_PAGES = [
+  "index.html",
+  "curriculum.html",
+  "testing.html",
+  "automation.html",
+  "projects.html",
+  "personal.html",
+  "contact.html",
+  "privacy.html",
+] as const;
+
+/** SEO-04: utility-pagina's die expliciet buiten de sitemap blijven. */
+export const NON_SITEMAP_PAGES = ["404.html", "bedankt.html"] as const;
+
+/** LINK-01 en IMG-01: site-bestanden die de markup mag refereren. */
+export const SITE_ASSETS = [
+  "css/style.css",
+  "js/ts/main.js",
+  "images/logoipsum-407.png",
+  "data/playwright-history.json",
+  "robots.txt",
+  "sitemap.xml",
+] as const;
+
+/** IMG-01: de lokale afbeelding-bron van de site (placeholder-asset). */
+export const LOCAL_IMAGE_SOURCES = ["images/logoipsum-407.png"] as const;
+
+/**
+ * RESP-01: de viewports van de responsive-suite, inclusief de CSS-grenzen
+ * (TESTPLAN §6.3; `style.css` gebruikt `max-width: 850px` en `max-width: 500px`).
+ * De grenzen zelf en de grens eronder zijn opgenomen, zodat de overschrijving
+ * van de media query getest wordt — boundary value analysis op de breakpoint.
+ */
+export const RESPONSIVE_VIEWPORTS = [
+  { width: 1280, height: 800 },
+  { width: 850, height: 1024 },
+  { width: 849, height: 1024 },
+  { width: 500, height: 640 },
+  { width: 499, height: 640 },
+  { width: 390, height: 844 },
+  { width: 320, height: 568 },
+] as const;
+
+/** RESP-01: de nav-breakpoint van `style.css` (`max-width: 850px`). */
+export const NAV_BREAKPOINT = 850;
+
+/** RESP-01: de compacte breakpoint van `style.css` (`max-width: 500px`). */
+export const COMPACT_BREAKPOINT = 500;
+
+/** RESP-01: de `data-testid`-contracten van de zeven nav-links. */
+export const NAV_LINK_TEST_IDS = [
+  "nav-home",
+  "nav-curriculum",
+  "nav-testing",
+  "nav-automation",
+  "nav-projects",
+  "nav-personal",
+  "nav-contact",
+] as const;
