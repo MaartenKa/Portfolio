@@ -35,6 +35,7 @@
 | **Accessibility-suite** | `playwright/tests/accessibility/accessibility.spec.ts` met `AccessibilityPage` (`pages/a11y.page.ts`) en `utils/contrast.ts`: tabvolgorde-contract per pagina, focus-outline (2px, offset 3px), skip-link-focus op `main`, `lang="nl"`, landmarks, alt-teksten, Nederlandse section-labels, `aria-hidden` op decoratieve iconen, gemeten placeholder-contrast en `forced-colors`-fallback. |
 | **Skip-link-focus** | `tabindex="-1"` op `main#hoofdinhoud` in alle 10 pagina's, zodat Enter op de skip-link de focus echt op de hoofdinhoud zet. |
 | **Kleine fixes** | `networkidle` verwijderd; runtime-error-helper hernoemd; titel-regex escapet input; honeypot-assert gebruikersgericht. |
+| **Kijkmodus** | `playwright.local.config.ts` kent de env-vlag `PW_VIEW=1`: `video: { mode: 'on' }`, `trace: 'on'`, `screenshot: 'on'`, headed en open HTML-rapport, zodat een geslaagde run na te kijken is. `npm run test:localVideo` (`scripts/view-tests.mjs`) start die modus; `npm run show:report` en `npm run show:trace` openen rapport en trace. De standaardrun blijft `retain-on-failure`. Gemeten: 12/12 en 3/3 groen met 12 resp. 3 video's, traces en screenshots; `npm run check` groen. |
 
 ## 3. Wat nog open is
 
@@ -44,6 +45,7 @@
 | 2 | **SM-03 live fallback** | Lokaal is `404.html` direct getest; unknown-path-fallback is een live/GitHub-Pages-check. | Live fallback handmatig of via live-only test afdekken. |
 | 3 | **Non-functioneel** | A11Y-01…04 is gebouwd (17 tests). RESP-01, SEO-01…04, LINK-01/02, IMG-01, VIS-01 en PERF-01 ontbreken nog. | De overige non-functionele suites bouwen. |
 | 4 | **CI-history data/keten** | CIH-06 (ci-summary), CIH-07 (schema v2), CIH-08 (a11y CI-sectie) ontbreken. | Volgens `PLAN-CI-HISTORY-TESTS.md` bouwen. |
+| 5 | **Showcase-media op de portfolio** | De kijkmodus is gereed en gemeten; de video's op de site staan gepland in TESTPLAN §10.4, en `docs/automation.html` belooft ze "in een volgende stap". | Uitvoeren zodra de portfolio-inrichting vastligt: keus van de suite-onderdelen, `test.use` met `video: 'on'`, de clip naar een site-asset en de site-copy bijwerken. |
 
 ## 4. Wat niet meer op de backlog staat
 
@@ -70,6 +72,8 @@
    en SEO-01…04. A11Y-01…04 is af.
 3. CIH-06/07/08.
 4. Fase 5 (VIS-01, PERF-01) — apart besluit, omdat dat nieuwe dependencies vraagt.
+5. Showcase-media op de portfolio (TESTPLAN §10.4) — uitgesteld tot de
+   portfolio-inrichting vastligt.
 
 ## 6. Documentatie
 

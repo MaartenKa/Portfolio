@@ -543,6 +543,7 @@ impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish
 |  5   | Visual regression + Lighthouse-drempels                                                                                         | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                                                                            |
 |  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → test → artifacts → history   | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit                                                                         |
 |  7   | Optioneel: pre-deploy/PR-gate (push-trigger op de poorten), cross-browser (Firefox/WebKit) + exploratoire device-sessies        | Gate-besluit (§10.2), browser-coverage & handmatige findings geformaliseerd                                                                                        |
+| 8  | Showcase-media: video's van de suite op de portfolio-site, wanneer de portfolio-inrichting vastligt | Kijkmodus-artifacten uit §10.4 gekozen, als site-asset opgeslagen en ingebet op automation.html; de site-copy is bijgewerkt |
 
 ### 10.1 CI-pipeline (fase 6, in lijn met BestPractices §18)
 
@@ -587,6 +588,26 @@ als **doel/aspiratie**, niet als huidige werkelijkheid.
 | 4   | trace/screenshot/video-bestanden in `playwright/test-results/` worden niet als artifact geüpload; alleen `report.json` wordt geüpload | Failure-debugging via trace ontbreekt in CI                                                                   | Verbeterpunt: `test-results/` uploaden bij failure                              |
 | 5   | Geen pre-deploy gate                                                                 | Een push naar `main` wordt niet automatisch op de suite gevalideerd                                           | Open beslispunt (§10.2)                                                         |
 | 6   | Live host kan tijdelijk 5xx/timeout geven                                            | Smoke-tests kunnen als flaky worden geregistreerd als de host niet beschikbaar is                             | Mitigatie: `check:site`-preflight; `BasePage.gotoWithRetry()` voor smoke; hostfout telt als infra, niet als testflake |
+
+### 10.4 Open taak: showcase-media (video's) op de portfolio
+
+De kijkmodus staat in de werkbom en is gemeten: de env-vlag `PW_VIEW=1`
+(`npm run test:localVideo`, `scripts/view-tests.mjs`) zet `video: { mode: 'on' }`,
+`trace: 'on'`, `screenshot: 'on'`, headed en open HTML-rapport, zodat ook een
+geslaagde run na te kijken is (PLAYWRIGHT §7, BESTPRACTICES §35). De standaardrun
+`npm run test:local` blijft `retain-on-failure`: bij een groene run blijft de
+artifactmap leeg.
+
+**Uitgesteld tot de portfolio-inrichting vastligt.** De site-opmaak en de portfolio-claims
+moeten definitief zijn; dan wordt deze taak uitgevoerd. Nu is er de taakomschrijving.
+
+| Aspect | Wat er dan te doen is |
+| --- | --- |
+| Keus | Bepalen welke suite-onderdelen showcase-media krijgen. Kandidaat: de CI-history-kaarten en de geschiedenis-tabel op `automation.html`, want daar staat de site-belofte "Screenshots, video's en de volledige HTML-report volgen in een volgende stap". |
+| Techniek | `test.use({ video: { mode: 'on', size: { width: 800, height: 450 }, show: { test: { level: 'step' }, actions: { duration: 400 } } } })` in het gekozen spec-bestand. De artifacts in `playwright/test-results/` zijn gitignore-gebied en geen publicatiebron; de clip gaat expliciet naar een site-asset (bijv. `docs/media/`) via `page.video().saveAs(...)`. |
+| Site | De "volgen in een volgende stap"-copy in `docs/automation.html` wordt een actieve embed: `<video>` met poster, Nederlandse `figcaption` en `aria-label`. De opname laat de vaste site-header weg (conventie van de element-screenshot, PLAYWRIGHT §7). |
+| Acceptatie | `npm run check` groen, `npm run test:local` groen, `npx playwright test --list` telt de gekozen tests, en de embed is speelbaar op `http://127.0.0.1:8080/automation.html` en op de live site na deploy. |
+| Beperking | Binaire media groeien met de suite: gemeten ~112 KB video, ~1.24 MB trace en ~610 KB screenshot per test. Bewaar alleen de gekozen clips, niet de artifactmap. Een clip met de CI-cijfers van één run is snapshot-data, geen regressie-bewijs (§6.2 en §8.5). |
 
 ---
 
@@ -822,6 +843,7 @@ werk, niet als bewijs.
 | Testrapportage    | HTML-report en JSON-report per run              | `playwright/playwright-report/`, `playwright/test-results/report.json` |
 | CI-history        | `docs/data/playwright-history.json` + dashboard | `scripts/ci-summary.mjs`, `automation.html`                            |
 | Kwaliteitspoorten | typecheck, lint en html-validate                | `npm run check`, `playwright.yml`                                      |
+| Showcase-media | video-clips van de suite op de portfolio (gepland, §10.4) | kijkmodus in `playwright.local.config.ts` (`PW_VIEW=1`) |
 
 **Planning en inspanning:** de fasering staat in §10. Fase 1–3 zijn de
 functionele basis, fase 4–5 de non-functionele kwaliteit en fase 6–7 de
