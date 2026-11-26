@@ -7,7 +7,7 @@
 | **Eigenaar**   | QA Engineer (zie §13)                                                                       |
 | **Testobject** | Statische portfolio-site in `docs/` (10 HTML-bestanden) + Playwright-suite in `playwright/` |
 | **Testbasis**  | §3.3                                                                                        |
-| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 80 tests in 7 spec-bestanden          |
+| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 131 tests in 10 spec-bestanden         |
 
 **Scope:** de statische portfolio-website in `docs/` — 9 contentpagina's plus de
 `404.html`-fallback (10 HTML-bestanden), het CSS-design-systeem, één klein
@@ -175,8 +175,9 @@ checks**. De "unit-laag" wordt gedeeltelijk vervangen door directe DOM/ARIA-asse
             └─────────────────────────────┘
 ```
 
-- **Component/DOM-laag:** snelle, gerichte asserts op `aria-expanded`, `class="open"`,
-  honeypot-zichtbaarheid, heading-hierarchie — via Page Objects.
+- **Component/DOM-laag:** snelle, gerichte asserts op `aria-expanded`, menu-visibility
+  (geen class-assert), honeypot-zichtbaarheid en `aria-hidden` op decoratieve iconen —
+  via Page Objects.
 - **Non-functional:** viewport/a11y/SEO/links/visual/perf — eigen spec-bestanden.
 - **E2E/acceptance:** volledige gebruikersflows (navigatie, formulier-gebruik, menu).
 
@@ -230,8 +231,13 @@ uitgevoerde UAT.
 
 ### 5.2 Non-functioneel
 
-- **Responsive:** correcte layout en menu per breakpoint; geen horizontale
-  scroll op 1280×800, 850×1024, 390×844 en 360×640 (en als extra grens 320px breed).
+- **Responsive:** correcte layout en menu per breakpoint; geen horizontale scroll, de
+  nav-stijl op de grens en de compacte layout. **Bestaand:** de responsive-suite
+  (`responsive.spec.ts`, 8 tests) meet op 1280×800, de grenzen 850×1024 en 849×1024, de
+  grenzen 500×640 en 499×640, mobiel 390×844 en de ondergrens 320×568 — op alle 10
+  pagina's, met toggle-zichtbaarheid, full-width knoppen, gestapelde hero-knoppen en de
+  hero-tilt (`transform: none` op de compacte grens). De partitie ≤500px is gedekt door
+  499×640, 390×844 en 320×568; `360×640` staat niet in de suite.
 - **Accessibility:** keyboard-reikbare navigatie, focus-ordening, skip-link,
   `aria-expanded`, `aria-label`, decoratieve iconen met `aria-hidden`,
   Nederlandse section-labels, contrast, `lang`, afbeelding-`alt` en
@@ -288,8 +294,11 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
 - **Vereisten-gebaseerd** — uit de doelen G1–G13 en het formulier-gedrag (§7).
 - **Error guessing / exploratorisch** — handmatige sessies; reproduceerbare bugs
   worden geautomatiseerd.
-- **Boundary value analysis** — minimale (1 teken) en extreme (500+/1000+ tekens)
-  formulierwaarden, plus de viewport-breakpoints 850px/500px als grenzen (§7 F6).
+- **Boundary value analysis** — minimaal (1 teken) en de gemeten bovenwaarde (500
+  tekens) op naam en bericht (§7 F6). De velden hebben géén `maxlength`, `minlength` of
+  `pattern` in de HTML, dus F6 is een data-grens en geen specificatie-boundary. De
+  viewport-breakpoints 850px/500px zijn wél échte grenzen: RESP-01 (§8.4) meet de grens
+  zelf en de grens eronder — 850 en 849, 500 en 499.
 - **Equivalence partitioning** — geldige vs. ongeldige e-mail, lege vs. gevulde
   verplichte velden (F1–F4), honeypot gevuld vs. leeg (F5).
 - **State-transition testing** — menu-toggle toestand (closed → open → closed) en
@@ -353,14 +362,17 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
 ### 6.3 Browsers & viewports
 
 - **Basis:** Chromium (Desktop Chrome) — reeds geconfigureerd.
-- **Responsive-viewporten (nieuw):**
-  - Desktop: `1280×800` (≥850px, nav inline)
-  - Tablet: `850×1024` / `820×1180` (≤850px, menu-toggle zichtbaar)
-  - Mobiel: `390×844` en `360×640` (≤500px, compacte layout, knoppen full-width)
-  - Extra ondergrens: `320×568` (smalle mobiel; extra check op horizontale scroll)
-- **Vaste waarden in de suite:** de bestaande menu- en desktoptests gebruiken
-  `DESKTOP_VIEWPORT` en `MOBILE_VIEWPORT` uit
-  `playwright/utils/test-data.ts`, niet lokale literals per spec.
+- **Vaste waarden in de suite:** `DESKTOP_VIEWPORT` = `1920×1080` en
+  `MOBILE_VIEWPORT` = `390×844` uit `playwright/utils/test-data.ts`; de menu- en
+  navigatietests gebruiken die constanten, niet lokale literals per spec.
+- **Responsive-viewporten (bestaand, RESP-01 in `responsive.spec.ts`):**
+  `RESPONSIVE_VIEWPORTS` in `playwright/utils/test-data.ts` met desktop `1280×800`
+  (nav inline), de grenzen `850×1024` en `849×1024` (toggle-zichtbaarheid op
+  `max-width: 850px`), de grenzen `500×640` en `499×640` (compacte layout op
+  `max-width: 500px`), mobiel `390×844` en de ondergrens `320×568` (extra check op
+  horizontale scroll). De breakpoints zelf staan als constanten `NAV_BREAKPOINT` (850)
+  en `COMPACT_BREAKPOINT` (500), en de nav-`data-testid`-lijst als
+  `NAV_LINK_TEST_IDS` in dezelfde testdata.
 - **Cross-browser (fase 7, optioneel):** Firefox + WebKit toevoegen (Playwright
   maakt dit triviaal via `devices`); prioriteit lager omdat de site simpel is.
 
@@ -377,7 +389,7 @@ De belangrijkste data-flow. Verwacht-gedrag per scenario:
 | F3  | Ongeldige e-mail                  | `ongeldig-email`                      | géén submit, e-mail-validatiemelding                                                                              | Bestaand (checkValidity + invalid field + 0 requests)                       |
 | F4  | Alleen optioneel veld ontbreekt   | `subject` leeg                        | WEL geldige submit (subject is niet `required`)                                                                   | Bestaand (mock; 1 request)                                                  |
 | F5  | Honeypot ingevuld (bot)           | `_gotcha` gevuld                      | de honeypot-waarde gaat mee in de Formward-POST (zes veldnamen en de `_gotcha`-waarde), het veld blijft verborgen en de tabvolgorde slaat het over; de verwijdering zelf is Formward-upstream (§3.2) | Bestaand (payload- en tabvolgorde-assert)                                 |
-| F6  | Boundary: minimale/ extreme tekst | naam = 1 teken, bericht = 500+ tekens | WEL geldige submit; geen fouten/truncatie in UI (boundary value analysis)                                         | Bestaand (mock; 1 request)                                                  |
+| F6  | Boundary: minimale/ extreme tekst | naam = 1 teken, bericht = 500 tekens | WEL geldige submit; geen fouten/truncatie in UI (data-grens; de HTML heeft geen `maxlength`, dus geen specificatiegrens — zie §5.5)                                         | Bestaand (mock; 1 request)                                                  |
 | F7  | Speciale tekens / unicode         | emoji, quotes, accents                | WEL geldige submit; tekst wordt veilig gerenderd (geen HTML-injectie op static page)                              | Bestaand (mock; 1 request)                                                  |
 | F8  | Dubbel submit                     | snel dubbel klikken op verstuurknop   | Maximaal één POST naar Formward; redirect blijft idempotent                                                       | Gepland                                                                    |
 | F9  | Redirect-target is correct        | geldige submit                        | eind-URL = `bedankt.html` (subpath `/Portfolio/` behouden) + bedankt-tekst zichtbaar (geen lege/pagina-not-found) | Bestaand (met mock; bewijst afhandeling, niet de echte `_redirect`-waarde) |
@@ -412,9 +424,10 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 
 De statuskolommen gebruiken de legenda uit §5. **Bestaand** betekent dat er een
 test in een spec-bestand staat; **Deels** betekent dat slechts een subset is
-geautomatiseerd. De huidige suite telt **80 tests in 7 spec-bestanden**: smoke 10,
-homepage 12, contact 16, mobiel menu 17, CI-history 5, footer 3 en accessibility 17.
-Deze matrix beschrijft de target-set; F8 is nog gepland.
+geautomatiseerd. De huidige suite telt **131 tests in 10 spec-bestanden**: smoke 10,
+homepage 12, contact 16, mobiel menu 17, CI-history 5, footer 3, accessibility 17,
+content-integrity 11, SEO 32 en responsive 8. Deze matrix beschrijft de target-set; F8 is
+nog gepland, en VIS-01 en PERF-01 zijn fase 5.
 
 ### 8.1 Smoke / sanity (G1) — `playwright/tests/smoke/smoke.spec.ts` _(bestaand)_
 
@@ -449,23 +462,23 @@ Deze matrix beschrijft de target-set; F8 is nog gepland.
 | MENU-09 | Focus na openen gaat naar eerste nav-link          | eerste nav-link is gefocust                                    | Bestaand                                                        |
 | MENU-10 | `Escape` op gesloten menu verandert de focus niet  | focus blijft op huidige actieve locator                        | Bestaand                                                        |
 
-### 8.4 Non-functioneel (G5–G10) — nieuwe spec-bestanden _(fase 4–5)_
+### 8.4 Non-functioneel (G5–G10) — `responsive.spec.ts`, `seo.spec.ts`, `content-integrity.spec.ts` en `accessibility.spec.ts` _(bestaand)_ ; VIS-01 en PERF-01 blijven fase 5
 
 | ID      | Categorie           | Testcase                                                           | Verwacht resultaat (concreet)                                                                                                                                                         | Status                                          |
 | ------- | ------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| RESP-01 | Responsive          | Layout per breakpoint (desktop/tablet/mobiel)                      | juiste nav-stijl; geen horizontale scroll op 1280×800, 850×1024, 390×844, 360×640 en de extra grens 320px breed                                                                       | Gepland (fase 4)                                |
+| RESP-01 | Responsive          | Layout per breakpoint (desktop/tablet/mobiel)                      | 8 tests op 1280×800, de grenzen 850×1024 en 849×1024, de grenzen 500×640 en 499×640, 390×844 en de ondergrens 320×568, op alle 10 pagina's: geen horizontale scroll, toggle-zichtbaarheid en ingeklapt menu tot en met de nav-grens, full-width knoppen en gestapelde hero-knoppen op de compacte grens, hero-tilt aan op desktop en `transform: none` op de grens. De viewports staan als `RESPONSIVE_VIEWPORTS` in `test-data.ts`; `360×640` is niet opgenomen — de partitie ≤500px wordt getest op 499×640, 390×844 en 320×568 | **Bestaand** (`responsive.spec.ts`, 8 tests)        |
 | A11Y-01 | Accessibility       | Keyboard-only navigatie + focus-visible                            | alle interactieve elementen toetsbaar bereikbaar; zichtbare focus-indicator (WCAG 2.4.7)                                                                                              | **Bestaand** (`accessibility.spec.ts`)                                |
 | A11Y-02 | Accessibility       | `aria-expanded` / labels / `lang="nl"` / img `alt`                 | attributen aanwezig en correct; `lang="nl"` op elke pagina; elk formulierveld heeft een eigen label; elke `<img>` heeft een niet-lege `alt`                                                                        | **Bestaand** (`accessibility.spec.ts`)                                |
 | A11Y-03 | Accessibility       | Skip-link, decoratieve iconen en section-labels                    | skip-link → `#hoofdinhoud` met focus op het doel; decoratieve emoji/pijlen `aria-hidden="true"`; section-labels in het Nederlands                                                     | **Bestaand** (`accessibility.spec.ts`)                                |
 | A11Y-04 | Accessibility       | Placeholder-contrast en `forced-colors` fallback                   | computed `::placeholder`-kleur `rgb(148, 163, 184)`; contrast ≥ 4.5:1 tegen de invoerachtergrond (meting, geen alleen CSS-waarde); in forced-colors `CanvasText`, geen gradient-clip  | **Bestaand** (`accessibility.spec.ts`)                                |
-| SEO-01  | SEO                 | unieke `<title>` + meta description per pagina                     | geen duplicaten, NL-taal                                                                                                                                                              | Gepland (fase 4)                                |
-| SEO-02  | SEO                 | één `h1` per pagina, geen duplicaat `id`, robots.txt               | structuur correct; `docs/robots.txt` aanwezig en geldig                                                                                                                               | Gepland (fase 4)                                |
-| SEO-03  | SEO                 | canonical + Open Graph/Twitter cards per pagina                    | canonical = eigen absolute URL; `og:title`/`og:url` = eigen `<title>`/URL; `og:image` absolute; `twitter:card=summary`                                                                | Gepland (fase 4)                                |
-| SEO-04  | SEO                 | `docs/sitemap.xml`                                                 | geldige XML, 8 content-pagina's, `404`/`bedankt` uitgesloten, alle locaties = bestaande bestanden                                                                                     | Gepland (fase 4)                                |
+| SEO-01  | SEO                 | unieke `<title>` + meta description per pagina                     | titel begint met `Maarten Kamps`, lengte 10–60; description 15–160 tekens; 10 titels en 10 descriptions site-wide uniek; de taal is Nederlands                                                      | **Bestaand** (`seo.spec.ts`, 11 tests)            |
+| SEO-02  | SEO                 | één `h1` per pagina, geen duplicaat `id`, `robots`-meta per pagina  | precies één `<h1>`; geen duplicaten in `id`-attributen; `robots` = `noindex, nofollow` op alle 10 pagina's                                                                                          | **Bestaand** (`seo.spec.ts`, 10 tests)            |
+| SEO-03  | SEO                 | canonical + Open Graph/Twitter cards per pagina                    | canonical = eigen absolute URL `https://maartenka.github.io/Portfolio/<pagina>`; `og:url` = canonical; `og:type=website`, `og:locale=nl_NL`, `og:site_name`, `og:image` met `width`/`height`/`alt`; `twitter:card=summary` met titel, description en image      | **Bestaand** (`seo.spec.ts`, 10 tests)            |
+| SEO-04  | SEO                 | `docs/sitemap.xml` + `docs/robots.txt`                             | sitemap dekt exact de 8 content-pagina's, `404`/`bedankt` staan er niet in, alle locaties zijn bestaande bestanden; `robots.txt` sluit indexering uit (`User-agent: *` + `Disallow: /`). Vinding: de sitemap publiceert indexeerbare URLs terwijl de site expliciet niet indexeerbaar is — die spanning is gedocumenteerd, niet geassert                                  | **Bestaand** (`seo.spec.ts`, 1 test)              |
 | HTML-01 | Content-integriteit | `npx html-validate "docs/**/*.html"` (config `.htmlvalidate.json`) | 0 errors (o.a. `no-implicit-close`, `close-order`, `element-case`, `no-raw-characters`, `no-utf8-bom`; stijlstijlen `doctype-style`/`void-style`/`no-implicit-button-type` staan uit) | **Bestaand** (CI-poort `npm run validate:html`) |
-| LINK-01 | Content-integriteit | interne links op alle pagina's                                     | geen gebroken interne links                                                                                                                                                           | Gepland (fase 4)                                |
-| LINK-02 | Content-integriteit | externe links (`href^="https://"`)                                 | elke externe link heeft `target="_blank"` + `rel="noopener noreferrer"`                                                                                                               | Gepland (fase 4)                                |
-| IMG-01  | Content-integriteit | afbeeldingen laden                                                 | geen 404/bron-fouten; alle `<img>` hebben niet-lege `alt`                                                                                                                             | Gepland (fase 4)                                |
+| LINK-01 | Content-integriteit | interne links op alle pagina's                                     | elke interne `<a href>` targett een bekend site-bestand (`ALL_PAGES`, `css/style.css`, `js/ts/main.js`, `images/logoipsum-407.png`, `data/playwright-history.json`, `robots.txt`, `sitemap.xml`); elk in-page anchor heeft een element met die id; geen HTTP-check van externe hosts (§6.2)  | **Bestaand** (`content-integrity.spec.ts`)        |
+| LINK-02 | Content-integriteit | externe links (`href^="https://"`)                                 | elke externe link heeft `target="_blank"` + `rel="noopener noreferrer"`                                                                                                               | **Bestaand** (`content-integrity.spec.ts`)        |
+| IMG-01  | Content-integriteit | afbeeldingen en asset-referenties                                  | elke `<img>` heeft een niet-lege `alt`, een interne bron uit de asset-set en is geladen; elke interne referentie in `img[src]`, `link[href]` en `script[src]` is een bekend site-bestand; de load-state van de externe shields.io-badge is niet geassert (§6.2) | **Bestaand** (`content-integrity.spec.ts`)        |
 | VIS-01  | Visual (fase 5)     | screenshot-baseline per pagina × breakpoint                        | geen onbedoelde regressies; baseline gemaakt in CI/Linux met vaste fonts; tolerantie max 1% diff-pixels                                                                               | Gepland (fase 5)                                |
 | PERF-01 | Performance         | Lighthouse (Perf/A11y/BestPractices/SEO) ≥ drempel                 | Performance ≥ 90, Accessibility ≥ 95, Best Practices ≥ 90, SEO ≥ 90; LCP < 2,5 s, CLS < 0,1 en TBT < 200 ms                                                                           | Gepland (fase 5)                                |
 
@@ -537,9 +550,9 @@ impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish
 | Fase | Scope                                                                                                                           | Levert / exit-criterium                                                                                                                                            |
 | :--: | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 |  1   | Bestaande suite stabiliseren (smoke + navigatie + contact)                                                                      | Alle huidige tests groen, deterministisch, gemockt; geen flaky                                                                                                     |
-|  2   | **Mobiele menu-toggle stabiliseren & uitbreiden** (TC MENU-01…10, bestaand + nieuwe focus/Escape/klik-buiten-cases)             | Suite groen + deterministisch; extra viewports (850×1024, 360×640) toegevoegd; ARIA state-transition, focusbeheer, `Escape`-sluiten en klik-buiten-het-menu gedekt |
+|  2   | **Mobiele menu-toggle stabiliseren & uitbreiden** (TC MENU-01…10, bestaand + nieuwe focus/Escape/klik-buiten-cases)             | Suite groen + deterministisch op `DESKTOP_VIEWPORT` (1920×1080) en `MOBILE_VIEWPORT` (390×844); ARIA state-transition, focusbeheer, `Escape`-sluiten en klik-buiten-het-menu gedekt. De extra viewports (850×1024, 360×640) zijn niet toegevoegd — die staan in RESP-01 (fase 4) |
 |  3   | Testdata centraliseren (`utils/test-data.ts`) + F4/F6/F7/F10-cases; F8 blijft gepland | Formulier-testdataset centraal; F-matrix grotendeels gedekt                                                                                                        |
-|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks — **a11y af** (17 tests in `accessibility.spec.ts`) | A11Y-01…04 groen op alle 10 pagina's; RESP/SEO/LINK/IMG nog te bouwen                                                                                             |
+|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks — **af** (a11y 17, SEO 32, content-integrity 11, responsive 8) | A11Y-01…04, SEO-01…04, LINK-01/02, IMG-01 en RESP-01 groen op alle 10 pagina's; VIS-01 en PERF-01 zijn fase 5                                                                                             |
 |  5   | Visual regression + Lighthouse-drempels                                                                                         | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                                                                            |
 |  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → test → artifacts → history   | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit                                                                         |
 |  7   | Optioneel: pre-deploy/PR-gate (push-trigger op de poorten), cross-browser (Firefox/WebKit) + exploratoire device-sessies        | Gate-besluit (§10.2), browser-coverage & handmatige findings geformaliseerd                                                                                        |
@@ -633,19 +646,23 @@ moeten definitief zijn; dan wordt deze taak uitgevoerd. Nu is er de taakomschrij
 - De testdata en verwachtingen zijn deterministisch: gemockte endpoints, vaste
   fixtures en geen afhankelijkheid van live CI-cijfers.
 
-### Exit criteria — huidige baseline (suite zoals nu, 80 tests)
+### Exit criteria — huidige baseline (suite zoals nu, 131 tests)
 
 1. **Poorten groen** — `npm run check` (typecheck + lint + html-validate) slaagt.
-2. **Suite groen** — 80/80 tests slagen; 0 failures en 0 skipped in het JSON-report.
+2. **Suite groen** — 131/131 tests slagen lokaal (`npm run test:local`), 0 failures en
+   0 skipped in het JSON-report. De 131-suite heeft nog niet in de CI gedraaid: de laatst
+   gelogde CI-run is 63/63 (run 71).
 3. **Geen blokkerende of hoge defects** in de gedekte gebieden; bekende
-   niet-blokkerende issues zijn gedocumenteerd.
+   niet-blokkerende issues zijn gedocumenteerd. De sitemap/robots-contradictie (SEO-04)
+   en de compacte-layout-dekking (8 van de 10 pagina's hebben `.button`-elementen) zijn
+   documentvindingen, geen defecten.
 4. **Determinisme** — de suite is herhaalbaar groen: lokaal met `retries: 0`, CI met
    `retries: 2` als vangnet. Een test die alleen via een retry slaagt, telt als
    **flaky** en moet worden onderzocht (zie §12.1).
-5. **Beperkingen benoemd** — F8 is gepland, de accessibility-suite (A11Y-01…04,
-   17 tests) is bestaand, en de responsive-, SEO-, content-integriteit-, visual-
-   en performance-checks uit fase 4–5 ontbreken nog. Die staan als **gepland**
-   gemarkeerd en blokkeren deze baseline niet.
+5. **Beperkingen benoemd** — F8 is gepland; VIS-01 en PERF-01 uit fase 5 ontbreken nog;
+   de E2E-laag (S1–S6) en de pyramide-basis (CIH-06) zijn nog niet gebouwd. De
+   accessibility-, responsive-, SEO- en content-integriteit-suite zijn bestaand en lokaal
+   groen: A11Y-01…04 (17), RESP-01 (8), SEO-01…04 (32) en LINK-01/LINK-02/IMG-01 (11).
 
 ### Exit criteria — release-target (na fase 1–7)
 
@@ -771,10 +788,10 @@ werk, niet als bewijs.
 | G2   | NAV-01…NAV-05                       | `homepage-functional.spec.ts`, `mobile-menu-functional.spec.ts`, `footer-functional.spec.ts` | NAV-01–05 bestaand                                               | 12 homepage + 17 menu + 3 footer-tests |
 | G3   | F1…F10                              | `contact-functional.spec.ts`                                    | F1–F7, F9, F10 bestaand; F8 gepland                               | 16 contact-tests                       |
 | G4   | MENU-01…MENU-10                     | `mobile-menu-functional.spec.ts`                                | MENU-01–10 bestaand                                               | 17 menu-tests                          |
-| G5   | RESP-01                             | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
+| G5   | RESP-01                             | `responsive.spec.ts`                                          | Bestaand                                                          | 8 responsive-tests                   |
 | G6   | A11Y-01…A11Y-04                     | `accessibility.spec.ts`                                         | Bestaand                                                          | 17 accessibility-tests             |
-| G7   | SEO-01…SEO-04                       | nog te maken (fase 4)                                           | Gepland                                                           | —                                      |
-| G8   | LINK-01, LINK-02, IMG-01, HTML-01   | HTML-01 via CI-poort; rest fase 4                               | HTML-01 bestaand; LINK/IMG gepland                                | `npm run validate:html`                |
+| G7   | SEO-01…SEO-04                       | `seo.spec.ts`                                                 | Bestaand                                                          | 32 SEO-tests                       |
+| G8   | LINK-01, LINK-02, IMG-01, HTML-01   | `content-integrity.spec.ts` + CI-poort                        | Bestaand                                                          | 11 content-integrity-tests + `npm run validate:html` |
 | G9   | VIS-01                              | nog te maken (fase 5)                                           | Gepland                                                           | —                                      |
 | G10  | PERF-01                             | nog te maken (fase 5)                                           | Gepland                                                           | —                                      |
 | G11  | procesdoel — geen producttestcase   | `playwright.config.ts`, CI-run                                  | Bewezen door CI-config, niet door een testcase                    | `fullyParallel: true`; CI `workers: 1` |
@@ -827,10 +844,16 @@ werk, niet als bewijs.
 | A11Y-02 | `accessibility.spec.ts` | `A11Y-02: elk veld van het contactformulier heeft een eigen label` |
 | A11Y-04 | `accessibility.spec.ts` | `A11Y-04: de placeholder heeft voldoende contrast tegen de invoerachtergrond`; `A11Y-04: de hero-tekst blijft leesbaar in forced-colors-modus` |
 | HTML-01 | CI-poort | `npm run validate:html` (geen Playwright-test) |
+| RESP-01 | `responsive.spec.ts` | `RESP-01: <width>×<height> heeft de juiste nav-stijl en geen horizontale scroll` (7 viewports, alle 10 pagina's per viewport) + `RESP-01: de hero-tilt is aan op desktop en uitgezet op de compacte grens` |
+| SEO-01 | `seo.spec.ts` | `SEO-01: <pagina> heeft een eigen, Nederlandse titel en description` (10 pagina's) + `SEO-01: titels en descriptions zijn site-wide uniek` |
+| SEO-02 | `seo.spec.ts` | `SEO-02: <pagina> heeft één h1, unieke id's en indexatie uit` (10 pagina's) |
+| SEO-03 | `seo.spec.ts` | `SEO-03: <pagina> heeft canonical, Open Graph en Twitter card` (10 pagina's) |
+| SEO-04 | `seo.spec.ts` | `SEO-04: sitemap.xml dekt de 8 content-pagina's en robots.txt sluit indexering uit` |
+| LINK-01, LINK-02, IMG-01 | `content-integrity.spec.ts` | `LINK-01, LINK-02 en IMG-01: <pagina> heeft valide links en afbeeldingen` (10 pagina's) + `IMG-01: elke asset-referentie op de site verwijst naar een bekend site-bestand` |
 
-> Cases zonder rij in deze tabel zijn nog open: F8 is gepland en de overige
-> non-functionele cases (RESP, SEO, LINK, IMG, VIS, PERF) zijn gepland. De tabel
-> beschrijft de bestaande suite.
+> Cases zonder rij in deze tabel zijn nog open: F8 is gepland, en VIS-01 en PERF-01 zijn
+> fase 5. De tabel beschrijft de bestaande suite — inclusief de non-functionele suites
+> uit stap 2 (RESP-01, SEO-01…04, LINK-01/LINK-02/IMG-01) en de accessibility-suite.
 
 ---
 
@@ -839,7 +862,7 @@ werk, niet als bewijs.
 | Onderdeel         | Deliverable                                     | Bron / bewijs                                                          |
 | ----------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
 | Testplan          | dit document, met status per testcase           | `Project-documentation/TESTPLAN.md`                                    |
-| Testsuite         | 7 spec-bestanden, 80 tests                      | `playwright/tests/` + `npx playwright test --list`                     |
+| Testsuite         | 10 spec-bestanden, 131 tests                    | `playwright/tests/` + `npx playwright test --list`                     |
 | Testrapportage    | HTML-report en JSON-report per run              | `playwright/playwright-report/`, `playwright/test-results/report.json` |
 | CI-history        | `docs/data/playwright-history.json` + dashboard | `scripts/ci-summary.mjs`, `automation.html`                            |
 | Kwaliteitspoorten | typecheck, lint en html-validate                | `npm run check`, `playwright.yml`                                      |
