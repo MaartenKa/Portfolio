@@ -89,8 +89,12 @@ jobs:
         env:
           SITE_BASE_URL: https://maartenka.github.io/Portfolio/
 
+      # Alleen Chromium: `playwright.config.ts` en `playwright.local.config.ts`
+      # definiëren elk één project `chromium`, dus Firefox en WebKit worden hier
+      # niet geïnstalleerd en draaien er nooit (BESTPRACTICES.md §17/§18:
+      # installeer alleen wat de pipeline nodig heeft; TESTPLAN.md §10.3 punt 3).
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps chromium
 
       - name: Run Playwright tests
         run: npm run test
