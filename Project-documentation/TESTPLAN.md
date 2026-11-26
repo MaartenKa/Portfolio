@@ -886,7 +886,8 @@ werk, niet als bewijs.
 | Testsuite         | 10 spec-bestanden, 131 tests                    | `playwright/tests/` + `npx playwright test --list`                     |
 | Testrapportage    | HTML-report en JSON-report per run              | `playwright/playwright-report/`, `playwright/test-results/report.json` |
 | CI-history        | `docs/data/playwright-history.json` + dashboard | `scripts/ci-summary.mjs`, `automation.html`                            |
-| Kwaliteitspoorten | typecheck, lint en html-validate                | `npm run check`, `playwright.yml`                                      |
+| Kwaliteitspoorten | typecheck, lint en html-validate (plus de geplande `test:ci-summary`, CIH-06) | `npm run check`, `playwright.yml`                                      |
+| CI-history datalaag | component-test op `scripts/ci-summary.mjs` — CIH-06, gepland | `playwright/tests/unit/` + `npm run test:ci-summary`; plan `PLAN-CI-HISTORY-TESTS.md` §7 |
 | Showcase-media | video-clips van de suite op de portfolio (gepland, §10.4) | kijkmodus in `playwright.local.config.ts` (`PW_VIEW=1`) |
 
 **Planning en inspanning:** de fasering staat in §10. Fase 1–3 zijn de

@@ -101,6 +101,7 @@ playwright/
   tests/smoke|functional/      # 63 tests (smoke + functioneel)
   tests/accessibility/accessibility.spec.ts  # A11Y-01…A11Y-04, 17 tests
   tests/compatibility|e2e|regression/        # gereserveerd, nog leeg
+  tests/unit/                                # gepland (CIH-06): component-test op ci-summary.mjs
 scripts/ci-summary.mjs         # JSON-report → CI-history
 scripts/site-check.mjs         # live-site-preflight vóór de tests
 Project-documentation/         # testplan, CI-documentatie, best practices, verbeterplan

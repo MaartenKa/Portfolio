@@ -255,6 +255,13 @@ concurrency:
 
 De relevante CI-stappen:
 
+- **Poorten en browserinstall vóór de suite** — `npm run typecheck`, `npm run lint`
+  en `npm run validate:html`, dan de preflight hieronder, dan
+  `npx playwright install --with-deps chromium`: alleen Chromium, want de configs
+  kennen één `chromium`-project. De geplande vierde poort is
+  `npm run test:ci-summary` (CIH-06) — zonder browser, na `validate:html` en vóór
+  de browserinstall; de code is er nog niet.
+
 0. **Check live site availability** — `npm run check:site` (`scripts/site-check.mjs`)
    controleert alle live `docs/*.html`-pagina's op HTTP 200 met retries. Faalt
    deze preflight, dan starten de Playwright-tests niet; de hostfout wordt als
@@ -603,6 +610,12 @@ echte CI-cijfers tonen.
   de minuut; GitHub Pages serveert met `max-age=600`, dus JSON, site-JS en HTML
   kunnen tot tien minuten oud zijn. `cache: "no-store"` omzeilt de browsercache,
   niet de Pages-cache. Een harde reload na een deploy is verwacht gedrag.
+- **De producerende kant heeft geen eigen test.** `scripts/ci-summary.mjs` draait in
+  de CI zonder geautomatiseerde controle op de report→entry-vertaling; de
+  weergavelaag is wél gedekt door vijf UI-tests met gemockte data. De component-test
+  CIH-06 is gescopeerd — niet-browser project `playwright/tests/unit/` met poort
+  `npm run test:ci-summary` vóór de browserinstall — en nog niet gebouwd. Zie
+  `PLAN-CI-HISTORY-TESTS.md` §7 en `TEST-SUITE-STATUS.md` §3 punt 4.
 - De gepubliceerde HTML bevat altijd de placeholders; de cijfers ontstaan pas in
   de DOM na de fetch. "Bron bekijken" is daarom nooit een bewijs van de cijfers.
 
@@ -646,3 +659,9 @@ de **CI-keten** zelf (commit → Pages → browser) hebben géén geautomatiseer
 
 De indeling per laag, de voorgestelde testcase-IDs (CIH-01…CIH-08), de koppeling
 aan `TESTPLAN.md` en de roadmap staan in `PLAN-CI-HISTORY-TESTS.md`.
+
+De uitvoeringsvorm van CIH-06 is november 2026 vastgelegd: de Playwright-runner in
+een **niet-browser project** `unit` (`playwright/tests/unit/ci-summary.spec.ts`,
+geen `devices`-use, geen `page`-fixture), met `npm run test:ci-summary` als CI-poort
+vóór de browserinstall. De code is nog niet gebouwd; de suite telt 131 tests in 10
+spec-bestanden. Poort en project zijn dus nog niet in `package.json` en de configs.

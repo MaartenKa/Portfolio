@@ -88,6 +88,7 @@ network mocking, CI-ready configuratie).
 │       ├── content-integrity/content-integrity.spec.ts # LINK-01, LINK-02, IMG-01 (11 tests)
 │       ├── seo/seo.spec.ts   # SEO-01…SEO-04 (32 tests)
 │       ├── responsive/responsive.spec.ts # RESP-01 (8 tests op 7 viewports)
+│       ├── unit/              # gepland — CIH-06: component-test op ci-summary.mjs (niet-browser project)
 │       ├── compatibility/     # leeg — TESTPLAN fase 7 (Firefox/WebKit)
 │       ├── e2e/               # leeg — gebruikersflows
 │       └── regression/        # leeg — integriteitssuite voor later

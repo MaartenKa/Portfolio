@@ -474,6 +474,9 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
 | `CI-PLAYWRIGHT-HISTORY.md` | Hoe zit het exact in elkaar: schema's, velden, CI-stappen, verificatie |
 | `PLAYWRIGHT.md` | Hoe is het testproject opgebouwd: structuur, POM, conventies, commando's |
 | `TESTPLAN.md` | Wat er getest moet worden, en wat er al is |
+| `TEST-SUITE-STATUS.md` | De actuele backlog: wat gedaan is, wat open is, en de theorie–praktijkaudit |
 | `PLAN-CI-HISTORY-TESTS.md` | Testsoort van de CI-history tests, de plaats ervan in `TESTPLAN.md` en de roadmap |
+| `PLAN-DEPENDENCY-UPGRADES.md` | Versiebeleid en de upgrade-reeks (Node, npm, actions, de CI-deprecation-warns) |
+| `PLAN-HERO-SOFT-3D.md` | Plan en resultaat van de soft-3D homepage-card |
 | `BESTPRACTICES.md` | Hoe je goed test en commentaar schrijft: ISTQB, Playwright en commentaarconventies |
 | `AGENTS.md` | Welke documentatie relevant is |
