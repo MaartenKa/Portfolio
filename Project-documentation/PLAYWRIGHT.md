@@ -182,6 +182,13 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   high-contrastmodus de gradient-tekst niet verliest. Alleen
   `section.privacy-policy` heeft bewust géén `aria-label`: zonder accessible name
   is zo'n section geen landmark.
+- **Woordbreking (`overflow-wrap: break-word` op `body`):** lange, onbreekbare teksten
+  mogen afgebroken worden — de h1 "Automatiseren" op `automation.html`, de h1 "Laten we
+  kennismaken" op `contact.html`, de h2 "Van handmatig naar geautomatiseerd" op
+  `testing.html` en de URL-link op `privacy.html`. Zonder die regel is hun min-content
+  breder dan de beschikbare kolom, en de pagina loopt dan horizontaal op een smalle
+  viewport. De responsive-suite (RESP-01) meet dat; in CI (run 72) faalden vier cases vóór
+  deze regel, op de runner met zijn bredere uitvalfont.
 
 ## 5. Testautomatisering (`playwright/`)
 
@@ -303,6 +310,11 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    op 1280, `transform: none` op 500 en 499 (PLAN-HERO-SOFT-3D). De viewport-vertakking
    staat in `ResponsivePage.expectViewportContract()`, niet in het test-lichaam.
    Page object: `pages/responsive.page.ts`.
+   In CI (run 72) faalden de vier smalle viewport-cases op 500, 499, 390 en 320: de
+   runner-uitvalfont is breder dan het lokale "Segoe UI", dus overschreed de min-content
+   van lange woorden en de URL-link de kolom. De site-CSS breekt die nu met
+   `overflow-wrap: break-word` op `body`; de hertest is lokaal met een wide-font proxy op
+   de lokale `docs/`-build (10 pagina's × 7 viewports, `scrollWidth == innerWidth`).
 7. **Node-laag (CIH-06)** — `tests/unit/ci-summary.spec.ts` (8 tests, CIH-06a…h) op
    `scripts/ci-summary.mjs`: vaste rapportstatistiek → de vertaling → asserts op de
    history-entry (formules uit `stats`, `passRate`-afronding op één decimaal, `total = 0`

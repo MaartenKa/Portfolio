@@ -21,7 +21,10 @@
 > `npm run test:ci-summary` als CI-poort vóór de browserinstall en de gate-config
 > `playwright.unit.config.ts`. De TESTPLAN-wijzigingen in §6 zijn doorgevoerd. De
 > datasuite is lokaal gemeten: 8/8 groen, `npm run check` groen en de suite telt
-> 139 tests in 11 spec-bestanden. De CI-run met de poort is nog niet gedraaid;
+> 139 tests in 11 spec-bestanden. Run 72 heeft de poort in de CI gezet: de datasuite en de
+> Chromium-install concludeerden success vóór de browserinstall, en de teststap gaf
+> `Running 139 tests` met een record van `total = 139` (135 geslaagd, 4 faalden — RESP-01
+> op de runner-fonts, niet de datasuite). CIH-07 (schema v2) en CIH-08 (a11y) volgen.
 > CIH-07 (schema v2) en CIH-08 (a11y) volgen.
 
 ## 1. De vraag en het korte antwoord
@@ -45,7 +48,7 @@ een eigen juiste testsoort.
 | --- | --- | --- | --- | --- |
 | **A — Weergave** | `src/ts/main.ts` + `docs/automation.html` | JSON → kaarten, totalen, ratio, tabel, lege staat | Functioneel (systeemniveau), met `page.route()`-mock | **Ja** — 5 tests |
 | **B — Data** | `scripts/ci-summary.mjs` | `report.json` → history-entry: formules, `no-report`, dedup, `--max` | Component-/unittest van een Node-script, zonder browser | **Ja** — 8 tests in `playwright/tests/unit/ci-summary.spec.ts` (CIH-06a…h), browserloos project `unit` |
-| **C — Keten** | workflow → bot-commit → Pages → browser | dat de cijfers echt live verschijnen | E2E/acceptance van de CI zelf | **Nee** — wel handmatig bewezen (`CI-PLAYWRIGHT-HISTORY.md` §15) |
+| **C — Keten** | workflow → bot-commit → Pages → browser | dat de cijfers echt live verschijnen | E2E/acceptance van de CI zelf | **Nee** — wel handmatig bewezen (`CI-PLAYWRIGHT-HISTORY.md` §15 en §15.1, met run 72 van de 139-suite) |
 
 Waarom de mock in laag A bewust is: zonder mock hangt elke verwachting af van wat
 er die nacht in de CI draaide. Dat is niet deterministisch en botst met de
@@ -124,7 +127,7 @@ bot-commit in de git-log en `CI-PLAYWRIGHT-HISTORY.md` §15.
 | Fase | Werk | Waarom | Risico |
 | --- | --- | --- | --- |
 | **A — klaar** | Pooled ratio, `Totaal uitgevoerde tests`, `Totaal geslaagd`, `Suite omvang`, notering, 5 UI-tests, vaste lokale hulpm-config | De kaarten beantwoorden "mijn suite slaagt voor X%" op één consistente manier | — |
-| **B — gebouwd** | **CIH-06**: datasuite op `scripts/ci-summary.mjs` — 8 tests in `playwright/tests/unit/ci-summary.spec.ts`, niet-browser project `unit`, poort `npm run test:ci-summary` vóór de browserinstall, gate-config `playwright.unit.config.ts` | De UI is gedekt, de producerende kant was niet gedekt. Een rekenfout geeft een groene suite én onjuiste kaarten | Laag — geen browser; de CI-poort is toegevoegd en de CI-run ermee is nog niet gedraaid |
+| **B — gebouwd** | **CIH-06**: datasuite op `scripts/ci-summary.mjs` — 8 tests in `playwright/tests/unit/ci-summary.spec.ts`, niet-browser project `unit`, poort `npm run test:ci-summary` vóór de browserinstall, gate-config `playwright.unit.config.ts` | De UI is gedekt, de producerende kant was niet gedekt. Een rekenfout geeft een groene suite én onjuiste kaarten | Laag — geen browser; de CI-poort is toegevoegd en in run 72 ermee gedraaid |
 | **C** | **Schema v2**: `suiteTests` in de entry, geteld uit de JSON-report; UI valt terug op `max(total)` voor entries zonder veld | `ci-suite-size` is nu een proxy: te hoog bij een krimpende suite, te laag als de grootste run buiten de 30-run window valt | Middel — schema-wijziging, oude entries moeten blijven renderen |
 | **D** | **CIH-08** a11y van de CI-sectie, samen met de A11Y-fase uit `TESTPLAN.md` | De CI-sectie is de meest dynamische plek van de site en dus de meest a11y-gevoelige | Laag |
 | **E** | Productiebewijs herhalen na fase B en C | De keten is één keer bewezen (run #42); na een schema-wijziging is een nieuwe dispatch-run nodig | — |

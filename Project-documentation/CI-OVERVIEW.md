@@ -182,7 +182,8 @@ Dit bestand bepaalt **wat er in het dagboekje komt te staan**.
   (geen `devices`-use, geen `page`-fixture), met `npm run test:ci-summary` als
   CI-poort vóór de browserinstall en de gate-config
   `playwright.unit.config.ts` (eigen `outputDir`, alleen de `list`-reporter). De
-  CI-run met deze stand is nog niet gedraaid.
+  Run 72 heeft deze stand in de CI gezet: de datasuite-poort en de browserinstall
+  concludeerden success, en de teststap gaf `Running 139 tests`.
 
 #### `docs/data/playwright-history.json` — het dagboekje
 
@@ -441,10 +442,11 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    sinds stap 2 gebouwd in `content-integrity/` (11 tests), `seo/` (32 tests) en
    `responsive/` (8 tests), en lokaal groen. Voor cross-browser staat fase 7 in het plan;
    voor `e2e/` staat er geen testcase, geen ID en geen roadmapfase — de map is de
-   placeholder voor gebruikersflows. De CI-cijfers tonen dus nog alleen smoke en functioneel:
-   de laatst gelogde CI-run is 63/63 (run 71), en de suite van 139 tests heeft nog niet in
-   de CI gedraaid. `accessibility/` is gevuld (17 tests) en `unit/` met de datasuite
-   CIH-06 (8 tests, zonder browser).
+   placeholder voor gebruikersflows. De CI-cijfers van run 72 tonen de 139-suite op de
+   runner: 135 geslaagd en 4 faalden — de RESP-01 op de smalle viewports (500, 499, 390
+   en 320), door de bredere runner-uitvalfont. `accessibility/` is gevuld (17 tests) en
+   `unit/` met de datasuite CIH-06 (8 tests, zonder browser), die in run 72 als poort
+   vóór de browserinstall draaide.
 4. **`docs/js/ts/main.js` is een gebouwd bestand in de repo.** Na een wijziging in
    `src/ts/main.ts` moet `npm run build` gedraaid worden en het resultaat gecommit;
    de CI bouwt het niet.
@@ -457,8 +459,10 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    datasuite CIH-06: 8 tests in `playwright/tests/unit/ci-summary.spec.ts`, in de
    Playwright-runner zonder browser, als CI-poort `npm run test:ci-summary` vóór de
    browserinstall met de gate-config `playwright.unit.config.ts`. De weergavelaag is
-   gedekt door `ci-history-functional.spec.ts`. De CI-run met deze stand is nog niet
-   gedraaid: de history-record staat nog op 63/63 (run 71).
+   gedekt door `ci-history-functional.spec.ts`. Run 72 heeft deze stand bewezen: de
+   datasuite-poort en de Chromium-install concludeerden success, de teststap gaf
+   `Running 139 tests` en de history-record op `main` bevat die run met `total = 139`
+   (135 geslaagd, 4 faalden).
 7. **De suite draait tegen de live site.** Nieuwe UI-tests slagen pas ná deploy plus
    de cache-periode uit §11. Voor lokaal werk aan `docs/` staat er een vaste
    hulpm-config in de repo: `playwright.local.config.ts` (`npm run test:local`,
@@ -471,6 +475,13 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    de run direct en goedkoop stop. Zie `TESTPLAN.md` §11 (entry-criteria) en §10 fase 6.
    De browserinstall is teruggebracht naar **Chromium alleen**
    (`--with-deps chromium`), omdat de configs één `chromium`-project definiëren.
+9. **De runner heeft bredere system-fonts dan de lokale machine.** De
+   responsive-check "geen horizontale scroll" meet documentbreedte, en die is
+   font-metric-afhankelijk. In run 72 faalden vier RESP-01-cases op de smalle viewports,
+   terwijl dezelfde tests lokaal groen draaiden tegen de live site. De site-CSS breekt
+   lange woorden en URLs (`overflow-wrap: break-word` op `body`), en de hertest draait
+   lokaal met een wide-font proxy op de lokale `docs/`-build. De groene CI-stand volgt
+   na deploy plus een dispatch-run.
 
 
 

@@ -20,7 +20,7 @@ met pass-rate, groene streaks en de status van de laatste runs.
 | ---------------------- | --------------------------------------------------- |
 | Testsuite              | **139 tests** in 11 spec-bestanden (131 browser + 8 datasuite) |
 | Browser                | Chromium (Desktop Chrome)                           |
-| Laatste gelogde CI-run | **63/63 geslaagd** (run 71, 100%; suite telt nu 139 — de 139-suite heeft nog niet in de CI gedraaid) |
+| Laatste gelogde CI-run | **135/139 geslaagd** (run 72, 97,1%; de 139-suite draaide voor het eerst in de CI — 4 RESP-01-cases faalden door de runner-fonts, de CSS-fix staat in de werkbom) |
 | CI                     | GitHub Actions — dagelijks om 18:17 UTC + handmatig |
 | Kwaliteitspoorten      | `tsc --noEmit`, ESLint 10, html-validate, `test:ci-summary` (CIH-06) |
 | Stack                  | HTML/CSS, TypeScript, Playwright 1.65, GitHub Pages |
@@ -160,6 +160,14 @@ suite; de datasuite heeft geen browser nodig, dus hij faalt vóór de download.
   `npm run test:local`, dat tegen de lokale `docs/` draait. Een 5xx/timeout van de
   host wordt door `npm run check:site` vóór de suite afgevangen en geldt als
   infrastructuurprobleem, niet als testflake.
+- **De layout is font-metric-gevoelig.** De responsive-suite (RESP-01) meet de
+  documentbreedte, en die hangt af van de glyphbreedtes van de system-uitvalfont. De
+  runner heeft een bredere uitvalfont dan de lokale "Segoe UI", dus kan de min-content
+  van een lange, onbreekbare tekst (een h1, een h2, een URL) breder zijn dan de kolom —
+  dan loopt de pagina horizontaal op een smalle viewport. De site-CSS breekt lange
+  woorden en URLs (`overflow-wrap: break-word` op `body`), en de hertest draait lokaal
+  met een wide-font proxy op de lokale `docs/`-build. In run 72 faalden vier RESP-01-cases
+  op de runner vóór die fix; dezelfde tests waren lokaal groen.
 - **Non-functionele suites zijn nu gebouwd voor responsive, SEO en content-integriteit.**
   De accessibility-suite (A11Y-01…A11Y-04, 17 tests), de responsive-suite (RESP-01, 8 tests
   op 7 viewports, inclusief de CSS-grenzen 850/849 en 500/499), de SEO-suite (SEO-01…04,
