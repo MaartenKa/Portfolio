@@ -485,7 +485,7 @@ nog gepland, en VIS-01 en PERF-01 zijn fase 5.
 
 | ID      | Categorie           | Testcase                                                           | Verwacht resultaat (concreet)                                                                                                                                                         | Status                                          |
 | ------- | ------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| RESP-01 | Responsive          | Layout per breakpoint (desktop/tablet/mobiel)                      | 8 tests op 1280×800, de grenzen 850×1024 en 849×1024, de grenzen 500×640 en 499×640, 390×844 en de ondergrens 320×568, op alle 10 pagina's: geen horizontale scroll, toggle-zichtbaarheid en ingeklapt menu tot en met de nav-grens, full-width knoppen en gestapelde hero-knoppen op de compacte grens, hero-tilt aan op desktop en `transform: none` op de grens. De viewports staan als `RESPONSIVE_VIEWPORTS` in `test-data.ts`; `360×640` is niet opgenomen — de partitie ≤500px wordt getest op 499×640, 390×844 en 320×568 | **Bestaand** (`responsive.spec.ts`, 8 tests) — in run 72 faalden de vier smalle viewport-cases op de runner-fonts; de site-CSS breekt nu lange woorden en URLs (`overflow-wrap: break-word` op `body`), hertest met de wide-font proxy        |
+| RESP-01 | Responsive          | Layout per breakpoint (desktop/tablet/mobiel)                      | 8 tests op 1280×800, de grenzen 850×1024 en 849×1024, de grenzen 500×640 en 499×640, 390×844 en de ondergrens 320×568, op alle 10 pagina's: geen horizontale scroll, toggle-zichtbaarheid en ingeklapt menu tot en met de nav-grens, full-width knoppen en gestapelde hero-knoppen op de compacte grens, hero-tilt aan op desktop en `transform: none` op de grens. De viewports staan als `RESPONSIVE_VIEWPORTS` in `test-data.ts`; `360×640` is niet opgenomen — de partitie ≤500px wordt getest op 499×640, 390×844 en 320×568 | **Bestaand** (`responsive.spec.ts`, 8 tests) — in run 72 faalden de vier smalle viewport-cases op de runner-fonts; de site-CSS breekt lange woorden en URLs (`overflow-wrap: break-word` op `body`), hertest met de wide-font proxy; run 73 draaide alle 8 tests groen in CI |
 | A11Y-01 | Accessibility       | Keyboard-only navigatie + focus-visible                            | alle interactieve elementen toetsbaar bereikbaar; zichtbare focus-indicator (WCAG 2.4.7)                                                                                              | **Bestaand** (`accessibility.spec.ts`)                                |
 | A11Y-02 | Accessibility       | `aria-expanded` / labels / `lang="nl"` / img `alt`                 | attributen aanwezig en correct; `lang="nl"` op elke pagina; elk formulierveld heeft een eigen label; elke `<img>` heeft een niet-lege `alt`                                                                        | **Bestaand** (`accessibility.spec.ts`)                                |
 | A11Y-03 | Accessibility       | Skip-link, decoratieve iconen en section-labels                    | skip-link → `#hoofdinhoud` met focus op het doel; decoratieve emoji/pijlen `aria-hidden="true"`; section-labels in het Nederlands                                                     | **Bestaand** (`accessibility.spec.ts`)                                |
@@ -518,7 +518,7 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 | CIH-04 | Runs zonder noemer (`total = 0`) vallen buiten de totalen      | alleen 2 van 3 runs geteld: `ci-total-executed` = "80", `ci-pass-ratio` = "90%", `ci-streak` = "0", `ci-status` = "Geannuleerd"; notering bevat "2 van 3 CI-runs geteld"                                                             | Bestaand |
 | CIH-05 | Lege geschiedenis: placeholders en placeholder-rij             | alle kaarten tonen "—", `ci-history-body` bevat "Geen CI-historie beschikbaar."                                                                                                                                                      | Bestaand |
 
-> **Bewijs:** `npx playwright test --list` telt 5 tests in dit spec-bestand (80 in
+> **Bewijs:** `npx playwright test --list` telt 5 tests in dit spec-bestand (139 in
 > de hele suite). De tabel heeft in de markup 6 kolommen (Run, Datum, Status,
 > Tests, Geslaagd, Flaky) en géén `data-testid` per rij; rijen worden via
 > `getByRole("row")` geteld. Er is **géén** aparte JSON-schema- of 404-fallback-test **in dit spec-bestand**.
@@ -531,7 +531,8 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 > `PLAN-CI-HISTORY-TESTS.md` §7. CIH-07 (schema v2 met `suiteTests`)
 > en CIH-08 (a11y van de CI-sectie) volgen daarna. De suite telt 139 tests in 11
 > spec-bestanden; run 72 heeft de datasuite als poort in de CI gedraaid, vóór de
-> browserinstall, en de teststap gaf `Running 139 tests`.
+> browserinstall, en de teststap gaf `Running 139 tests`. Run 73 draaide de volledige
+> suite groen: 139 geslaagd, 0 faalden en `passRate` 100.
 
 ---
 
@@ -579,7 +580,7 @@ impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish
 |  3   | Testdata centraliseren (`utils/test-data.ts`) + F4/F6/F7/F10-cases; F8 blijft gepland | Formulier-testdataset centraal; F-matrix grotendeels gedekt                                                                                                        |
 |  4   | Non-functioneel: responsive, a11y, SEO, links/img checks — **af** (a11y 17, SEO 32, content-integrity 11, responsive 8) | A11Y-01…04, SEO-01…04, LINK-01/02, IMG-01 en RESP-01 groen op alle 10 pagina's; VIS-01 en PERF-01 zijn fase 5                                                                                             |
 |  5   | Visual regression + Lighthouse-drempels                                                                                         | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                                                                            |
-|  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → datasuite CIH-06 → test → artifacts → history   | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit; Chromium-only browserinstall; de history-**data** is gedekt door de datasuite CIH-06 (`npm run test:ci-summary`, 8 tests) vóór de browserinstall — in run 72 met die poort gedraaid, met een record van `total = 139`                                |
+|  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → datasuite CIH-06 → test → artifacts → history   | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit; Chromium-only browserinstall; de history-**data** is gedekt door de datasuite CIH-06 (`npm run test:ci-summary`, 8 tests) vóór de browserinstall — in run 72 met die poort gedraaid (record `total = 139`, 135 geslaagd), en in run 73 groen met 139 geslaagd en `passRate` 100                                |
 |  7   | Optioneel: pre-deploy/PR-gate (push-trigger op de poorten), cross-browser (Firefox/WebKit) + exploratoire device-sessies        | Gate-besluit (§10.2), browser-coverage & handmatige findings geformaliseerd                                                                                        |
 | 8  | Showcase-media: video's van de suite op de portfolio-site, wanneer de portfolio-inrichting vastligt | Kijkmodus-artifacten uit §10.4 gekozen, als site-asset opgeslagen en ingebet op automation.html; de site-copy is bijgewerkt |
 
@@ -688,9 +689,11 @@ moeten definitief zijn; dan wordt deze taak uitgevoerd. Nu is er de taakomschrij
    `npm run test:ci-summary` (8 datasuite-tests) slagen.
 2. **Suite groen** — 139/139 tests slagen lokaal (`npm run test:local`), 0 failures en
    0 skipped in het JSON-report; lokaal tegen de live site is dat ook 139/139. In de CI
-   draaide de suite in run 72: 135 geslaagd en 4 faalden — RESP-01 op de smalle viewports
-   door de bredere runner-uitvalfont. De CSS-fix staat in de werkbom; de groene CI-stand
-   volgt na deploy plus een dispatch-run.
+   draaide de suite groen in run 73: 139 geslaagd en 0 faalden, `passRate` 100, met alle
+   CI-stappen success. De vier RESP-01-cases die in run 72 op de smalle viewports faalden
+   door de bredere runner-uitvalfont zijn opgeheven. De CSS-fix
+   (`overflow-wrap: break-word` op `body`) staat op `main` en is gedeployed; run 73
+   bevestigt de groene CI-stand met 139/139.
 3. **Geen blokkerende of hoge defects** in de gedekte gebieden; bekende
    niet-blokkerende issues zijn gedocumenteerd. De sitemap/robots-contradictie (SEO-04)
    en de compacte-layout-dekking (8 van de 10 pagina's hebben `.button`-elementen) zijn

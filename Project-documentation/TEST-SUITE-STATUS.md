@@ -11,23 +11,25 @@
 - **139 tests in 11 spec-bestanden.**
 - Smoke: 10, homepage: 12, contact: 16, mobiel menu: 17, CI-history: 5, footer: 3,
   accessibility: 17, content-integrity: 11, SEO: 32, responsive: 8, CIH-06 datasuite: 8.
-- `npm run check` → groen.
+- `npm run check` → groen (gemeten 27 november 2026, na de CSS-fix).
 - `npm run test:ci-summary` → **8/8 geslaagd** (de datasuite van CIH-06, zonder browser).
-- `npm run test:local` → **139/139 tests geslaagd** (gemeten na de CIH-06-bouw, november 2026).
+- `npm run test:local` → **139/139 tests geslaagd** (gemeten 27 november 2026: afsluitregel
+  `139 passed`, 1 worker, `retries: 0`, tegen de lokale `docs/` op poort 8080).
 - `npx playwright test --list` → 139 tests in 11 files.
-- Sequencering: lokaal **139/139** en lokaal tegen de live site **139/139**
-  (`npm run test`). In de CI draaide de 139-suite in run **72** (handmatig gestart op de
-  docs-commit van deze stand): **135 geslaagd, 4 faalden**. Alle vier faalden in de
-  RESP-01-cases op de smalle viewports (500×640, 499×640, 390×844, 320×568), met 37–46 px
-  horizontale overloop en in élke poging dezelfde maat — dus geen testflake, maar een
-  environment-defect: de runner-uitvalfont is breder dan het lokale "Segoe UI". De site-CSS
-  breekt nu lange woorden en URLs (`overflow-wrap: break-word` op `body`), gemeten met de
-  wide-font proxy. Groen in CI volgt na deploy plus een dispatch-run.
-- **Laatste CI-record:** run **72** met `total` **139**, `passed` **135**, `failed` **4**
-  en `passRate` **97,1** — de eerste CI-run van de 139-suite, door de bot committed op
-  `main`. De JSON in de werkbom eindigt nog op run **71** (63/63, 100%); de entry voor
-  run 72 komt binnen bij de volgende pull. De history-JSON is de bron van waarheid voor de
-  README-claim over de laatste run (PLAYWRIGHT §10).
+- Sequencering: lokaal **139/139** (gemeten 27 november) en lokaal tegen de live site
+  **139/139** (`npm run test`). De 139-suite draaide voor het eerst in de CI in run **72**:
+  **135 geslaagd, 4 faalden**. Alle vier faalden in de RESP-01-cases op de smalle viewports
+  (500×640, 499×640, 390×844, 320×568), met 37–46 px horizontale overloop en in élke poging
+  dezelfde maat — dus geen testflake, maar een environment-defect: de runner-uitvalfont is
+  breder dan het lokale "Segoe UI". De site-CSS breekt lange woorden en URLs
+  (`overflow-wrap: break-word` op `body`), gemeten met de wide-font proxy. Run **73**
+  bevestigt de fix in de CI: **139 geslaagd, 0 faalden**, met alle CI-stappen success.
+- **Laatste CI-record:** run **73** met `total` **139**, `passed` **139**, `failed` **0**
+  en `passRate` **100** — de eerste groene CI-run van de 139-suite, `workflow_dispatch`,
+  door de bot committed op `main`. De JSON in de werkbom bevat runs tot en met **72**
+  (nieuwste vooraan, 30 entries); de entry voor run **73** komt binnen bij de volgende
+  pull. De history-JSON is de bron van waarheid voor de README-claim over de laatste run
+  (PLAYWRIGHT §10).
 - **Werkbom na de CIH-06-bouw (november 2026):** de datasuite staat in
   `playwright/tests/unit/ci-summary.spec.ts` (8 cases uit `PLAN-CI-HISTORY-TESTS.md` §7),
   het niet-browser project `unit` staat in `playwright.config.ts`,
@@ -36,10 +38,11 @@
   `playwright.yml` na `validate:html` en vóór `check:site` en de browserinstall.
   Chromium-only install (`--with-deps chromium`) staat in de workflow. Gemeten:
   `npm run check` groen, `npm run test:ci-summary` 8/8, `npm run test:local` 139/139 en
-  `--list` 139 tests in 11 files. Run 72 heeft deze stand in de CI gezet: de vier poorten
+  `--list` 139 tests in 11 files. Run 72 zette deze stand in de CI: de vier poorten
   (typecheck, lint, html-validate, datasuite), de Chromium-install, `Running 139 tests`,
-  de drie artifacts en de bot-commit. De datasuite-poort en de browserinstall
-  concludeerden success; de teststap faalde op de vier RESP-01-cases.
+  de drie artifacts en de bot-commit concludeerden success; alleen de teststap faalde op
+  de vier RESP-01-cases. Run 73 draaide dezelfde keten groen — alle 16 stappen success,
+  139/139 en een record met `passRate` 100 — met de CSS-fix in `docs/css/style.css`.
 
 ## 2. Wat is gedaan
 
@@ -71,7 +74,7 @@
 | **Fix stap 2** | Drie page objects (`content.page.ts`, `seo.page.ts`, `responsive.page.ts`) en drie fixtures (`contentPage`, `seoPage`, `responsivePage`). `SeoPage` krijgt de `request`-fixture voor `sitemap.xml` en `robots.txt`; de fixtures navigeren niet, de specs doen dat per pagina. De viewport-vertakking staat in `ResponsivePage.expectViewportContract()`, niet in het test-lichaam. |
 | **Chromium-only browserinstall (workflows)** | `.github/workflows/playwright.yml` installeert `npx playwright install --with-deps chromium`, omdat `playwright.config.ts` en `playwright.local.config.ts` elk één project `chromium` definiëren. Open punt §3 punt 7 en audit §4.1 punt 8 zijn damit opgelost in de werkbom (TESTPLAN §10.1 en §10.3 punt 3, BESTPRACTICES §18). De CI-run bevestigt dit pas in een run met het nieuwe workflow-bestand. |
 | **CIH-06 datasuite** | `playwright/tests/unit/ci-summary.spec.ts` met 8 tests (CIH-06a…h) op `scripts/ci-summary.mjs`: formules uit `stats`, `passRate`-afronding op één decimaal, `total = 0` en getalnormalisatie, `no-report` bij een ontbrekend rapport, `CI_SUMMARY_STATUS`-normalisatie, dedup op `runId`, `--max`-kappen en de decoding van de CLI-args met de run-URL uit de CI-omgeving. Het project `unit` is browserloos (geen `devices`-use, geen `page`-fixture); de gate-config `playwright.unit.config.ts` heeft een eigen `outputDir` en alleen de `list`-reporter, zodat het suite-rapport voor `ci-summary.mjs` schoon blijft. `npm run test:ci-summary` is de CI-poort vóór de browserinstall. Elke test schrijft in een eigen temp-map, dus `docs/data/playwright-history.json` blijft onaangeraakt. |
-| **Responsive-defect in CI (run 72)** | Vier RESP-01-cases (500×640, 499×640, 390×844, 320×568) faalden in CI op de check "geen horizontale scroll": de documentbreedte liep 37–46 px boven de viewport, in elke poging met dezelfde maat. Root-cause is environment-gevoelig: de runner-uitvalfont is breder dan het lokale "Segoe UI", dus is de min-content van lange onbreekbare woorden groter dan de kolom — h1 "Automatiseren" (`automation.html`), h1 "Laten we kennismaken" (`contact.html`), h2 "Van handmatig naar geautomatiseerd" (`testing.html`) en de URL-link op `privacy.html`. De fix staat in de werkbom: `overflow-wrap: break-word` op `body` in `docs/css/style.css`. Met de wide-font proxy gemeten: vóór de fix overloop op automation (533/533/432/355 px op 500/499/390/320), testing (342 px op 320), contact (393/323 px) en privacy (337 px); na de fix is `scrollWidth == innerWidth` op alle 10 pagina's in alle 7 viewports. Lokaal opnieuw groen: `npm run check`, `npm run test:local` 139/139 en `npm run test` (live) 139/139. De groene CI-stand komt na deploy van de CSS en een dispatch-run. |
+| **Responsive-defect in CI — opgeheven in run 73** | Vier RESP-01-cases (500×640, 499×640, 390×844, 320×568) faalden in CI op de check "geen horizontale scroll": de documentbreedte liep 37–46 px boven de viewport, in elke poging met dezelfde maat. Root-cause is environment-gevoelig: de runner-uitvalfont is breder dan het lokale "Segoe UI", dus is de min-content van lange onbreekbare woorden groter dan de kolom — h1 "Automatiseren" (`automation.html`), h1 "Laten we kennismaken" (`contact.html`), h2 "Van handmatig naar geautomatiseerd" (`testing.html`) en de URL-link op `privacy.html`. De fix staat in `docs/css/style.css` (op `body`) en is gecommit en gedeployed. Met de wide-font proxy gemeten: vóór de fix overloop op automation (533/533/432/355 px op 500/499/390/320), testing (342 px op 320), contact (393/323 px) en privacy (337 px); na de fix is `scrollWidth == innerWidth` op alle 10 pagina's in alle 7 viewports. Lokaal opnieuw groen: `npm run check` en `npm run test:local` 139/139 (27 november). Run **73** bevestigt de groene CI-stand op de runner: 139/139, `passRate` 100, 3 artifacts en alle 16 stappen success. |
 
 ## 3. Wat nog open is
 
@@ -121,7 +124,7 @@ reconstructie uit het geheugen. De bijbehorende acties staan in §6.
 | `TESTPLAN.md` §5.4 Security (⭐⭐) | HTTPS, honeypot-check, ongewenste navigatie | Geen security-ID in de matrix en geen security-deliverable in §16. De honeypot-structuur is wél gedekt (F5, A11Y-01). | Type met een prioriteit en zonder testcase. |
 | `TESTPLAN.md` §5.2 en §5.4 Performance (⭐⭐⭐) | Lighthouse ≥ 90/95/90/90, LCP < 2,5 s, CLS < 0,1, TBT < 200 ms | Lighthouse staat niet in `package.json`; PERF-01 is gepland. | De drempels bestaan, de meting bestaat niet. |
 | `TESTPLAN.md` §5.4 Visual | VIS-01, `maxDiffPixelRatio` 0,01 | Geen baseline en geen dependency (fase 5). | Analoog. |
-| `TESTPLAN.md` §5.4 Smoke: "kleine subset bij elke build/deploy" | Smoke draait bij elke build | De push-trigger in `playwright.yml` is uitgeschakeld en er is geen pre-deploy gate. Smoke draait één keer per nacht: 10 van de 80 tests. | De smoke-rol is niet als rol geconfigureerd; G12 is een open beslispunt. |
+| `TESTPLAN.md` §5.4 Smoke: "kleine subset bij elke build/deploy" | Smoke draait bij elke build | De push-trigger in `playwright.yml` is uitgeschakeld en er is geen pre-deploy gate. Smoke draait één keer per nacht: 10 van de 139 tests. | De smoke-rol is niet als rol geconfigureerd; G12 is een open beslispunt. |
 | `TESTPLAN.md` §5.3 en §12.4: exploratoire sessies en closure | Handmatige sessies op iOS/Android, lessons learned, open defecten met severity | Geen sessieregister, geen findingsregister, geen closure-log in de repo. | Gedeclareerde practice zonder artefact. |
 | `TESTPLAN.md` §12.1, §12.4 en §14 DoD: defectbeheer | Issue met severity; een defect is geen testcase | De echte defects (raw `&` in `curriculum.html`, skip-link `tabindex`, de P2-a11y-fixes) staan als prose in de documentatie, zonder defect-ID en zonder link naar een testcase. | Geen defectregister en geen trace testcase ↔ defect. |
 | `TESTPLAN.md` §13: reviewer "PR-review op testkwaliteit" | Reviews via PR's op de DoD | Er is geen PR-workflow: pushes gaan direct naar `main`, de history-commit komt van de bot, de CI is nightly + dispatch. | Een rol zonder proces. |
@@ -202,12 +205,12 @@ Expliciet vastgelegd, zodat de audit niet als afrekening gelezen wordt.
   in `robots.txt`). SEO-04 assert de onderlinge consistentie van de gepubliceerde
   bestanden en dat de indexatie-keus op elke pagina staat; de spanning zelf is een
   documentvinding (TESTPLAN §8.4, §10.2).
-- **CI-uitvoering van de 139-suite is bewezen in run 72**: de vier poorten, de
-  Chromium-only install, `Running 139 tests using 1 worker`, de drie artifacts en de
-  history-record met `total = 139` (135 geslaagd, 4 faalden, 97,1%) draaiden in één run.
-  Open is de **groene** CI-stand: de vier RESP-01-cases faalden door de runner-fonts, de
-  CSS-fix staat in de werkbom en moet eerst op Pages staan; daarna een dispatch-run voor
-  139/139 en een record met 139 geslaagd.
+- **CI-uitvoering van de 139-suite is bewezen, en groen**: run 72 zette de vier poorten,
+  de Chromium-only install, `Running 139 tests using 1 worker`, de drie artifacts en de
+  history-record met `total = 139` in één run (135 geslaagd, 4 faalden, 97,1%). Run **73**
+  draaide dezelfde keten volledig groen: 139/139, `passRate` 100, drie artifacts,
+  bot-commit en alle 16 stappen success. De vier RESP-01-cases van run 72 zijn opgeheven
+  door de CSS-fix (`overflow-wrap: break-word` op `body`), die op `main` staat.
 - **Wide-font proxy als diagnosetechniek (november 2026)**: een tijdelijk Node-script
   diende de lokale `docs/`-build en forceerde een brede font
   (`* { font-family: Verdana, sans-serif !important; }` via `page.addStyleTag`) als proxy
@@ -238,8 +241,8 @@ Expliciet vastgelegd, zodat de audit niet als afrekening gelezen wordt.
    de npm-script en de CI-poort vóór de browserinstall in `playwright.yml`. Vult de
    pyramide-basis (audit §4.2) en is de eerste niet-browser test in de repo. Gemeten:
    `npm run check` groen, `npm run test:ci-summary` 8/8, `npm run test:local` 139/139 en
-   `--list` 139 tests in 11 files. Run 72 heeft deze stand in de CI gezet — de poorten, de Chromium-install,
-   139 tests, de drie artifacts en de history-record. De datasuite zelf is damit in CI bewezen; de teststap faalde op de vier RESP-01-cases. Daarna CIH-07 (schema v2) en CIH-08 (a11y CI-sectie).
+   `--list` 139 tests in 11 files. Run 72 zette deze stand in de CI — de poorten, de Chromium-install,
+   139 tests, de drie artifacts en de history-record. De datasuite is damit in CI bewezen; de teststap faalde toen op de vier RESP-01-cases. Run 73 bevestigt dezelfde stand groen: 139/139 en `passRate` 100. Daarna CIH-07 (schema v2) en CIH-08 (a11y CI-sectie).
 4. **De E2E-laag: flow-tests voor S1–S6** in `playwright/tests/e2e/`, met een doel (G14),
    ID's, een plaats in de §15-traceability en de F-matrix als decision table. Besluit vooraf,
    omdat dit de pyramide-top vult en `functional/` deels raakt.
