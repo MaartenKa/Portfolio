@@ -103,6 +103,15 @@ body {
 
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+
+  /* Lange, onbreekbare woorden (bijvoorbeeld "Automatiseren" in de h1 van
+     automatisering, "geautomatiseerd" in een h2 op testing, "kennismaken" op
+     contact) en lange URLs (privacy) moeten afgebroken kunnen worden. Zonder
+     deze regel is de min-content van zo'n woord breder dan de beschikbare
+     kolom, en de pagina loopt dan horizontaal op een smalle viewport. De
+     responsive-suite (RESP-01) meten de documentbreedte en viel in CI op de
+     runner, waar de system-uitvalfont breder is dan het lokale "Segoe UI". */
+  overflow-wrap: break-word;
 }
 
 ::selection {
