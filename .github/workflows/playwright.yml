@@ -10,7 +10,7 @@ on:
   # workflow_dispatch om dat op te vangen.
 
   schedule:
-    - cron: "17 18 * * 1"
+    - cron: "17 18 * * *"
 
   # De push-trigger staat bewust uit; de tests worden handmatig bij een push
   # gedraaid. Onderstaand blok is een voorbeeld om de trigger weer aan te zetten.
