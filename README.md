@@ -18,7 +18,7 @@ met pass-rate, groene streaks en de status van de laatste runs.
 
 | Kenmerk                | Waarde                                              |
 | ---------------------- | --------------------------------------------------- |
-| Testsuite              | **139 tests** in 11 spec-bestanden (131 browser + 8 datasuite) |
+| Testsuite              | **145 tests** in 12 spec-bestanden (137 browser + 8 datasuite) |
 | Browser                | Chromium (Desktop Chrome)                           |
 | Laatste gelogde CI-run | **139/139 geslaagd** (run 73, 100%; de 139-suite draaide groen in de CI, na de CSS-fix die de vier RESP-01-cases van run 72 ophefte) |
 | CI                     | GitHub Actions — dagelijks om 18:17 UTC + handmatig |
@@ -32,6 +32,9 @@ met pass-rate, groene streaks en de status van de laatste runs.
   en asserts op zichtbaarheid, attributen en URL's.
 - **Structuur** — Page Object Model met `base.page.ts` als basis, gedeelde testdata
   en herbruikbare fixtures.
+- **Gebruikersflows (E2E)** — zes flows op de pyramide-kern: de navigatietour, de
+  contactjourney, het mobiele menu, het CI-dashboard, de footer en de 404-herstelroute
+  — met landingschecks op URL én `h1` (`playwright/tests/e2e/e2e.spec.ts`).
 - **Non-functionele dekking** — accessibility (toetsenbord, landmarks, alt-teksten,
   contrast), responsive meetbare checks op de echte CSS-grenzen, SEO (canonical,
   Open Graph, Twitter card, sitemap, robots) en content-integriteit van interne links,
@@ -122,8 +125,9 @@ Project-documentation/         # testplan, CI-documentatie, best practices, verb
 | Content-integrity | `playwright/tests/content-integrity/content-integrity.spec.ts` |     11 |
 | SEO              | `playwright/tests/seo/seo.spec.ts`                          |     32 |
 | Responsive       | `playwright/tests/responsive/responsive.spec.ts`            |      8 |
+| E2E-gebruikersflows | `playwright/tests/e2e/e2e.spec.ts` (S1–S6)               |      6 |
 | CIH-06 datasuite | `playwright/tests/unit/ci-summary.spec.ts` (zonder browser)  |      8 |
-| **Totaal**       | 11 spec-bestanden                                            | **139** |
+| **Totaal**       | 12 spec-bestanden                                            | **145** |
 
 ## Kwaliteitspoorten
 
@@ -176,7 +180,8 @@ suite; de datasuite heeft geen browser nodig, dus hij faalt vóór de download.
   Chromium met eigen DOM-asserts. axe-core en Lighthouse zijn niet opgenomen
   (`package.json` heeft geen extra dependency), dus screenreader-gedrag en
   performance-meting blijven handmatig; visual baselines (VIS-01) staan als fase 5 in het
-  testplan. `compatibility/`, `e2e/` en `regression/` zijn nog gereserveerd.
+  testplan. De E2E-laag is gebouwd (zes flows S1–S6, `playwright/tests/e2e/e2e.spec.ts`);
+  `compatibility/` en `regression/` zijn nog gereserveerd.
 - **De producerende kant heeft nu eigen tests.** `scripts/ci-summary.mjs` draait in
   de datasuite CIH-06: 8 tests in `playwright/tests/unit/ci-summary.spec.ts`, in de
   Playwright-runner zonder browser, via `npm run test:ci-summary` als CI-poort vóór de

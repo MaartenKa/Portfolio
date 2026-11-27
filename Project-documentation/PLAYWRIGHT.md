@@ -71,6 +71,7 @@ network mocking, CI-ready configuratie).
 │   │   ├── content.page.ts   # ContentIntegrityPage (LINK-01, LINK-02, IMG-01 asserts)
 │   │   ├── seo.page.ts       # SeoPage (SEO-01…SEO-04 asserts, DOM + request)
 │   │   ├── responsive.page.ts # ResponsivePage (RESP-01 asserts per viewport)
+│   │   ├── flows.page.ts       # FlowPage (E2E-01…E2E-06: journey-continuity, landings op URL + h1)
 │   │
 │   ├── fixtures/
 │   │   ├── formward.mock.ts  # FormwardMock: route + request-registratie
@@ -89,9 +90,9 @@ network mocking, CI-ready configuratie).
 │       ├── content-integrity/content-integrity.spec.ts # LINK-01, LINK-02, IMG-01 (11 tests)
 │       ├── seo/seo.spec.ts   # SEO-01…SEO-04 (32 tests)
 │       ├── responsive/responsive.spec.ts # RESP-01 (8 tests op 7 viewports)
+│       ├── e2e/e2e.spec.ts   # E2E-01…E2E-06: de zes gebruikersflows S1–S6
 │       ├── unit/ci-summary.spec.ts # CIH-06: 8 datasuite-tests op ci-summary.mjs (browserloos)
 │       ├── compatibility/     # leeg — TESTPLAN fase 7 (Firefox/WebKit)
-│       ├── e2e/               # leeg — gebruikersflows
 │       └── regression/        # leeg — integriteitssuite voor later
 │   └── playwright-report/    # HTML rapport (ge-genereerd, in .gitignore)
 │   └── test-results/         # screenshots/traces/video's + JSON report (in .gitignore)
@@ -242,6 +243,17 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
     een semi-transparante achtergrond en contrastratio) staan in
     `utils/contrast.ts`; de tab- en label-contractlijsten staan in
     `utils/test-data.ts`.
+  - `FlowPage extends BasePage` (in `flows.page.ts`) — asserts voor de
+    E2E-gebruikersflows (E2E-01…E2E-06): `navigateTo(path)`, `expectLandedOn(landing)`
+    (URL + zichtbare `h1`), `followNavLink(testId)`, `followCardLink(testId)`,
+    `followFooterLink(testId, url)`, `expectJourneyPath(steps)`,
+    `expectFooterJourney()`, `expectFooterActive(activeId, inactiveId)`,
+    `expectNoActiveFooterLink()`, `expectRunLinkContract(runUrl)` en
+    `expectNotFoundRecovery(unknownPath)`. De URL-contracten zijn de bestaande
+    mappen `NAV_ITEM_URLS` en `CARD_LINK_URLS`; de flow dupliceren geen detail-asserts
+    van de functionele suites (BESTPRACTICES §25). De constanten `HOME_LANDING`,
+    `NAV_JOURNEY_STEPS`, `FOOTER_JOURNEY_STEPS` en `FOOTER_LINK_CONTRACT` staan in
+    dit page object.
 
 ### Test-categorieën (huidig)
 
@@ -325,8 +337,18 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    runner draait zonder browser (geen `devices`-use, geen `page`-fixture), en
    `npm run test:ci-summary` is de vierde CI-poort vóór de browserinstall. Elke test
    schrijft in een eigen temp-map.
-   **Gebouwd november 2026:** de suite telt 139 tests in 11 spec-bestanden
-   (131 browser + 8 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
+   **Gebouwd november 2026:** de suite telt 145 tests in 12 spec-bestanden
+   (131 browser + 8 datasuite + 6 E2E-flows). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
+8. **E2E-gebruikersflows** — `tests/e2e/e2e.spec.ts` (6 tests, E2E-01…E2E-06 =
+   scenarios S1–S6, TESTPLAN §8.6): de navigatietour langs de zeven nav-links, de
+   contactjourney (lege validatie → invullen → submit → `bedankt.html` → back), het
+   mobiele menu op 390×844 (open, focus, navigeer, gesloten op de landing), het
+   CI-dashboard met drie gemockte runs (kaarten, rijen, run-link, terug naar home), de
+   footerreis met de actieve state per pagina, en de herstelroute vanaf het
+   404-fallback. Elke stap assert de landing op URL én `h1`; de detail-asserts staan in
+   de functionele suites. Page object: `pages/flows.page.ts`.
+   **Gebouwd november 2026:** de suite telt 145 tests in 12 spec-bestanden
+   (137 browser + 8 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
 
 ### Config (playwright.config.ts)
 
@@ -451,7 +473,7 @@ kan ook: `npm run test:localUi` (UI mode met watch mode) of `--debug`
   output). `tsconfig.site.json` overrules met `noEmit: false` voor de site-JS.
 - **`fixtures/test-fixtures.ts`** — typed custom fixtures (`test.extend`) voor
   `homePage`, `contactPage`, `navPage`, `ciHistoryPage`, `basePage`, `footerPage`,
-  `a11yPage`, `contentPage`, `seoPage`, `responsivePage` en `formwardMock`. Navigatie en
+  `a11yPage`, `contentPage`, `seoPage`, `responsivePage`, `flowPage` en `formwardMock`. Navigatie en
   mock zijn expliciet in de test of in een `beforeEach`; de fixtures zelf navigeren niet.
   `seoPage` krijgt de `request`-fixture voor `sitemap.xml` en `robots.txt`.
 - **`fixtures/formward.mock.ts`** — `FormwardMock`: route-mock met
@@ -591,6 +613,7 @@ kan ook: `npm run test:localUi` (UI mode met watch mode) of `--debug`
 - CI-history documentatie: `Project-documentation/CI-PLAYWRIGHT-HISTORY.md`
 - CI-history data: `docs/data/playwright-history.json`
 - CIH-06: `playwright/tests/unit/ci-summary.spec.ts` + `npm run test:ci-summary` (browserloos, CI-poort vóór de browserinstall)
+- E2E-flows: `playwright/tests/e2e/e2e.spec.ts` (E2E-01…E2E-06, scenarios S1–S6) + page object `playwright/pages/flows.page.ts`
 - Indexatie: `noindex, nofollow` (alle pagina's) + `docs/robots.txt`
 
 ## 10. README onderhouden
@@ -601,7 +624,7 @@ dezelfde wijziging** als de oorzaak, niet later.
 
 | README-claim | Bron van waarheid | Bijwerken wanneer |
 | --- | --- | --- |
-| Aantal tests per suite + totaal (139) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
+| Aantal tests per suite + totaal (145) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
 | Playwright-versie (1.65) | `package.json` → `devDependencies` | versie-upgrade |
 | ESLint-versie (10) | `package.json` → `devDependencies.eslint` | versie-upgrade |
 | Node-grens (`>=24.8 <25`) | `package.json` → `engines.node` | Node-upgrade |

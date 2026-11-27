@@ -2,12 +2,12 @@
 
 | Veld           | Waarde                                                                                      |
 | -------------- | ------------------------------------------------------------------------------------------- |
-| **Versie**     | 1.4 — november 2026                                                                         |
+| **Versie**     | 1.5 — november 2026                                                                         |
 | **Status**     | Actueel testplan; status per testcase staat in de matrixen (§7, §8); suite-testnamen in §15.1 |
 | **Eigenaar**   | QA Engineer (zie §13)                                                                       |
 | **Testobject** | Statische portfolio-site in `docs/` (10 HTML-bestanden) + Playwright-suite in `playwright/` |
 | **Testbasis**  | §3.3                                                                                        |
-| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 139 tests in 11 spec-bestanden; `npm run test:ci-summary` = 8/8 (datasuite CIH-06)         |
+| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 145 tests in 12 spec-bestanden; `npm run test:ci-summary` = 8/8 (datasuite CIH-06); `npm run test:local` = 145/145         |
 
 **Scope:** de statische portfolio-website in `docs/` — 9 contentpagina's plus de
 `404.html`-fallback (10 HTML-bestanden), het CSS-design-systeem, één klein
@@ -76,6 +76,7 @@ kader gebruikt om de scope te bepalen en prioriteiten te onderbouwen.
 | G11 | Tests draaien deterministisch en reproduceerbaar in CI (parallel-draaibaar ontwerp; CI zelf draait met 1 worker)                         | Proces                              |
 | G12 | Kwaliteitspoorten (typecheck, lint, html-validate) en de suite draaien geautomatiseerd in CI; een pre-deploy gate is **open beslispunt** | Proces (CI/CD)                      |
 | G13 | De CI-history-sectie op `automation.html` toont de nieuwste run en gepoolde cijfers correct uit de history-JSON                          | Functioneel (dashboard)             |
+| G14 | De volledige gebruikersflows — navigatietour, contactjourney, mobiel menu, dashboard, footer en 404-herstel — zijn geautomatiseerd als E2E-flow   | Functioneel (E2E / acceptance)      |
 
 ---
 
@@ -181,13 +182,18 @@ checks**. De "unit-laag" wordt gedeeltelijk vervangen door directe DOM/ARIA-asse
   (geen class-assert), honeypot-zichtbaarheid en `aria-hidden` op decoratieve iconen —
   via Page Objects.
 - **Non-functional:** viewport/a11y/SEO/links/visual/perf — eigen spec-bestanden.
-- **E2E/acceptance:** volledige gebruikersflows (navigatie, formulier-gebruik, menu).
+- **E2E/acceptance (gebouwd, E2E-01…E2E-06):** volledige gebruikersflows — de
+  navigatietour, de contactjourney, het mobiele menu, het CI-dashboard, de footer
+  en de 404-herstelroute — 6 tests in `playwright/tests/e2e/e2e.spec.ts` met page
+  object `pages/flows.page.ts` (§8.6, G14). De flows bewijzen journey-continuity;
+  de detail-asserts staan in de gefocuste functionele suites en worden niet
+  duplicerd (BESTPRACTICES §25).
 - **Node-laag (gebouwd, CIH-06):** de producerende kant van de CI-history
   (`scripts/ci-summary.mjs`) zonder browser, als `npm run test:ci-summary`-poort vóór
   de browserinstall: 8 tests in `playwright/tests/unit/ci-summary.spec.ts` in het project
   `unit` (geen `devices`-use, geen `page`-fixture), met de gate-config
-  `playwright.unit.config.ts`. De suite telt 139 tests in 11 spec-bestanden
-  (131 browser + 8 datasuite) — `PLAN-CI-HISTORY-TESTS.md` §7 fase B is damit gebouwd.
+  `playwright.unit.config.ts`. De suite telt 145 tests in 12 spec-bestanden
+  (137 browser + 8 datasuite) — `PLAN-CI-HISTORY-TESTS.md` §7 fase B is damit gebouwd.
 
 > **Conventie:** gebruik Page Objects voor UI-interactie; alleen de lightweight
 > smoke-laag mag rechtstreeks `page` gebruiken (netwerk/infrastructuurcheck).
@@ -311,8 +317,11 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
   verplichte velden (F1–F4), honeypot gevuld vs. leeg (F5).
 - **State-transition testing** — menu-toggle toestand (closed → open → closed) en
   `aria-expanded` per toestand; formulier (leeg → invullen → submit → redirect).
-- **Decision-table / scenario-based** — combinaties van veldstatussen voor het
-  contactformulier (§7 matrix F1–F10).
+- **Decision-table / scenario-based** — **omgezet**: de combinaties van veldstatussen
+  voor het contactformulier staan als conditie-actietabel in §7.1 (regels R1–R8 met de
+  F-cases), en de zes gebruikersflows zijn als scenario-tests gebouwd in §8.6
+  (E2E-01…E2E-06, `playwright/tests/e2e/e2e.spec.ts`). De vroegere casolijst zonder
+  condities × acties is damit vervuld (audit `TEST-SUITE-STATUS.md` §4.2).
 
 ---
 
@@ -413,6 +422,31 @@ De belangrijkste data-flow. Verwacht-gedrag per scenario:
 | F9  | Redirect-target is correct        | geldige submit                        | eind-URL = `bedankt.html` (subpath `/Portfolio/` behouden) + bedankt-tekst zichtbaar (geen lege/pagina-not-found) | Bestaand (met mock; bewijst afhandeling, niet de echte `_redirect`-waarde) |
 | F10 | Terugnavigatie na redirect        | geldige submit → back                 | browser back werkt naar `contact.html` zonder crash; formulier is gereset/leeg (nieuwe context per test)          | Bestaand (back + 1 request)                                                 |
 
+### 7.1 Conditie-actietabel (decision table) op het formulier
+
+De matrix hierboven is een casolijst; deze tabel is de conditie-actietabel die bij
+§5.5 hoort. De condities zijn de veldstatussen, de acties zijn het gedrag dat de
+site bij die combinatie mag tonen. `-` is `don't care`. Eén regel per decisis-
+combinatie, met de testcase die de regel dekt — een regel zonder testcase is
+zichtbaar open werk.
+
+| Regel | C1 Naam | C2 E-mail geldig | C3 Bericht | C4 Onderwerp | C5 Honeypot gevuld | A1 Native validatie blokkeert submit | A2 POST naar Formward | A3 Redirect naar `bedankt.html` | Testcase |
+| ----- | ------- | ---------------- | ---------- | ------------ | ------------------ | ------------------------------------ | --------------------- | ------------------------------- | -------- |
+| R1 | gevuld | geldig | gevuld | any | leeg | nee | ja (1) | ja | F1, F9 |
+| R2 | leeg | leeg | leeg | any | leeg | **ja** | nee (0) | nee | F2 |
+| R3 | gevuld | **ongeldig** | gevuld | any | leeg | **ja** | nee (0) | nee | F3 |
+| R4 | gevuld | geldig | gevuld | **leeg** | leeg | nee | ja (1) | ja | F4 |
+| R5 | gevuld | geldig | gevuld | any | **gevuld** | nee | ja (1, met `_gotcha`) | ja | F5 |
+| R6 | 1 teken | geldig | 500 tekens | any | leeg | nee | ja (1) | ja | F6 |
+| R7 | unicode | geldig | unicode | any | leeg | nee | ja (1) | ja | F7 |
+| R8 | gevuld | geldig | gevuld | any | leeg | nee | **max. 1 bij dubbel klikken** | idempotent | F8 (gepland) |
+
+> **Dekking per regel:** R1–R7 zijn geautomatiseerd in `contact-functional.spec.ts`;
+> R8 is het open F8-besluit (submit-guard in de HTML, of het recorden als niet
+> lokaal-automatiseerbaar). De partitie uit §5.5 — honeypot "gevuld" (R5) én
+> "leeg bij een geldige submit" (R1) — is nu beide geassert: R5 op de payload, R1 op
+> de request-count. De flow E2E-02 (S2, §8.6) doorloopt R1 als journey.
+
 > **Testdata-koppeling:** de datasets staan in `playwright/utils/test-data.ts`:
 > `VALID_CONTACT` (F1/F9/F10), `INVALID_EMAIL_CONTACT` (F3),
 > `OPTIONAL_SUBJECT_CONTACT` (F4), `BOUNDARY_CONTACT` (F6) en
@@ -442,10 +476,10 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 
 De statuskolommen gebruiken de legenda uit §5. **Bestaand** betekent dat er een
 test in een spec-bestand staat; **Deels** betekent dat slechts een subset is
-geautomatiseerd. De huidige suite telt **139 tests in 11 spec-bestanden**: smoke 10,
+geautomatiseerd. De huidige suite telt **145 tests in 12 spec-bestanden**: smoke 10,
 homepage 12, contact 16, mobiel menu 17, CI-history 5, footer 3, accessibility 17,
-content-integrity 11, SEO 32, responsive 8 en de datasuite CIH-06 8. Deze matrix
-beschrijft de target-set; F8 is
+content-integrity 11, SEO 32, responsive 8, de E2E-flows 6 en de datasuite CIH-06 8.
+Deze matrix beschrijft de target-set; F8 is
 nog gepland, en VIS-01 en PERF-01 zijn fase 5.
 
 ### 8.1 Smoke / sanity (G1) — `playwright/tests/smoke/smoke.spec.ts` _(bestaand)_
@@ -518,7 +552,7 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 | CIH-04 | Runs zonder noemer (`total = 0`) vallen buiten de totalen      | alleen 2 van 3 runs geteld: `ci-total-executed` = "80", `ci-pass-ratio` = "90%", `ci-streak` = "0", `ci-status` = "Geannuleerd"; notering bevat "2 van 3 CI-runs geteld"                                                             | Bestaand |
 | CIH-05 | Lege geschiedenis: placeholders en placeholder-rij             | alle kaarten tonen "—", `ci-history-body` bevat "Geen CI-historie beschikbaar."                                                                                                                                                      | Bestaand |
 
-> **Bewijs:** `npx playwright test --list` telt 5 tests in dit spec-bestand (139 in
+> **Bewijs:** `npx playwright test --list` telt 5 tests in dit spec-bestand (145 in
 > de hele suite). De tabel heeft in de markup 6 kolommen (Run, Datum, Status,
 > Tests, Geslaagd, Flaky) en géén `data-testid` per rij; rijen worden via
 > `getByRole("row")` geteld. Er is **géén** aparte JSON-schema- of 404-fallback-test **in dit spec-bestand**.
@@ -529,10 +563,46 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 > `page`-fixture), met `npm run test:ci-summary` als CI-poort vóór de browserinstall,
 > na `validate:html`, en de gate-config `playwright.unit.config.ts`. De cases staan in
 > `PLAN-CI-HISTORY-TESTS.md` §7. CIH-07 (schema v2 met `suiteTests`)
-> en CIH-08 (a11y van de CI-sectie) volgen daarna. De suite telt 139 tests in 11
+> en CIH-08 (a11y van de CI-sectie) volgen daarna. De suite telt 145 tests in 12
 > spec-bestanden; run 72 heeft de datasuite als poort in de CI gedraaid, vóór de
 > browserinstall, en de teststap gaf `Running 139 tests`. Run 73 draaide de volledige
 > suite groen: 139 geslaagd, 0 faalden en `passRate` 100.
+
+### 8.6 Gebruikersflows (G14) — `playwright/tests/e2e/e2e.spec.ts` _(bestaand, 6 tests)_
+
+De zes scenarios S1–S6, nu als testcase gedefinieerd. De flows bewijzen
+**journey-continuity**: de gebruiker landt op elke stap op de verwachte pagina met
+de verwachte h1. De detail-asserts — attributes, focus, payload, kaartcijfers —
+staan in de gefocuste suites (§8.1–§8.5) en worden in de flows niet duplicerd
+(BESTPRACTICES §25, risico R16). Page object: `pages/flows.page.ts`; de fixtures
+`flowPage`, `contactPage`, `navPage`, `footerPage` en `ciHistoryPage` worden
+hergebruikt.
+
+| ID      | Scenario            | Flow (stappen van de gebruiker)                                              | Verwacht resultaat (concreet)                                                                                                                          | Status                       |
+| ------- | ------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| E2E-01  | S1 navigatietour    | home → de zeven nav-links in de volgorde van de navigatielijst               | elke stap landt op de eigen URL uit `NAV_ITEM_URLS` en op de eigen `h1`; geen console- of page errors                                                      | **Bestaand** (`e2e.spec.ts`) |
+| E2E-02  | S2 contactjourney   | home → `nav-contact` → submit op lege velden → invullen → submit → `bedankt.html` → browser back | native validatie blokkeert de lege submit (R2); exact één POST met de zes Formward-velden en `_redirect` (R1); terugkeer zonder tweede submit (F10) | **Bestaand**                 |
+| E2E-03  | S3 mobiel menu      | 390×844: home → toggle open → focus eerste nav-link → klik `nav-automation`  | menu open met `aria-expanded="true"` en focus op de eerste link; op de landing gesloten met `aria-expanded="false"` en de h1 van `automation.html`        | **Bestaand**                 |
+| E2E-04  | S4 dashboardjourney | mock → `automation.html` → kaarten → geschiedenis-tabel → run-link → `nav-home` | laatste-run en aggregate kaarten op de gemockte cijfers (3 rijen, Σ 435 uitgevoerd / 431 geslaagd, ratio 99,1%); run-link met `target="_blank"` + `rel`; terug op de home | **Bestaand**                 |
+| E2E-05  | S5 footerjourney    | home (footer-contract) → `footer-contact` → `footer-privacy` → `nav-home`    | `href` van de vier footerlinks en de externe `target`/`rel` (NAV-04); actieve link op contact en op privacy; géén actieve link op de homepage (NAV-05)     | **Bestaand**                 |
+| E2E-06  | S6 404-herstel      | onbekend pad → `404.html` → `nav-home`                                       | het onbekende pad geeft HTTP 404, de fallback van de site toont de fallback-content, en de navigatie herstelt naar de home zonder runtime errors          | **Bestaand**                 |
+
+> **Bewijs:** `npx playwright test --list` telt 6 tests in dit spec-bestand (145 in
+> de hele suite, 12 spec-bestanden). Lokaal gemeten op 27 november 2026: 6/6 groen
+> en de suite 145/145 (`npm run test:local`, 1 worker, `retries: 0`, lokale `docs/`
+> op poort 8080). De E2E-laag vult damit de kern van de pyramide (§4) — de open
+> regel in de audit (`TEST-SUITE-STATUS.md` §4.2) is gesloten. De eerste CI-run van
+> de 145-suite is het productiebewijs dat nog komt; de CI-record van run 73 is de
+> 139-suite.
+>
+> **Determinisme:** de dashboardjourney mockt de history-endpoint met drie vaste
+> runs, zodat de verwachte kaartcijfers niet afhangen van wat er in de CI draaide
+> (§6.2, PLAN-CI-HISTORY-TESTS §3). De Formward-mock is actief in S2. De flow
+> klikt geen externe links: de suite hangt niet aan externe hosts (§6.2).
+>
+> **Live-aantekening:** de Pages-fallback op een willekeurig pad blijft een
+> live-check (SM-03, §8.1). E2E-06 is op beide omgevingen deterministisch: het
+> onbekende pad eindigt als 404 en `404.html` is de fallbackpagina van de repo.
 
 ---
 
@@ -558,6 +628,7 @@ Mitigaties zijn bewust verweven in BestPractices (determinisme, mocking, isolati
 | R13 | De history-data is er, maar de weergave (kaarten/Geschiedenis-tabel) ontbreekt of is onvolledig → bezoeker ziet lege kaarten                                                                                                                                                     | Middel |    Laag-Middel     | CIH-01…05 in `ci-history-functional.spec.ts`; placeholder-fallback CIH-05; `data-testid`-contract in de HTML (PLAYWRIGHT §4)                                                                                                       |
 | R14 | Één incidentele (niet-reproduceerbare) testmislukking in de suite: bij de eerste volledige lokale run na de kwaliteitspoorten viel de homepage-CTA-test weg; in isolatie en in een volledige herhaling was 41/41 groen. Determinisme is daarmee een gemeten risico, geen aanname | Middel |        Laag        | 5 opeenvolgende groene runs als exit-metric (§11); `retries: 2` in CI maar `0` lokaal (`playwright.local.config.ts`) zodat een lokale bevinding zichtbaar blijft; bij herhaling: trace/screenshot (`retain-on-failure`) analyseren |
 | R15 | Live GitHub Pages/CDN geeft tijdelijk 5xx of timeout, waardoor een smoke-check faalt terwijl de site zelf niet defect is | Middel | Middel | `npm run check:site` als preflight; `BasePage.gotoWithRetry()` voor smoke; hostfout wordt als infra behandeld, niet als testflake (run #64: `testing.html` 503) |
+| R16 | E2E-flow-tests dupliceren de gefocuste functionele asserts, zodat dezelfde assert op twee plekken staat en twee wijzigingen twee plekken raakt | Middel | Laag | De flows bewijzen alleen journey-continuity (landing op URL + h1, actieve state, request-count); de detail-asserts blijven in de gefocuste suites. De URL- en footer-contracten zijn de bestaande mappen uit de page objects, niet een eigen lijst (`pages/flows.page.ts`, BESTPRACTICES §25) |
 
 
 **Schaal en eigenaarschap:** Impact en waarschijnlijkheid zijn labels op een
@@ -583,6 +654,7 @@ impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish
 |  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → datasuite CIH-06 → test → artifacts → history   | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit; Chromium-only browserinstall; de history-**data** is gedekt door de datasuite CIH-06 (`npm run test:ci-summary`, 8 tests) vóór de browserinstall — in run 72 met die poort gedraaid (record `total = 139`, 135 geslaagd), en in run 73 groen met 139 geslaagd en `passRate` 100                                |
 |  7   | Optioneel: pre-deploy/PR-gate (push-trigger op de poorten), cross-browser (Firefox/WebKit) + exploratoire device-sessies        | Gate-besluit (§10.2), browser-coverage & handmatige findings geformaliseerd                                                                                        |
 | 8  | Showcase-media: video's van de suite op de portfolio-site, wanneer de portfolio-inrichting vastligt | Kijkmodus-artifacten uit §10.4 gekozen, als site-asset opgeslagen en ingebet op automation.html; de site-copy is bijgewerkt |
+| 9  | **E2E-laag: de zes gebruikersflows S1–S6 — af** (november 2026, E2E-01…E2E-06 in `playwright/tests/e2e/e2e.spec.ts`, page object `pages/flows.page.ts`) | Doel G14 in §2, zes cases in §8.6 met een plaats in de §15-traceability, de F-matrix als conditie-actietabel (§7.1), lokaal 6/6 en de suite 145/145 groen. De pyramide-kern (§4) is damit gevuld; de eerste CI-run van de 145-suite is het resterende productiebewijs |
 
 ### 10.1 CI-pipeline (fase 6, in lijn met BestPractices §18)
 
@@ -683,14 +755,15 @@ moeten definitief zijn; dan wordt deze taak uitgevoerd. Nu is er de taakomschrij
 - De testdata en verwachtingen zijn deterministisch: gemockte endpoints, vaste
   fixtures en geen afhankelijkheid van live CI-cijfers.
 
-### Exit criteria — huidige baseline (suite zoals nu, 139 tests)
+### Exit criteria — huidige baseline (suite zoals nu, 145 tests)
 
 1. **Poorten groen** — `npm run check` (typecheck + lint + html-validate) en
    `npm run test:ci-summary` (8 datasuite-tests) slagen.
-2. **Suite groen** — 139/139 tests slagen lokaal (`npm run test:local`), 0 failures en
-   0 skipped in het JSON-report; lokaal tegen de live site is dat ook 139/139. In de CI
-   draaide de suite groen in run 73: 139 geslaagd en 0 faalden, `passRate` 100, met alle
-   CI-stappen success. De vier RESP-01-cases die in run 72 op de smalle viewports faalden
+2. **Suite groen** — 145/145 tests slagen lokaal (`npm run test:local`), 0 failures en
+   0 skipped in het JSON-report. In de CI draaide de suite groen in run 73: 139 geslaagd
+   en 0 faalden, `passRate` 100, met alle CI-stappen success — dat is de 139-suite vóór
+   de E2E-laag; de eerste CI-run van de 145-suite is het bewijs dat nog komt. De vier
+   RESP-01-cases die in run 72 op de smalle viewports faalden
    door de bredere runner-uitvalfont zijn opgeheven. De CSS-fix
    (`overflow-wrap: break-word` op `body`) staat op `main` en is gedeployed; run 73
    bevestigt de groene CI-stand met 139/139.
@@ -701,8 +774,9 @@ moeten definitief zijn; dan wordt deze taak uitgevoerd. Nu is er de taakomschrij
 4. **Determinisme** — de suite is herhaalbaar groen: lokaal met `retries: 0`, CI met
    `retries: 2` als vangnet. Een test die alleen via een retry slaagt, telt als
    **flaky** en moet worden onderzocht (zie §12.1).
-5. **Beperkingen benoemd** — F8 is gepland; VIS-01 en PERF-01 uit fase 5 ontbreken nog;
-   de E2E-laag (S1–S6) is nog niet gebouwd. De pyramide-basis is gebouwd: CIH-06 als
+5. **Beperkingen benoemd** — F8 is gepland; VIS-01 en PERF-01 uit fase 5 ontbreken nog.
+   De E2E-laag (S1–S6) is gebouwd: 6 flows in `playwright/tests/e2e/e2e.spec.ts`
+   (§8.6, G14), lokaal groen. De pyramide-basis is gebouwd: CIH-06 als
    `npm run test:ci-summary`-poort (8 tests, `playwright/tests/unit/ci-summary.spec.ts`,
    PLAN-CI-HISTORY-TESTS §7). De
    accessibility-, responsive-, SEO- en content-integriteit-suite zijn bestaand en lokaal
@@ -716,7 +790,8 @@ het acceptatieniveau van een volledige release, niet de huidige stand.
 1. **Smoke 100%** — alle pagina's laden, geen console/page errors (SM-01…SM-03,
    inclusief de 404-fallback).
 2. **Functioneel** — navigatie NAV-01…NAV-05, formulier F1–F10, menu-toggle
-   MENU-01…MENU-10 en CI-history CIH-01…CIH-05 groen (§7, §8, G13).
+   MENU-01…MENU-10, CI-history CIH-01…CIH-05 en de gebruikersflows E2E-01…E2E-06
+   groen (§7, §8, §8.6, G13, G14).
 3. **Non-functioneel** — RESP-01, A11Y-01…A11Y-04, SEO-01…SEO-04, LINK-01, LINK-02,
    IMG-01, VIS-01 en PERF-01 groen op alle 10 pagina's; HTML-01 blijft groen.
 4. **Geen blokkerende defects**; geen open defects met severity Hoog zonder
@@ -728,7 +803,7 @@ het acceptatieniveau van een volledige release, niet de huidige stand.
 | Metric                  | Doel (release-target)                                                                                                                                                                           | Bron / meting                                                    |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | Uitgevoerde testcases   | 100% van de cases in §7/§8 die status **Bestaand** of **Deels** hebben                                                                                                                          | Playwright JSON-report (`stats.expected`)                        |
-| Vereisten-dekking       | Elk in-scope productdoel G1–G10 en G13 heeft ≥1 **bestaande** testcase; G11/G12 worden door CI-config en een CI-run bewezen, niet door een testcase; geplande cases tellen niet mee als dekking | Traceerbaarheid §15 + `npx playwright test --list`               |
+| Vereisten-dekking       | Elk in-scope productdoel G1–G10, G13 en G14 heeft ≥1 **bestaande** testcase; G11/G12 worden door CI-config en een CI-run bewezen, niet door een testcase; geplande cases tellen niet mee als dekking | Traceerbaarheid §15 + `npx playwright test --list`               |
 | Pass-rate               | 100% pass, 0 fail, 0 skipped, 0 unexpected                                                                                                                                                      | Playwright JSON-report                                           |
 | Flaky-aandeel           | 0% (geen test die alleen via een retry slaagt)                                                                                                                                                  | JSON-report `flaky`-veld + 5 groene runs met `retries: 0` lokaal |
 | Dekking van de F-matrix | 9/10 cases bestaand (F8 gepland)                                                                                                                                                      | §7                                                               |
@@ -841,10 +916,11 @@ werk, niet als bewijs.
 | G11  | procesdoel — geen producttestcase   | `playwright.config.ts`, CI-run                                  | Bewezen door CI-config, niet door een testcase                    | `fullyParallel: true`; CI `workers: 1` |
 | G12  | procesdoel — geen producttestcase   | `.github/workflows/playwright.yml`                              | Vier poorten + suite bestaand; pre-deploy gate open beslispunt (§10.2) | workflow-run + artifacts + de datasuite-poort vóór de browserinstall |
 | G13  | CIH-01…CIH-05 bestaand, CIH-06 gebouwd; CIH-07/08 gepland | `ci-history-functional.spec.ts`; CIH-06: `playwright/tests/unit/ci-summary.spec.ts`       | Bestaand: CIH-01…05 (5 UI-tests) + CIH-06 (8 datasuite-tests)                                               | 13 CI-history-tests; CIH-06 draait als `npm run test:ci-summary`-poort |
+| G14  | E2E-01…E2E-06 (flows S1–S6)   | `playwright/tests/e2e/e2e.spec.ts`                             | Bestaand                                                       | 6 E2E-flows, lokaal 6/6 en 145/145 (27 nov 2026) |
 
 > G11 en G12 zijn **procesdoelen**; ze worden niet door een Playwright-testcase
 > bewezen. Daarom geldt de dekkingseis uit §11 alleen voor de productdoelen
-> G1–G10 en G13, plus de procesbewijzen van G11/G12.
+> G1–G10, G13 en G14, plus de procesbewijzen van G11/G12.
 
 ### 15.1 Exacte suite-testnamen (alleen bestaande cases)
 
@@ -894,6 +970,12 @@ werk, niet als bewijs.
 | SEO-03 | `seo.spec.ts` | `SEO-03: <pagina> heeft canonical, Open Graph en Twitter card` (10 pagina's) |
 | SEO-04 | `seo.spec.ts` | `SEO-04: sitemap.xml dekt de 8 content-pagina's en robots.txt sluit indexering uit` |
 | LINK-01, LINK-02, IMG-01 | `content-integrity.spec.ts` | `LINK-01, LINK-02 en IMG-01: <pagina> heeft valide links en afbeeldingen` (10 pagina's) + `IMG-01: elke asset-referentie op de site verwijst naar een bekend site-bestand` |
+| E2E-01 | `e2e.spec.ts` | `E2E-01 (S1): elke nav-link van de navigatielijst landt op de eigen pagina` |
+| E2E-02 | `e2e.spec.ts` | `E2E-02 (S2): van de homepage via het formulier naar de bedanktpagina en terug` |
+| E2E-03 | `e2e.spec.ts` | `E2E-03 (S3): open het menu, navigeer, en het menu is gesloten op de nieuwe pagina` |
+| E2E-04 | `e2e.spec.ts` | `E2E-04 (S4): van de homepage naar het dashboard, met de kaarten, de rijen en de run-link` |
+| E2E-05 | `e2e.spec.ts` | `E2E-05 (S5): footer-contract, actieve footer-link en terugkeer naar de homepage` |
+| E2E-06 | `e2e.spec.ts` | `E2E-06 (S6): een onbekend pad eindigt als 404 en de navigatie herstelt naar de homepage` |
 
 > Cases zonder rij in deze tabel zijn nog open: F8 is gepland, en VIS-01 en PERF-01 zijn
 > fase 5. De tabel beschrijft de bestaande suite — inclusief de non-functionele suites
@@ -906,10 +988,11 @@ werk, niet als bewijs.
 | Onderdeel         | Deliverable                                     | Bron / bewijs                                                          |
 | ----------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
 | Testplan          | dit document, met status per testcase           | `Project-documentation/TESTPLAN.md`                                    |
-| Testsuite         | 11 spec-bestanden, 139 tests                    | `playwright/tests/` + `npx playwright test --list`                     |
+| Testsuite         | 12 spec-bestanden, 145 tests                    | `playwright/tests/` + `npx playwright test --list`                     |
 | Testrapportage    | HTML-report en JSON-report per run              | `playwright/playwright-report/`, `playwright/test-results/report.json` |
 | CI-history        | `docs/data/playwright-history.json` + dashboard | `scripts/ci-summary.mjs`, `automation.html`                            |
 | Kwaliteitspoorten | typecheck, lint, html-validate en de datasuite `test:ci-summary` (CIH-06) | `npm run check`, `npm run test:ci-summary`, `playwright.yml`           |
+| E2E-gebruikersflows | zes flows S1–S6 (E2E-01…E2E-06), gebouwd (6 tests) | `playwright/tests/e2e/e2e.spec.ts` + `playwright/pages/flows.page.ts`; planbesluit in `TESTPLAN.md` §8.6 en §10 fase 9 |
 | CI-history datalaag | datasuite op `scripts/ci-summary.mjs` — CIH-06, gebouwd (8 tests) | `playwright/tests/unit/ci-summary.spec.ts` + `npm run test:ci-summary` + `playwright.unit.config.ts`; plan `PLAN-CI-HISTORY-TESTS.md` §7 |
 | Showcase-media | video-clips van de suite op de portfolio (gepland, §10.4) | kijkmodus in `playwright.local.config.ts` (`PW_VIEW=1`) |
 

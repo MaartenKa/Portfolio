@@ -710,7 +710,8 @@ De uitvoeringsvorm van CIH-06 is november 2026 **gebouwd**: de Playwright-runner
 **niet-browser project** `unit` (`playwright/tests/unit/ci-summary.spec.ts`, 8 tests,
 geen `devices`-use, geen `page`-fixture), met `npm run test:ci-summary` als CI-poort
 vóór de browserinstall en de gate-config `playwright.unit.config.ts` (eigen `outputDir`,
-`list`-reporter, `retries: 0`). De suite telt 139 tests in 11 spec-bestanden; project en
+`list`-reporter, `retries: 0`). De suite telt 145 tests in 12 spec-bestanden (137 browser
++ 8 datasuite, inclusief de zes E2E-flows in `playwright/tests/e2e/e2e.spec.ts`); project en
 poort staan in `playwright.config.ts`, `playwright.local.config.ts` en `package.json`.
 Run 72 heeft de poort in de CI gezet, met de datasuite vóór de browserinstall en een
 history-record met `total = 139` (135 geslaagd, 4 faalden); run 73 draaide de volledige
