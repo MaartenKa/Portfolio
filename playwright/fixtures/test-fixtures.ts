@@ -11,6 +11,7 @@ import { HomePage } from "../pages/home.page";
 import { NavigationPage } from "../pages/mobile.page";
 import { ResponsivePage } from "../pages/responsive.page";
 import { SeoPage } from "../pages/seo.page";
+import { FlowPage } from "../pages/flows.page";
 
 /**
  * Getypeerde Playwright-fixtures voor de portfolio-suite.
@@ -30,6 +31,7 @@ type Fixtures = {
   contentPage: ContentIntegrityPage;
   seoPage: SeoPage;
   responsivePage: ResponsivePage;
+  flowPage: FlowPage;
   formwardMock: FormwardMock;
 };
 
@@ -87,6 +89,11 @@ export const test = base.extend<Fixtures>({
   responsivePage: async ({ page }, use) => {
     // De viewport wordt per test gezet; de fixture levert het page object.
     await use(new ResponsivePage(page));
+  },
+
+  flowPage: async ({ page }, use) => {
+    // De E2E-flows navigeren zelf per stap; de fixture levert de journey-asserts.
+    await use(new FlowPage(page));
   },
 });
 
