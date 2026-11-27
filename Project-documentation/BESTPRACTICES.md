@@ -333,6 +333,11 @@ Onderzoek de oorzaak:
 
 Verhoog niet simpelweg retries/timeouts om flakiness te verbergen.
 
+Een defect dat in élke retry met dezelfde maat terugkomt, is géén testflake: de retry is
+een vangnet, geen reparatie. In run 72 faalden de vier RESP-01-cases in elke poging met
+dezelfde overloop (537 px content in een viewport van 500 px) — dat is deterministisch
+environment-gedrag van de runner, niet de suite.
+
 ## 14. Timeouts
 
 Gebruik timeouts bewust.
@@ -430,6 +435,15 @@ Installeer alleen browsers die de pipeline daadwerkelijk nodig heeft.
 > in `playwright.config.ts` en `playwright.local.config.ts`. De vroegere beperking —
 > alle engines bij één project — is in de werkbom opgelost. Zie `TESTPLAN.md` §10.1
 > en §10.3 punt 3.
+
+De runner is niet de lokale machine: de system-uitvalfont is er breder. Een layout-assert
+op documentbreedte ("geen horizontale scroll") is environment-gevoelig, dus een groene
+live-run op eigen machine is geen bewijs voor CI. Reproduceer de CI-stand lokaal door een
+brede font te forceren — `page.addStyleTag` met `* { font-family: Verdana, sans-serif
+!important; }` op de lokale `docs/`-build — en zoek de overloopende box door elementen één
+voor één te verbergen en de pseudo-elementen per class uit te schakelen. Fix de bron in de
+site-CSS (woorden en URLs laten breken met `overflow-wrap: break-word` op `body`), niet de
+assert: de check die hier faalde, vond een echt mobiel defect.
 
 Gebruik Linux voor CI waar mogelijk (goedkoper en sneller). Schaal parallelism bewust via workers/sharding; een conservatieve default is één worker voor stabiliteit.
 
