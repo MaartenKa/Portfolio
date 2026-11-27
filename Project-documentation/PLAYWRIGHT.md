@@ -188,7 +188,8 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   `testing.html` en de URL-link op `privacy.html`. Zonder die regel is hun min-content
   breder dan de beschikbare kolom, en de pagina loopt dan horizontaal op een smalle
   viewport. De responsive-suite (RESP-01) meet dat; in CI (run 72) faalden vier cases vóór
-  deze regel, op de runner met zijn bredere uitvalfont.
+  deze regel, op de runner met zijn bredere uitvalfont. Met de regel op `main` is run 73
+  groen op dezelfde runner (139/139).
 
 ## 5. Testautomatisering (`playwright/`)
 
@@ -315,6 +316,7 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    van lange woorden en de URL-link de kolom. De site-CSS breekt die nu met
    `overflow-wrap: break-word` op `body`; de hertest is lokaal met een wide-font proxy op
    de lokale `docs/`-build (10 pagina's × 7 viewports, `scrollWidth == innerWidth`).
+   Run 73 bevestigt dat in de CI: 139/139, inclusief de vier smalle viewports.
 7. **Node-laag (CIH-06)** — `tests/unit/ci-summary.spec.ts` (8 tests, CIH-06a…h) op
    `scripts/ci-summary.mjs`: vaste rapportstatistiek → de vertaling → asserts op de
    history-entry (formules uit `stats`, `passRate`-afronding op één decimaal, `total = 0`
