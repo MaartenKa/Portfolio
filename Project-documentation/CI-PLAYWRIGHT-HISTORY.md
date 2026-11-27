@@ -619,10 +619,11 @@ echte CI-cijfers tonen.
   (formules, `passRate`-afronding, `total = 0`, `no-report`, `CI_SUMMARY_STATUS`, dedup op
   `runId`, `--max`-kappen en de CLI-args), in het browserloze `unit`-project met de poort
   `npm run test:ci-summary` vóór de browserinstall. De weergavelaag is gedekt door vijf
-  UI-tests met gemockte data. Run 72 heeft de poort in CI gedraaid: de datasuite
+  UI-tests met gemockte data. Run 72 draaide de poort in CI: de datasuite
   (8 tests, browserloos) en de Chromium-install concludeerden success vóór de
-  browserinstall, en de teststap gaf `Running 139 tests` met een record van `total = 139`.
-  Zie `PLAN-CI-HISTORY-TESTS.md` §7 en `TEST-SUITE-STATUS.md` §2.
+  browserinstall, en de teststap gaf `Running 139 tests` met een record van `total = 139`
+  (135 geslaagd, 4 faalden). Run 73 draaide dezelfde keten groen: 139/139 en een record
+  met `passRate` 100. Zie `PLAN-CI-HISTORY-TESTS.md` §7 en `TEST-SUITE-STATUS.md` §2.
 - De gepubliceerde HTML bevat altijd de placeholders; de cijfers ontstaan pas in
   de DOM na de fetch. "Bron bekijken" is daarom nooit een bewijs van de cijfers.
 
@@ -672,8 +673,26 @@ Chromium-only install. Per schakel, uit de CI-log van de run:
 De vier faalden zijn environment-gevoelig — de runner-uitvalfont is breder dan het lokale
 "Segoe UI", zodat de min-content van lange woorden en de URL-link de kolom overschreed —
 en niet flaky: ze kwamen in elke retry met dezelfde maten terug. De site-CSS-fix
-(`overflow-wrap: break-word` op `body`) staat in de werkbom; een dispatch-run na deploy
-moet de 139/139-stand en een record met 139 geslaagd opleveren.
+(`overflow-wrap: break-word` op `body`) staat op `main` en is gedeployed.
+
+### 15.2 De groene 139-suite-run (run 73, `workflow_dispatch`)
+
+Run 73 draaide dezelfde keten volledig groen, handmatig gestart op 27 november 2026
+(jobduur 2m 15s). Per schakel, uit de CI-log van de run:
+
+| Schakel | Bewijsbron | Waarde |
+| ------- | ---------- | ------ |
+| Vier poorten (typecheck, lint, html-validate, CIH-06) | CI-log stappen 5–8 | alle vier `success`, vóór de browserinstall |
+| Preflight live site (`check:site`) | CI-log stap 9 | `success` |
+| Browserinstall | CI-log stap 10 | `success` met `--with-deps chromium` |
+| Tests | CI-log stap 11 | `success` — 139 tests, 139 geslaagd, 0 faalden |
+| Artifacts | CI-log | 3: `playwright-report` (272 KB), `playwright-json-report` (10,9 KB), `playwright-history` (1,61 KB) |
+| History-record | JSON op `main` | `runNumber 73`, `conclusion success`, `total 139`, `passed 139`, `failed 0`, `passRate 100` |
+| Bot-commit | git-log | `chore(ci): update Playwright history [skip ci]`, direct na de run |
+
+Daarmee is de 139-suite voor het eerst groen in de CI, de vier RESP-01-cases mee op de
+runner. De geschiedenis op `main` is de bron van waarheid voor de dashboard-kaarten en
+voor de README-claim over de laatste run.
 
 ## 16. Testsoort en vervolgplan
 
@@ -694,4 +713,5 @@ vóór de browserinstall en de gate-config `playwright.unit.config.ts` (eigen `o
 `list`-reporter, `retries: 0`). De suite telt 139 tests in 11 spec-bestanden; project en
 poort staan in `playwright.config.ts`, `playwright.local.config.ts` en `package.json`.
 Run 72 heeft de poort in de CI gezet, met de datasuite vóór de browserinstall en een
-history-record met `total = 139`.
+history-record met `total = 139` (135 geslaagd, 4 faalden); run 73 draaide de volledige
+suite groen met 139/139 en `passRate` 100.
