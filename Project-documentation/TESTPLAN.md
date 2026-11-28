@@ -210,7 +210,7 @@ formulier-submit naar de externe dienst Formward. De toewijzing is daarom:
 
 | ISTQB-niveau     | Toepassing in dit project                                                                                                                  |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Component / unit | de Node-script-logica (`scripts/ci-summary.mjs`) is gedekt door de datasuite CIH-06 in `playwright/tests/unit/` (8 tests, browserloos); de enige module-logic (`main.ts`) wordt via DOM/ARIA-asserts gedekt (PLAN-CI-HISTORY-TESTS §7) |
+| Component / unit | de Node-script-logica (`scripts/ci-summary.mjs`) is gedekt door de datasuite CIH-06 in `playwright/tests/unit/` (9 tests, browserloos); de enige module-logic (`main.ts`) wordt via DOM/ARIA-asserts gedekt (PLAN-CI-HISTORY-TESTS §7) |
 | Integration      | interactie formulier ↔ Formward (**system integration** met een gemockte externe interface); geen component-integratie in de klassieke zin |
 | System           | de volledige site als geheel (Playwright E2E)                                                                                              |
 | Acceptance       | systeemtest tegen de acceptatiecriteria van §3.3/§11 — géén formele UAT met eindgebruikers                                                 |
@@ -567,7 +567,7 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 >
 > **Roadmap:** CIH-06 (de datasuite op `scripts/ci-summary.mjs`) is november 2026
 > **gebouwd**: de Playwright-runner in het **niet-browser project** `unit`
-> (`playwright/tests/unit/ci-summary.spec.ts`, 8 tests, geen `devices`-use en geen
+> (`playwright/tests/unit/ci-summary.spec.ts`, 9 tests, geen `devices`-use en geen
 > `page`-fixture), met `npm run test:ci-summary` als CI-poort vóór de browserinstall,
 > na `validate:html`, en de gate-config `playwright.unit.config.ts`. De cases staan in
 > `PLAN-CI-HISTORY-TESTS.md` §7. CIH-07 (schema v2 met `suiteTests`) is gebouwd;
@@ -658,9 +658,9 @@ impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish
 |  1   | Bestaande suite stabiliseren (smoke + navigatie + contact)                                                                      | Alle huidige tests groen, deterministisch, gemockt; geen flaky                                                                                                     |
 |  2   | **Mobiele menu-toggle stabiliseren & uitbreiden** (TC MENU-01…10, bestaand + nieuwe focus/Escape/klik-buiten-cases)             | Suite groen + deterministisch op `DESKTOP_VIEWPORT` (1920×1080) en `MOBILE_VIEWPORT` (390×844); ARIA state-transition, focusbeheer, `Escape`-sluiten en klik-buiten-het-menu gedekt. De extra viewports (850×1024, 360×640) zijn niet toegevoegd — die staan in RESP-01 (fase 4) |
 |  3   | Testdata centraliseren (`utils/test-data.ts`) + F4/F6/F7/F10-cases; F8 blijft gepland | Formulier-testdataset centraal; F-matrix grotendeels gedekt                                                                                                        |
-|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks — **af** (a11y 17, SEO 32, content-integrity 11, responsive 8) | A11Y-01…04, SEO-01…04, LINK-01/02, IMG-01 en RESP-01 groen op alle 10 pagina's; VIS-01 en PERF-01 zijn fase 5                                                                                             |
+|  4   | Non-functioneel: responsive, a11y, SEO, links/img checks — **af** (a11y 21 inclusief CIH-08, SEO 32, content-integrity 11, responsive 8) | A11Y-01…04, SEO-01…04, LINK-01/02, IMG-01 en RESP-01 groen op alle 10 pagina's; VIS-01 en PERF-01 zijn fase 5                                                                                             |
 |  5   | Visual regression + Lighthouse-drempels                                                                                         | Baselines + PERF-01 in CI (niet-blokkerend waar zinvol)                                                                                                            |
-|  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → datasuite CIH-06 → test → artifacts → history   | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit; Chromium-only browserinstall; de history-**data** is gedekt door de datasuite CIH-06 (`npm run test:ci-summary`, 8 tests) vóór de browserinstall — in run 72 met die poort gedraaid (record `total = 139`, 135 geslaagd), en in run 73 groen met 139 geslaagd en `passRate` 100; de 152-suite draaide in run 76 (152/152), en `suiteTests` is in runs 75 en 76 door de echte producer geschreven                                |
+|  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → datasuite CIH-06 → test → artifacts → history   | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit; Chromium-only browserinstall; de history-**data** is gedekt door de datasuite CIH-06 (`npm run test:ci-summary`, 9 tests) vóór de browserinstall — in run 72 met die poort gedraaid (record `total = 139`, 135 geslaagd), en in run 73 groen met 139 geslaagd en `passRate` 100; de 152-suite draaide in run 76 (152/152), en `suiteTests` is in runs 75 en 76 door de echte producer geschreven                                |
 |  7   | Optioneel: pre-deploy/PR-gate (push-trigger op de poorten), cross-browser (Firefox/WebKit) + exploratoire device-sessies        | Gate-besluit (§10.2), browser-coverage & handmatige findings geformaliseerd                                                                                        |
 | 8  | Showcase-media: video's van de suite op de portfolio-site, wanneer de portfolio-inrichting vastligt | Kijkmodus-artifacten uit §10.4 gekozen, als site-asset opgeslagen en ingebet op automation.html; de site-copy is bijgewerkt |
 | 9  | **E2E-laag: de zes gebruikersflows S1–S6 — af** (november 2026, E2E-01…E2E-06 in `playwright/tests/e2e/e2e.spec.ts`, page object `pages/flows.page.ts`) | Doel G14 in §2, zes cases in §8.6 met een plaats in de §15-traceability, de F-matrix als conditie-actietabel (§7.1), lokaal 6/6 en de suite 148/148 groen. De pyramide-kern (§4) is damit gevuld; het productiebewijs is binnen: run 76 draaide de 152-suite 152/152 in de CI (28 november 2026) |
@@ -790,10 +790,10 @@ moeten definitief zijn; dan wordt deze taak uitgevoerd. Nu is er de taakomschrij
    na de deploy. VIS-01 en PERF-01 uit fase 5 ontbreken nog.
    De E2E-laag (S1–S6) is gebouwd: 6 flows in `playwright/tests/e2e/e2e.spec.ts`
    (§8.6, G14), lokaal groen. De pyramide-basis is gebouwd: CIH-06 als
-   `npm run test:ci-summary`-poort (8 tests, `playwright/tests/unit/ci-summary.spec.ts`,
+   `npm run test:ci-summary`-poort (9 tests, `playwright/tests/unit/ci-summary.spec.ts`,
    PLAN-CI-HISTORY-TESTS §7). De
    accessibility-, responsive-, SEO- en content-integriteit-suite zijn bestaand en lokaal
-   groen: A11Y-01…04 (17), RESP-01 (8), SEO-01…04 (32) en LINK-01/LINK-02/IMG-01 (11).
+   groen: A11Y-01…04 + CIH-08 (21), RESP-01 (8), SEO-01…04 (32) en LINK-01/LINK-02/IMG-01 (11).
 
 ### Exit criteria — release-target (na fase 1–7)
 
@@ -921,7 +921,7 @@ werk, niet als bewijs.
 | G3   | F1…F10                              | `contact-functional.spec.ts`                                    | F1–F10 bestaand; F8 gebouwd 28 november 2026                       | 21 contact-tests                       |
 | G4   | MENU-01…MENU-10                     | `mobile-menu-functional.spec.ts`                                | MENU-01–10 bestaand                                               | 17 menu-tests                          |
 | G5   | RESP-01                             | `responsive.spec.ts`                                          | Bestaand                                                          | 8 responsive-tests                   |
-| G6   | A11Y-01…A11Y-04                     | `accessibility.spec.ts`                                         | Bestaand                                                          | 17 accessibility-tests             |
+| G6   | A11Y-01…A11Y-04 + CIH-08            | `accessibility.spec.ts`                                         | Bestaand                                                          | 21 accessibility-tests (17 a11y + 4 CIH-08) |
 | G7   | SEO-01…SEO-04                       | `seo.spec.ts`                                                 | Bestaand                                                          | 32 SEO-tests                       |
 | G8   | LINK-01, LINK-02, IMG-01, HTML-01   | `content-integrity.spec.ts` + CI-poort                        | Bestaand                                                          | 11 content-integrity-tests + `npm run validate:html` |
 | G9   | VIS-01                              | nog te maken (fase 5)                                           | Gepland                                                           | —                                      |

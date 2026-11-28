@@ -122,7 +122,7 @@ Project-documentation/         # testplan, CI-documentatie, best practices, verb
 | Mobiel menu      | `playwright/tests/functional/mobile-menu-functional.spec.ts` |     17 |
 | CI-history UI    | `playwright/tests/functional/ci-history-functional.spec.ts`  |      7 |
 | Footer           | `playwright/tests/functional/footer-functional.spec.ts`      |      3 |
-| Accessibility    | `playwright/tests/accessibility/accessibility.spec.ts`       |     17 |
+| Accessibility    | `playwright/tests/accessibility/accessibility.spec.ts`       |     21 |
 | Content-integrity | `playwright/tests/content-integrity/content-integrity.spec.ts` |     11 |
 | SEO              | `playwright/tests/seo/seo.spec.ts`                          |     32 |
 | Responsive       | `playwright/tests/responsive/responsive.spec.ts`            |      8 |

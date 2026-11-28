@@ -20,8 +20,10 @@
 > (`playwright/tests/unit/ci-summary.spec.ts`, 9 tests inclusief CIH-07) met
 > `npm run test:ci-summary` als CI-poort vóór de browserinstall en de gate-config
 > `playwright.unit.config.ts`. De TESTPLAN-wijzigingen in §6 zijn doorgevoerd. De
-> datasuite is lokaal gemeten: 9/9 groen, `npm run check` groen en de suite telt
-> 152 tests in 12 spec-bestanden (143 browser + 9 datasuite, inclusief de E2E-laag en CIH-08). Run 72 zette de poort in de CI: de datasuite en de
+> datasuite is lokaal gemeten: 9/9 groen, `npm run check` groen en de suite telde
+> 152 tests in 12 spec-bestanden (143 browser + 9 datasuite, inclusief de E2E-laag en CIH-08).
+> De huidige telling is 157 (148 browser + 9 datasuite) na de vijf F8-tests van
+> 28 november 2026. Run 72 zette de poort in de CI: de datasuite en de
 > Chromium-install concludeerden success vóór de browserinstall, en de teststap gaf
 > `Running 139 tests` met een record van `total = 139` (135 geslaagd, 4 faalden — RESP-01
 > op de runner-fonts, niet de datasuite). Run 73 draaide de volledige suite groen: 139/139
@@ -154,7 +156,7 @@ Uitvoering (gebouwd november 2026): de **Playwright-runner zonder browser** — 
 `unit` in `playwright.config.ts` en `playwright.local.config.ts`, met geen
 `devices`-use en geen `page`-fixture, dus geen browserstart. De 9 cases (CIH-06a…h + CIH-07 datasuite)
 staan in `playwright/tests/unit/ci-summary.spec.ts`, zodat `npx playwright test --list`
-de cases meetelt (152 tests in 12 files) en de traceability in `TESTPLAN.md` §15 bij
+de cases meetelt (157 tests in 12 files na de F8-bouw) en de traceability in `TESTPLAN.md` §15 bij
 één telling blijft. Elke test bouwt een eigen temp-map: `docs/data/playwright-history.json`
 blijft onaangeraakt. Het npm-script `test:ci-summary` draait de cases via de aparte
 gate-config `playwright.unit.config.ts` (eigen `outputDir`, alleen de `list`-reporter,

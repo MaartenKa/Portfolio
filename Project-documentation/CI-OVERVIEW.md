@@ -74,7 +74,7 @@ bijhouden" én "site publiceren".
    testflake; bij een rode check starten de Playwright-tests niet.
 7b. **Vierde poort** — `npm run test:ci-summary` (CIH-06): de datasuite op
    `scripts/ci-summary.mjs`, gebouwd in `playwright/tests/unit/ci-summary.spec.ts`
-   (8 tests) en draaiend in het browserloze `unit`-project via
+   (9 tests) en draaiend in het browserloze `unit`-project via
    `playwright.unit.config.ts` (eigen `outputDir`, `list`-reporter, `retries: 0`). De
    poort staat na `validate:html` en vóór `check:site` en de browserinstall, dus een
    rekenfout faalt zonder downloadkosten.
@@ -174,7 +174,7 @@ Dit bestand bepaalt **wat er in het dagboekje komt te staan**.
 - **Faalt niet** als `report.json` ontbreekt of geen bruikbare `stats` heeft: dan
   schrijft hij nullen met `no-report` (of `unknown` als er wél stats zijn).
 - **Eigen test (CIH-06) — gebouwd november 2026.** De report→history-vertaling draait
-  in `playwright/tests/unit/ci-summary.spec.ts`: 8 tests met vaste rapportstatistiek →
+  in `playwright/tests/unit/ci-summary.spec.ts`: 9 tests met vaste rapportstatistiek →
   `node scripts/ci-summary.mjs` in een temp-map → asserts op de geschreven entry
   (formules, `passRate`-afronding, `total = 0` en getalnormalisatie, `no-report`,
   `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de decoding van de CLI-args).

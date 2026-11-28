@@ -18,7 +18,8 @@
   `157 passed`, 1 worker, `retries: 0`, tegen de lokale `docs/` op poort 8080, in 1,2 m). De
   contact-suite draaide 21/21 groen, inclusief de vijf F8-tests.
 - `npx playwright test --list` → 157 tests in 12 files.
-- Sequencering: lokaal **152/152** (gemeten 28 november). De 139-suite draaide voor het
+- Sequencering: lokaal **157/157** (gemeten 28 november, na de F8-bouw). De 139-suite
+  draaide voor het
   eerst in de CI in run **72**:
   **135 geslaagd, 4 faalden**. Alle vier faalden in de RESP-01-cases op de smalle viewports
   (500×640, 499×640, 390×844, 320×568), met 37–46 px horizontale overloop en in élke poging

@@ -623,7 +623,7 @@ echte CI-cijfers tonen.
   `unit`-project met de poort `npm run test:ci-summary` vóór de browserinstall. De weergavelaag is
   gedekt door zeven UI-tests met gemockte data, inclusief `suiteTests` en de `max(total)`-fallback.
   Run 72 draaide de CIH-06-poort in CI: de datasuite
-  (8 tests, browserloos) en de Chromium-install concludeerden success vóór de
+  (9 tests, browserloos) en de Chromium-install concludeerden success vóór de
   browserinstall, en de teststap gaf `Running 139 tests` met een record van `total = 139`
   (135 geslaagd, 4 faalden). Run 73 draaide dezelfde keten groen: 139/139 en een record
   met `passRate` 100. Runs 75 en 76 bewezen de CIH-07-stand in de CI: run 75 met de eerste
@@ -719,7 +719,9 @@ Twee kanttekeningen bij dit record:
 
 1. **De 145-suite is de 139-suite plus de zes E2E-flows.** Ná run 74 groeide de suite met
    CIH-07 (de datasuite op schema v2 en de twee UI-tests op `suiteTests`) en met CIH-08
-   (de vier a11y-tests van de CI-sectie): de suite telt nu 152 tests in 12 spec-bestanden.
+   (de vier a11y-tests van de CI-sectie) naar 152 tests in 12 spec-bestanden. De huidige
+   telling is 157 — de vijf F8-tests van 28 november 2026 zijn erbij, plan
+   `PLAN-CONTACT-SUBMIT-GUARD.md`.
 2. **Het schema-v2-bewijs kwam ná dit record binnen.** Het record van run 74 bevat geen
    `suiteTests`, want de producer op commit `78dfc2e` kende dat veld nog niet. De twee volgende
    `workflow_dispatch`-runs op de current HEAD zijn de bewijsruns: run 75 (148/148, de eerste
@@ -781,8 +783,9 @@ De uitvoeringsvorm van CIH-06/07 is november 2026 **gebouwd**: de Playwright-run
 **niet-browser project** `unit` (`playwright/tests/unit/ci-summary.spec.ts`, 9 tests,
 geen `devices`-use, geen `page`-fixture), met `npm run test:ci-summary` als CI-poort
 vóór de browserinstall en de gate-config `playwright.unit.config.ts` (eigen `outputDir`,
-`list`-reporter, `retries: 0`). De suite telt 152 tests in 12 spec-bestanden (143 browser
-+ 9 datasuite, inclusief de zes E2E-flows en de vier CIH-08-tests); project en
+`list`-reporter, `retries: 0`). De suite telt 157 tests in 12 spec-bestanden (148 browser
++ 9 datasuite, inclusief de zes E2E-flows, de vier CIH-08-tests en de vijf F8-tests);
+project en
 poort staan in `playwright.config.ts`, `playwright.local.config.ts` en `package.json`.
 Run 72 heeft de poort in de CI gezet, met de datasuite vóór de browserinstall en een
 history-record met `total = 139` (135 geslaagd, 4 faalden); run 73 draaide de volledige
