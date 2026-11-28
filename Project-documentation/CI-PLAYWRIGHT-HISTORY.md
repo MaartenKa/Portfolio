@@ -695,8 +695,34 @@ Run 73 draaide dezelfde keten volledig groen, handmatig gestart op 27 november 2
 
 Daarmee is de 139-suite voor het eerst groen in de CI, de vier RESP-01-cases mee op de
 runner. De geschiedenis op `main` is de bron van waarheid voor de dashboard-kaarten en
-voor de README-claim over de laatste run. De 148-suite met CIH-07, schema v2 en
+voor de README-claim over de laatste run. De 152-suite met CIH-07, CIH-08, schema v2 en
 `suiteTests` is nog niet in de CI bewezen. Zie §15.3 voor de volgende CI-bewijsrun.
+
+### 15.3 De 145-suite-run (run 74) en de volgende bewijsrun
+
+Run 74 is de eerste CI-run die de E2E-laag meedraaide: de nightly van 28 november 2026
+om 01:28 UTC op commit `78dfc2e`, jobduur 69,7 s. Per schakel, uit het record in
+`docs/data/playwright-history.json` en de CI-log:
+
+| Schakel | Bewijsbron | Waarde |
+| ------- | ---------- | ------ |
+| Vier poorten (typecheck, lint, html-validate, CIH-06) | CI-log | alle vier `success`, vóór de browserinstall |
+| Tests | CI-log | `Running 145 tests using 1 worker` → 145 geslaagd, 0 faalden |
+| Artifacts | CI-log | 3: `playwright-report`, `playwright-json-report`, `playwright-history` |
+| History-record | JSON op `main` | `runNumber 74`, `conclusion success`, `total 145`, `passed 145`, `failed 0`, `passRate 100` |
+| Bot-commit en Pages-deploy | git-log / Actions-log | `chore(ci): update Playwright history [skip ci]`, daarna `pages build and deployment` |
+
+Twee kanttekeningen bij dit record:
+
+1. **De 145-suite is de 139-suite plus de zes E2E-flows.** Ná run 74 groeide de suite met
+   CIH-07 (de datasuite op schema v2 en de twee UI-tests op `suiteTests`) en met CIH-08
+   (de vier a11y-tests van de CI-sectie): de suite telt nu 152 tests in 12 spec-bestanden.
+2. **Het schema-v2-bewijs is nog open.** Het record van run 74 bevat geen `suiteTests`,
+   want de producer op commit `78dfc2e` kende dat veld nog niet; geen van de 30 entries in
+   de JSON heeft `suiteTests`. De volgende `workflow_dispatch`-run op de current HEAD is de
+   bewijsrun: verwacht `Running 152 tests`, een entry met `suiteTests: 152`, drie artifacts
+   en een bot-commit (`PLAN-CI-HISTORY-TESTS.md` §9, en conclusie 2 van dit hoofdstuk over
+   de `schedule`-trigger).
 
 ## 16. Testsoort en vervolgplan
 
@@ -714,10 +740,10 @@ De uitvoeringsvorm van CIH-06/07 is november 2026 **gebouwd**: de Playwright-run
 **niet-browser project** `unit` (`playwright/tests/unit/ci-summary.spec.ts`, 9 tests,
 geen `devices`-use, geen `page`-fixture), met `npm run test:ci-summary` als CI-poort
 vóór de browserinstall en de gate-config `playwright.unit.config.ts` (eigen `outputDir`,
-`list`-reporter, `retries: 0`). De suite telt 148 tests in 12 spec-bestanden (139 browser
-+ 9 datasuite, inclusief de zes E2E-flows in `playwright/tests/e2e/e2e.spec.ts`); project en
+`list`-reporter, `retries: 0`). De suite telt 152 tests in 12 spec-bestanden (143 browser
++ 9 datasuite, inclusief de zes E2E-flows en de vier CIH-08-tests); project en
 poort staan in `playwright.config.ts`, `playwright.local.config.ts` en `package.json`.
 Run 72 heeft de poort in de CI gezet, met de datasuite vóór de browserinstall en een
 history-record met `total = 139` (135 geslaagd, 4 faalden); run 73 draaide de volledige
-suite groen: 139 geslaagd, 0 faalden en `passRate` 100. De 148-suite met schema v2 en
+suite groen: 139 geslaagd, 0 faalden en `passRate` 100. De 152-suite met schema v2 en
 `suiteTests` is nog niet in de CI bewezen. Zie §15.3 voor de volgende CI-bewijsrun.

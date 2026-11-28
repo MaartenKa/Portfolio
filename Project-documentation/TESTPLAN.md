@@ -7,7 +7,7 @@
 | **Eigenaar**   | QA Engineer (zie §13)                                                                       |
 | **Testobject** | Statische portfolio-site in `docs/` (10 HTML-bestanden) + Playwright-suite in `playwright/` |
 | **Testbasis**  | §3.3                                                                                        |
-| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 148 tests in 12 spec-bestanden; `npm run test:ci-summary` = 9/9 (datasuite CIH-06/07); `npm run test:local` = 148/148         |
+| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 152 tests in 12 spec-bestanden; `npm run test:ci-summary` = 9/9 (datasuite CIH-06/07); `npm run test:local` = 152/152         |
 
 **Scope:** de statische portfolio-website in `docs/` — 9 contentpagina's plus de
 `404.html`-fallback (10 HTML-bestanden), het CSS-design-systeem, één klein
@@ -41,7 +41,7 @@ in `mobile-menu-functional.spec.ts` (incl. ARIA, state-transitions, focus,
 payload- en tabvolgorde-contract); F8 is gepland (§7). De P2-accessibility fixes
 op de site (skip-link, decoratieve `aria-hidden`-iconen, Nederlandse
 section-labels, placeholder-contrast en `forced-colors` fallback) zijn sinds
-november 2026 gedekt door de accessibility-suite: 17 tests in
+november 2026 gedekt door de accessibility-suite: 21 tests in
 `accessibility.spec.ts` (A11Y-01…A11Y-04). De resterende gaten liggen op vlak
 **(4)**: responsive, SEO, content-integriteit (LINK/IMG), visual-regression en
 performance ontbreken nog als geautomatiseerde tests.
@@ -192,8 +192,8 @@ checks**. De "unit-laag" wordt gedeeltelijk vervangen door directe DOM/ARIA-asse
   (`scripts/ci-summary.mjs`) zonder browser, als `npm run test:ci-summary`-poort vóór
   de browserinstall: 9 tests in `playwright/tests/unit/ci-summary.spec.ts` inclusief CIH-07 in het project
   `unit` (geen `devices`-use, geen `page`-fixture), met de gate-config
-  `playwright.unit.config.ts`. De suite telt 148 tests in 12 spec-bestanden
-  (139 browser + 9 datasuite) — `PLAN-CI-HISTORY-TESTS.md` §7 fase B is damit gebouwd.
+  `playwright.unit.config.ts`. De suite telt 152 tests in 12 spec-bestanden
+  (143 browser + 9 datasuite) — `PLAN-CI-HISTORY-TESTS.md` §7 fase B is damit gebouwd.
 
 > **Conventie:** gebruik Page Objects voor UI-interactie; alleen de lightweight
 > smoke-laag mag rechtstreeks `page` gebruiken (netwerk/infrastructuurcheck).
@@ -255,7 +255,7 @@ uitgevoerde UAT.
 - **Accessibility:** keyboard-reikbare navigatie, focus-ordening, skip-link,
   `aria-expanded`, `aria-label`, decoratieve iconen met `aria-hidden`,
   Nederlandse section-labels, contrast, `lang`, afbeelding-`alt` en
-  `forced-colors` fallback. **Bestaand:** de accessibility-suite (17 tests)
+  `forced-colors` fallback. **Bestaand:** de accessibility-suite (21 tests)
   bewijst dit structureel in Chromium — tabvolgorde-contract per pagina,
   focus-outline, skip-link-focus op `main`, `lang="nl"`, landmarks, `alt`-teksten,
   section-labels, gemeten placeholder-contrast en de `forced-colors`-fallback.
@@ -476,8 +476,8 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 
 De statuskolommen gebruiken de legenda uit §5. **Bestaand** betekent dat er een
 test in een spec-bestand staat; **Deels** betekent dat slechts een subset is
-geautomatiseerd. De huidige suite telt **148 tests in 12 spec-bestanden**: smoke 10,
-homepage 12, contact 16, mobiel menu 17, CI-history 7, footer 3, accessibility 17,
+geautomatiseerd. De huidige suite telt **152 tests in 12 spec-bestanden**: smoke 10,
+homepage 12, contact 16, mobiel menu 17, CI-history 7, footer 3, accessibility 21,
 content-integrity 11, SEO 32, responsive 8, de E2E-flows 6 en de datasuite CIH-06/07 9.
 Deze matrix beschrijft de target-set; F8 is
 nog gepland, en VIS-01 en PERF-01 zijn fase 5.
@@ -538,7 +538,7 @@ nog gepland, en VIS-01 en PERF-01 zijn fase 5.
 ### 8.5 CI-history & dashboard (G13) — `playwright/tests/functional/ci-history-functional.spec.ts` _(bestaand, 5 tests)_
 
 De kaarten en de geschiedenis-tabel op `automation.html` worden client-side gevuld
-uit `docs/data/playwright-history.json` (schema `schemaVersion: 1`, entries met
+uit `docs/data/playwright-history.json` (schema `schemaVersion: 2`, entries met `suiteTests` en
 `total`, `passed`, `failed`, `flaky`, `passRate`), gerenderd door `src/ts/main.ts`.
 Deze sectie test het **eindpunt van de weergave** (data → kaarten/tabel), niet de
 producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
@@ -552,7 +552,7 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 | CIH-04 | Runs zonder noemer (`total = 0`) vallen buiten de totalen      | alleen 2 van 3 runs geteld: `ci-total-executed` = "80", `ci-pass-ratio` = "90%", `ci-streak` = "0", `ci-status` = "Geannuleerd"; notering bevat "2 van 3 CI-runs geteld"                                                             | Bestaand |
 | CIH-05 | Lege geschiedenis: placeholders en placeholder-rij             | alle kaarten tonen "—", `ci-history-body` bevat "Geen CI-historie beschikbaar."                                                                                                                                                      | Bestaand |
 
-> **Bewijs:** `npx playwright test --list` telt 7 tests in dit spec-bestand (148 in
+> **Bewijs:** `npx playwright test --list` telt 7 tests in dit spec-bestand (152 in
 > de hele suite). De tabel heeft in de markup 6 kolommen (Run, Datum, Status,
 > Tests, Geslaagd, Flaky) en géén `data-testid` per rij; rijen worden via
 > `getByRole("row")` geteld. Er is **géén** aparte JSON-schema- of 404-fallback-test **in dit spec-bestand**.
@@ -563,10 +563,11 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 > `page`-fixture), met `npm run test:ci-summary` als CI-poort vóór de browserinstall,
 > na `validate:html`, en de gate-config `playwright.unit.config.ts`. De cases staan in
 > `PLAN-CI-HISTORY-TESTS.md` §7. CIH-07 (schema v2 met `suiteTests`) is gebouwd;
-> CIH-08 (a11y van de CI-sectie) volgt. De suite telt 148 tests in 12
+> CIH-08 (a11y van de CI-sectie) is gebouwd: 4 tests in
+> `accessibility.spec.ts`. De suite telt 152 tests in 12
 > spec-bestanden; run 72 heeft de datasuite als poort in de CI gedraaid, vóór de
 > browserinstall, en de teststap gaf `Running 139 tests`. Run 73 draaide de volledige
-> suite groen: 139 geslaagd, 0 faalden en `passRate` 100. De CI-bewijsrun van de 148-suite is nog open.
+> suite groen: 139 geslaagd, 0 faalden en `passRate` 100. De CI-bewijsrun van de 152-suite is nog open.
 
 ### 8.6 Gebruikersflows (G14) — `playwright/tests/e2e/e2e.spec.ts` _(bestaand, 6 tests)_
 
@@ -587,12 +588,12 @@ hergebruikt.
 | E2E-05  | S5 footerjourney    | home (footer-contract) → `footer-contact` → `footer-privacy` → `nav-home`    | `href` van de vier footerlinks en de externe `target`/`rel` (NAV-04); actieve link op contact en op privacy; géén actieve link op de homepage (NAV-05)     | **Bestaand**                 |
 | E2E-06  | S6 404-herstel      | onbekend pad → `404.html` → `nav-home`                                       | het onbekende pad geeft HTTP 404, de fallback van de site toont de fallback-content, en de navigatie herstelt naar de home zonder runtime errors          | **Bestaand**                 |
 
-> **Bewijs:** `npx playwright test --list` telt 6 tests in dit spec-bestand (148 in
+> **Bewijs:** `npx playwright test --list` telt 6 tests in dit spec-bestand (152 in
 > de hele suite, 12 spec-bestanden). Lokaal gemeten op 27 november 2026: 6/6 groen
 > en de suite 148/148 (`npm run test:local`, 1 worker, `retries: 0`, lokale `docs/`
 > op poort 8080). De E2E-laag vult damit de kern van de pyramide (§4) — de open
 > regel in de audit (`TEST-SUITE-STATUS.md` §4.2) is gesloten. De eerste CI-run van
-> de 148-suite is het productiebewijs dat nog komt; de CI-record van run 73 is de
+> de 152-suite is het productiebewijs dat nog komt; de CI-record van run 73 is de
 > 139-suite.
 >
 > **Determinisme:** de dashboardjourney mockt de history-endpoint met drie vaste
@@ -654,7 +655,7 @@ impact: eerst de grootste functionele gap, dan non-functioneel, tenslotte polish
 |  6   | CI-keten (GitHub Actions, bestaand: `playwright.yml`): npm ci → typecheck → lint → html-validate → datasuite CIH-06 → test → artifacts → history   | Playwright HTML-report, JSON-report en CI-history als artifact; history op `main` gecommit; Chromium-only browserinstall; de history-**data** is gedekt door de datasuite CIH-06 (`npm run test:ci-summary`, 8 tests) vóór de browserinstall — in run 72 met die poort gedraaid (record `total = 139`, 135 geslaagd), en in run 73 groen met 139 geslaagd en `passRate` 100                                |
 |  7   | Optioneel: pre-deploy/PR-gate (push-trigger op de poorten), cross-browser (Firefox/WebKit) + exploratoire device-sessies        | Gate-besluit (§10.2), browser-coverage & handmatige findings geformaliseerd                                                                                        |
 | 8  | Showcase-media: video's van de suite op de portfolio-site, wanneer de portfolio-inrichting vastligt | Kijkmodus-artifacten uit §10.4 gekozen, als site-asset opgeslagen en ingebet op automation.html; de site-copy is bijgewerkt |
-| 9  | **E2E-laag: de zes gebruikersflows S1–S6 — af** (november 2026, E2E-01…E2E-06 in `playwright/tests/e2e/e2e.spec.ts`, page object `pages/flows.page.ts`) | Doel G14 in §2, zes cases in §8.6 met een plaats in de §15-traceability, de F-matrix als conditie-actietabel (§7.1), lokaal 6/6 en de suite 148/148 groen. De pyramide-kern (§4) is damit gevuld; de eerste CI-run van de 148-suite is het resterende productiebewijs |
+| 9  | **E2E-laag: de zes gebruikersflows S1–S6 — af** (november 2026, E2E-01…E2E-06 in `playwright/tests/e2e/e2e.spec.ts`, page object `pages/flows.page.ts`) | Doel G14 in §2, zes cases in §8.6 met een plaats in de §15-traceability, de F-matrix als conditie-actietabel (§7.1), lokaal 6/6 en de suite 148/148 groen. De pyramide-kern (§4) is damit gevuld; de eerste CI-run van de 152-suite is het resterende productiebewijs |
 
 ### 10.1 CI-pipeline (fase 6, in lijn met BestPractices §18)
 
@@ -755,14 +756,14 @@ moeten definitief zijn; dan wordt deze taak uitgevoerd. Nu is er de taakomschrij
 - De testdata en verwachtingen zijn deterministisch: gemockte endpoints, vaste
   fixtures en geen afhankelijkheid van live CI-cijfers.
 
-### Exit criteria — huidige baseline (suite zoals nu, 148 tests)
+### Exit criteria — huidige baseline (suite zoals nu, 152 tests)
 
 1. **Poorten groen** — `npm run check` (typecheck + lint + html-validate) en
    `npm run test:ci-summary` (9 datasuite-tests) slagen.
-2. **Suite groen** — 148/148 tests slagen lokaal (`npm run test:local`), 0 failures en
+2. **Suite groen** — 152/152 tests slagen lokaal (`npm run test:local`), 0 failures en
    0 skipped in het JSON-report. In de CI draaide de suite groen in run 73: 139 geslaagd
    en 0 faalden, `passRate` 100, met alle CI-stappen success — dat is de 139-suite vóór
-   de E2E-laag; de eerste CI-run van de 148-suite is het bewijs dat nog komt. De vier
+   de E2E-laag; de eerste CI-run van de 152-suite is het bewijs dat nog komt . De vier
    RESP-01-cases die in run 72 op de smalle viewports faalden
    door de bredere runner-uitvalfont zijn opgeheven. De CSS-fix
    (`overflow-wrap: break-word` op `body`) staat op `main` en is gedeployed; run 73
@@ -915,7 +916,7 @@ werk, niet als bewijs.
 | G10  | PERF-01                             | nog te maken (fase 5)                                           | Gepland                                                           | —                                      |
 | G11  | procesdoel — geen producttestcase   | `playwright.config.ts`, CI-run                                  | Bewezen door CI-config, niet door een testcase                    | `fullyParallel: true`; CI `workers: 1` |
 | G12  | procesdoel — geen producttestcase   | `.github/workflows/playwright.yml`                              | Vier poorten + suite bestaand; pre-deploy gate open beslispunt (§10.2) | workflow-run + artifacts + de datasuite-poort vóór de browserinstall |
-| G13  | CIH-01…CIH-05 bestaand, CIH-06/07 gebouwd; CIH-08 gepland | `ci-history-functional.spec.ts`; CIH-06/07: `playwright/tests/unit/ci-summary.spec.ts`       | Bestaand: CIH-01…05 + CIH-07 UI-tests (7 UI-tests) + CIH-06/07 datasuite (9 tests)                                               | 16 CI-history-tests; CIH-06/07 draait als `npm run test:ci-summary`-poort |
+| G13  | CIH-01…CIH-05 bestaand, CIH-06/07 en CIH-08 gebouwd | `ci-history-functional.spec.ts`; CIH-06/07: `playwright/tests/unit/ci-summary.spec.ts`       | Bestaand: CIH-01…05 + CIH-07 UI-tests (7 UI-tests) + CIH-06/07 datasuite (9 tests)                                               | 20 CI-history-tests (7 UI + 9 datasuite + 4 a11y); CIH-06/07 draait als `npm run test:ci-summary`-poort |
 | G14  | E2E-01…E2E-06 (flows S1–S6)   | `playwright/tests/e2e/e2e.spec.ts`                             | Bestaand                                                       | 6 E2E-flows, lokaal 6/6 en 148/148 (27 nov 2026) |
 
 > G11 en G12 zijn **procesdoelen**; ze worden niet door een Playwright-testcase
@@ -976,6 +977,7 @@ werk, niet als bewijs.
 | E2E-04 | `e2e.spec.ts` | `E2E-04 (S4): van de homepage naar het dashboard, met de kaarten, de rijen en de run-link` |
 | E2E-05 | `e2e.spec.ts` | `E2E-05 (S5): footer-contract, actieve footer-link en terugkeer naar de homepage` |
 | E2E-06 | `e2e.spec.ts` | `E2E-06 (S6): een onbekend pad eindigt als 404 en de navigatie herstelt naar de homepage` |
+| CIH-08a…d | `accessibility.spec.ts` | `CIH-08a: de geschiedenis-tabel heeft een Nederlandse caption en zes gekopde kolommen`; `CIH-08b: élke geschiedenisrij vult de zes kolommen en de run-link is veilig en leesbaar`; `CIH-08c: de lege geschiedenis houdt de caption en de zes-kolomsstructuur intact`; `CIH-08d: de CI-kaarten blijven leesbaar en de run-links zijn toetsenbordbereikbaar in rijvolgorde` |
 
 > Cases zonder rij in deze tabel zijn nog open: F8 is gepland, en VIS-01 en PERF-01 zijn
 > fase 5. De tabel beschrijft de bestaande suite — inclusief de non-functionele suites
@@ -988,7 +990,7 @@ werk, niet als bewijs.
 | Onderdeel         | Deliverable                                     | Bron / bewijs                                                          |
 | ----------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
 | Testplan          | dit document, met status per testcase           | `Project-documentation/TESTPLAN.md`                                    |
-| Testsuite         | 12 spec-bestanden, 148 tests                    | `playwright/tests/` + `npx playwright test --list`                     |
+| Testsuite         | 12 spec-bestanden, 152 tests                    | `playwright/tests/` + `npx playwright test --list`                     |
 | Testrapportage    | HTML-report en JSON-report per run              | `playwright/playwright-report/`, `playwright/test-results/report.json` |
 | CI-history        | `docs/data/playwright-history.json` + dashboard | `scripts/ci-summary.mjs`, `automation.html`                            |
 | Kwaliteitspoorten | typecheck, lint, html-validate en de datasuite `test:ci-summary` (CIH-06) | `npm run check`, `npm run test:ci-summary`, `playwright.yml`           |
