@@ -1,8 +1,26 @@
 {
   "schemaVersion": 2,
   "workflow": "playwright.yml",
-  "updated": "2026-11-28T01:28:16.545Z",
+  "updated": "2026-11-28T10:53:27.739Z",
   "runs": [
+    {
+      "runId": 46137082740,
+      "runNumber": 75,
+      "createdAt": "2026-11-28T10:53:27.739Z",
+      "event": "workflow_dispatch",
+      "branch": "main",
+      "commit": "90f35e4",
+      "conclusion": "success",
+      "total": 148,
+      "passed": 148,
+      "failed": 0,
+      "flaky": 0,
+      "skipped": 0,
+      "suiteTests": 148,
+      "passRate": 100,
+      "durationMs": 70516,
+      "runUrl": "https://github.com/MaartenKa/Portfolio/actions/runs/46137082740"
+    },
     {
       "runId": 46093057449,
       "runNumber": 74,
@@ -495,23 +513,6 @@
       "passRate": 100,
       "durationMs": 34347,
       "runUrl": "https://github.com/MaartenKa/Portfolio/actions/runs/41738784501"
-    },
-    {
-      "runId": 41556581228,
-      "runNumber": 44,
-      "createdAt": "2026-11-03T01:00:00.949Z",
-      "event": "schedule",
-      "branch": "main",
-      "commit": "e6531ca",
-      "conclusion": "success",
-      "total": 36,
-      "passed": 36,
-      "failed": 0,
-      "flaky": 0,
-      "skipped": 0,
-      "passRate": 100,
-      "durationMs": 37149,
-      "runUrl": "https://github.com/MaartenKa/Portfolio/actions/runs/41556581228"
     }
   ]
 }
