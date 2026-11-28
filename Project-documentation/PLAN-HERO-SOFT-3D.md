@@ -48,7 +48,7 @@ vlak; alleen de kaart krijgt perspectief en diepte.
 Na de wijziging:
 
 - `npm run check` moet groen blijven;
-- `npm run test:local` moet groen blijven (de suite telt inmiddels 145 tests);
+- `npm run test:local` moet groen blijven (de suite telt inmiddels 148 tests);
 - visueel controleren op desktop, tablet en mobiel;
 - controleren dat er geen horizontale scroll ontstaat;
 - controleren dat de terminaltekst leesbaar blijft.

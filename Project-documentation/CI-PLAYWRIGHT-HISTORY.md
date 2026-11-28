@@ -16,7 +16,7 @@ Op `docs/automation.html` staat een sectie **TESTRESULTATEN** met:
 
 1. De bestaande shields.io statusbadge.
 2. Vijf kaarten voor de suite en de laatste CI-run:
-   - `data-testid="ci-suite-size"` — suite-omvang (grootste `total` in de runs).
+   - `data-testid="ci-suite-size"` — suite-omvang (laatste niet-lege `suiteTests` uit schema v2, met `max(total)` als valback).
    - `data-testid="ci-runs"` — aantal gelogde testruns.
    - `data-testid="ci-total-tests"` — aantal uitgevoerde tests van de laatste run.
    - `data-testid="ci-pass-rate"` — slagingspercentage van de laatste run.
@@ -90,7 +90,7 @@ Berekende cijfers per run:
 total   = expected + flaky + unexpected
 passed  = expected + flaky
 failed  = unexpected
-passRate = (passed / total) * 100
+passRate      = (passed / total) * 100
 ```
 
 `skipped` wordt niet in de noemer van `passRate` meegenomen. Als `total` 0 is,
@@ -175,7 +175,7 @@ accepteert alleen `https://github.com/MaartenKa/Portfolio/actions/runs/<runId>`.
 
 ### 4.3 Output per run
 
-Een history-entry bevat:
+Een history-entry bevat `suiteTests` vanaf schema v2; entries zonder dit veld blijven leesbaar:
 
 ```json
 {
@@ -191,6 +191,7 @@ Een history-entry bevat:
   "failed": 1,
   "flaky": 1,
   "skipped": 1,
+  "suiteTests": 15,
   "passRate": 92.9,
   "durationMs": 12345,
   "runUrl": "https://github.com/MaartenKa/Portfolio/actions/runs/123"
@@ -206,7 +207,7 @@ ontbreken. `commit` kan een lege string zijn als `GITHUB_SHA` ontbreekt.
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "workflow": "playwright.yml",
   "updated": "ISO-8601 tijd of null",
   "runs": []
@@ -218,7 +219,7 @@ Het script:
 1. Zet de nieuwe entry bovenaan.
 2. Verwijdert een bestaande entry met dezelfde `runId`.
 3. Bewaart maximaal `--max` runs, standaard 30.
-4. Schrijft `updated` als het moment van genereren.
+4. Schrijft `suiteTests = total + skipped` en `updated` als het moment van genereren.
 
 Deduplicatie op `runId` voorkomt dubbele runs als de workflow opnieuw dezelfde
 run bijwerkt.
@@ -256,7 +257,7 @@ concurrency:
 De relevante CI-stappen:
 
 - **Vier poorten en de browserinstall vóór de suite** — `npm run typecheck`, `npm run lint`,
-  `npm run validate:html` en `npm run test:ci-summary` (CIH-06: de datasuite van 8 tests in
+  `npm run test:ci-summary` (CIH-06/07: de datasuite van 9 tests in
   het browserloze `unit`-project, via `playwright.unit.config.ts`), dan de preflight
   hieronder, dan `npx playwright install --with-deps chromium`: alleen Chromium, want de
   configs kennen één `chromium`-project. De datasuite draait dus vóór de browserinstall,
@@ -310,7 +311,7 @@ Het bestand staat in de repo als:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "workflow": "playwright.yml",
   "updated": null,
   "runs": []
@@ -357,11 +358,12 @@ valt de UI terug op placeholders:
 
 ### 7.2 Data-validatie
 
-Elke run wordt genormaliseerd:
+Elke run wordt genormaliseerd; `suiteTests` blijft `null` voor schema v1-records:
 
 - `conclusion` wordt beperkt tot `success`, `failure`, `cancelled`,
   `no-report` of `unknown`.
 - numerieke velden worden veilig naar niet-negatieve gehele getallen gezet.
+- `suiteTests` wordt veilig naar een niet-negatief geheel getal gezet; afwezig blijft `null`.
 - `passRate` wordt begrensd op `0` tot `100`.
 - `createdAt` wordt als string bewaard; ongeldige data toont `—` in de tabel.
 - entries die geen object zijn, worden genegeerd;
@@ -501,7 +503,7 @@ Exacte commando's:
 
 ```bash
 npm run test:local   # = playwright test -c playwright.local.config.ts (webServer start automatisch)
-npm run test:ci-summary  # = playwright test -c playwright.unit.config.ts (datasuite CIH-06, zonder webServer en browser)
+npm run test:ci-summary  # = playwright test -c playwright.unit.config.ts (datasuite CIH-06/07, zonder webServer en browser)
 node scripts/ci-summary.mjs --report=playwright/test-results/report.json --history=playwright/test-results/local-history.json --max=30
 ```
 
@@ -512,9 +514,9 @@ De lokale run met de suite van toen gaf destijds:
 ```
 
 De meting na de CIH-06-bouw (november 2026) is **139 passed** in de lokale suite en
-**8 passed** in de datasuite (`npm run test:ci-summary`).
+**9 passed** in de datasuite (`npm run test:ci-summary`), met schema v2 en `suiteTests`.
 
-(48 bestaande tests plus de 5 CI-history tests uit
+(48 bestaande tests plus de 7 CI-history tests uit
 `playwright/tests/functional/ci-history-functional.spec.ts`.)
 
 Daarna genereerde `scripts/ci-summary.mjs` uit die lokale JSON-report een
@@ -544,7 +546,7 @@ dummy history zelf staat niet in de repo: `docs/data/playwright-history.json`
 wordt door de CI gevuld; de CI-history-test mockt die data onafhankelijk van de
 live geschiedenis.
 
-De mock met drie runs (40/40, 40/38 en 40/30) geeft in de UI:
+De mock met drie runs (suiteTests 40, 40/40, 40/38 en 40/30) geeft in de UI:
 
 ```text
 ci-suite-size: 40 tests
@@ -615,11 +617,12 @@ echte CI-cijfers tonen.
   kunnen tot tien minuten oud zijn. `cache: "no-store"` omzeilt de browsercache,
   niet de Pages-cache. Een harde reload na een deploy is verwacht gedrag.
 - **De producerende kant heeft eigen tests.** `scripts/ci-summary.mjs` draait sinds
-  november 2026 in de datasuite CIH-06: 8 tests in `playwright/tests/unit/ci-summary.spec.ts`
-  (formules, `passRate`-afronding, `total = 0`, `no-report`, `CI_SUMMARY_STATUS`, dedup op
-  `runId`, `--max`-kappen en de CLI-args), in het browserloze `unit`-project met de poort
-  `npm run test:ci-summary` vóór de browserinstall. De weergavelaag is gedekt door vijf
-  UI-tests met gemockte data. Run 72 draaide de poort in CI: de datasuite
+  november 2026 in de datasuite CIH-06/07: 9 tests in `playwright/tests/unit/ci-summary.spec.ts`
+  inclusief schema v2 en `suiteTests` (formules, `passRate`-afronding, `total = 0`, `no-report`,
+  `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de CLI-args), in het browserloze
+  `unit`-project met de poort `npm run test:ci-summary` vóór de browserinstall. De weergavelaag is
+  gedekt door zeven UI-tests met gemockte data, inclusief `suiteTests` en de `max(total)`-fallback.
+  Run 72 draaide de CIH-06-poort in CI: de datasuite
   (8 tests, browserloos) en de Chromium-install concludeerden success vóór de
   browserinstall, en de teststap gaf `Running 139 tests` met een record van `total = 139`
   (135 geslaagd, 4 faalden). Run 73 draaide dezelfde keten groen: 139/139 en een record
@@ -641,7 +644,7 @@ De eerste run die de volledige keten draaide was run #42, gestart met
 | `ci-summary.mjs` | CI-log | draait stil en groen |
 | Bot-commit | git-log | `8566707` door `github-actions[bot]`, tekst `chore(ci): update Playwright history [skip ci]`, push `b040868..8566707 HEAD -> main` |
 | Pages-deploy | Actions-log | `pages build and deployment #73` door `github-pages[bot]`, direct na de bot-commit |
-| JSON live | HTTP | `200`, één entry: `runNumber 42`, `conclusion success`, `total 36`, `passed 36`, `failed 0`, `flaky 0`, `passRate 100`, `durationMs 34903` |
+| JSON live | HTTP | `200`, één entry: `runNumber 42`, `conclusion success`, `total 36`, `passed 36`, `failed 0`, `flaky 0`, `passRate 100`, `durationMs 34903`; `suiteTests` ontbreekt in deze schema v1-record |
 | Site | browser | kaarten en tabel gevuld, na een harde reload |
 
 Twee conclusies die de moeite waard zijn:
@@ -692,27 +695,29 @@ Run 73 draaide dezelfde keten volledig groen, handmatig gestart op 27 november 2
 
 Daarmee is de 139-suite voor het eerst groen in de CI, de vier RESP-01-cases mee op de
 runner. De geschiedenis op `main` is de bron van waarheid voor de dashboard-kaarten en
-voor de README-claim over de laatste run.
+voor de README-claim over de laatste run. De 148-suite met CIH-07, schema v2 en
+`suiteTests` is nog niet in de CI bewezen. Zie §15.3 voor de volgende CI-bewijsrun.
 
 ## 16. Testsoort en vervolgplan
 
-De vijf tests in `playwright/tests/functional/ci-history-functional.spec.ts`
+De zeven tests in `playwright/tests/functional/ci-history-functional.spec.ts`
 testen de **weergavelaag**: `main.ts` zet een history-JSON om naar kaarten en
 tabel, met de endpoint gemockt via `page.route()` zodat de verwachting
 deterministisch is. De **datalaag** (`scripts/ci-summary.mjs`: report → entry) is sinds november 2026 gedekt
-door de datasuite CIH-06; de **CI-keten** zelf (commit → Pages → browser) heeft géén
+door de datasuite CIH-06/07; de **CI-keten** zelf (commit → Pages → browser) heeft géén
 geautomatiseerde test, en §15 is daarvan het handmatige bewijs.
 
 De indeling per laag, de testcase-IDs (CIH-01…CIH-08), de koppeling
 aan `TESTPLAN.md` en de roadmap staan in `PLAN-CI-HISTORY-TESTS.md`.
 
-De uitvoeringsvorm van CIH-06 is november 2026 **gebouwd**: de Playwright-runner in het
-**niet-browser project** `unit` (`playwright/tests/unit/ci-summary.spec.ts`, 8 tests,
+De uitvoeringsvorm van CIH-06/07 is november 2026 **gebouwd**: de Playwright-runner in het
+**niet-browser project** `unit` (`playwright/tests/unit/ci-summary.spec.ts`, 9 tests,
 geen `devices`-use, geen `page`-fixture), met `npm run test:ci-summary` als CI-poort
 vóór de browserinstall en de gate-config `playwright.unit.config.ts` (eigen `outputDir`,
-`list`-reporter, `retries: 0`). De suite telt 145 tests in 12 spec-bestanden (137 browser
-+ 8 datasuite, inclusief de zes E2E-flows in `playwright/tests/e2e/e2e.spec.ts`); project en
+`list`-reporter, `retries: 0`). De suite telt 148 tests in 12 spec-bestanden (139 browser
++ 9 datasuite, inclusief de zes E2E-flows in `playwright/tests/e2e/e2e.spec.ts`); project en
 poort staan in `playwright.config.ts`, `playwright.local.config.ts` en `package.json`.
 Run 72 heeft de poort in de CI gezet, met de datasuite vóór de browserinstall en een
 history-record met `total = 139` (135 geslaagd, 4 faalden); run 73 draaide de volledige
-suite groen met 139/139 en `passRate` 100.
+suite groen: 139 geslaagd, 0 faalden en `passRate` 100. De 148-suite met schema v2 en
+`suiteTests` is nog niet in de CI bewezen. Zie §15.3 voor de volgende CI-bewijsrun.

@@ -37,7 +37,7 @@ network mocking, CI-ready configuratie).
 ├── tsconfig.site.json        # extends tsconfig.json; site-JS → docs/js/ts (noEmit: false)
 ├── playwright.config.ts      # Playwright configuratie
 ├── playwright.local.config.ts  # lokale override: baseURL http://127.0.0.1:8080 (docs/)
-├── playwright.unit.config.ts   # gate-config van de browserloze datasuite (CIH-06)
+├── playwright.unit.config.ts   # gate-config van de browserloze datasuite (CIH-06/07)
 ├── .htmlvalidate.json        # HTML-validation config voor de site-pagina's
 ├── scripts/
 │   └── ci-summary.mjs        # Playwright JSON-report → CI-history JSON
@@ -91,7 +91,7 @@ network mocking, CI-ready configuratie).
 │       ├── seo/seo.spec.ts   # SEO-01…SEO-04 (32 tests)
 │       ├── responsive/responsive.spec.ts # RESP-01 (8 tests op 7 viewports)
 │       ├── e2e/e2e.spec.ts   # E2E-01…E2E-06: de zes gebruikersflows S1–S6
-│       ├── unit/ci-summary.spec.ts # CIH-06: 8 datasuite-tests op ci-summary.mjs (browserloos)
+│       ├── unit/ci-summary.spec.ts # CIH-06/07: 9 datasuite-tests op ci-summary.mjs (browserloos)
 │       ├── compatibility/     # leeg — TESTPLAN fase 7 (Firefox/WebKit)
 │       └── regression/        # leeg — integriteitssuite voor later
 │   └── playwright-report/    # HTML rapport (ge-genereerd, in .gitignore)
@@ -145,7 +145,7 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   CI-run, QA-aggregaatcijfers en de laatste 10 CI-runs. De badge toont alleen
   de workflow-status; de kaarten en tabel worden gevuld uit
   `docs/data/playwright-history.json`, gegenereerd door de Playwright
-  JSON-reporter en `scripts/ci-summary.mjs`. Exacte werking staat in
+  JSON-reporter en `scripts/ci-summary.mjs` (suite-omvang via `suiteTests` uit schema v2). Exacte werking staat in
   `Project-documentation/CI-PLAYWRIGHT-HISTORY.md`.
 - **Links (extern):** GitHub `MaartenKa/Portfolio`,
   LinkedIn `maarten-kamps-a6909527`, e-mail `Maarten.kamps.bee@outlook.com`.
@@ -329,16 +329,16 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    `overflow-wrap: break-word` op `body`; de hertest is lokaal met een wide-font proxy op
    de lokale `docs/`-build (10 pagina's × 7 viewports, `scrollWidth == innerWidth`).
    Run 73 bevestigt dat in de CI: 139/139, inclusief de vier smalle viewports.
-7. **Node-laag (CIH-06)** — `tests/unit/ci-summary.spec.ts` (8 tests, CIH-06a…h) op
+7. **Node-laag (CIH-06/07)** — `tests/unit/ci-summary.spec.ts` (9 tests, CIH-06a…h + CIH-07) op
    `scripts/ci-summary.mjs`: vaste rapportstatistiek → de vertaling → asserts op de
    history-entry (formules uit `stats`, `passRate`-afronding op één decimaal, `total = 0`
    en getalnormalisatie, `no-report`, `CI_SUMMARY_STATUS`-normalisatie, dedup op `runId`,
-   `--max`-kappen en de decoding van de CLI-args met de run-URL uit de CI-omgeving). De
-   runner draait zonder browser (geen `devices`-use, geen `page`-fixture), en
+   `--max`-kappen, de decoding van de CLI-args met de run-URL uit de CI-omgeving, schema v2
+   en `suiteTests`). De runner draait zonder browser (geen `devices`-use, geen `page`-fixture), en
    `npm run test:ci-summary` is de vierde CI-poort vóór de browserinstall. Elke test
    schrijft in een eigen temp-map.
-   **Gebouwd november 2026:** de suite telt 145 tests in 12 spec-bestanden
-   (131 browser + 8 datasuite + 6 E2E-flows). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
+   **Gebouwd november 2026:** de suite telt 148 tests in 12 spec-bestanden
+   (139 browser + 9 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
 8. **E2E-gebruikersflows** — `tests/e2e/e2e.spec.ts` (6 tests, E2E-01…E2E-06 =
    scenarios S1–S6, TESTPLAN §8.6): de navigatietour langs de zeven nav-links, de
    contactjourney (lege validatie → invullen → submit → `bedankt.html` → back), het
@@ -347,8 +347,8 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    footerreis met de actieve state per pagina, en de herstelroute vanaf het
    404-fallback. Elke stap assert de landing op URL én `h1`; de detail-asserts staan in
    de functionele suites. Page object: `pages/flows.page.ts`.
-   **Gebouwd november 2026:** de suite telt 145 tests in 12 spec-bestanden
-   (137 browser + 8 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
+   **Gebouwd november 2026:** de suite telt 148 tests in 12 spec-bestanden
+   (139 browser + 9 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
 
 ### Config (playwright.config.ts)
 
@@ -367,7 +367,7 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   trace en screenshot van **élke** run, headed browser en open HTML-rapport.
   Standaard (`npm run test:local`) blijft de lichte retain-on-failure-stand.
 - `fullyParallel: true`; CI: 2 retries + 1 worker + `forbidOnly`
-- Projecten: **chromium** (Desktop Chrome) en **unit** (CIH-06). Het `unit`-project is
+- Projecten: **chromium** (Desktop Chrome) en **unit** (CIH-06/07). Het `unit`-project is
   een niet-browser project zonder `devices`-use en zonder `page`-fixture; het heeft een
   eigen `testDir` `./playwright/tests/unit`, en het chromium-project negeert die map met
   `testIgnore: "**/tests/unit/**"`, zodat geen spec twee keer draait.
@@ -389,7 +389,7 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
 | `npm run validate:html`   | `html-validate "docs/*.html"` (testcase HTML-01)          |
 | `npm run check`           | typecheck + lint + html-validate, in één keer             |
 | `npm run check:site`      | live pagina's vóór de suite op HTTP 200 controleren       |
-| `npm run test:ci-summary` | **CIH-06** — de datasuite op `scripts/ci-summary.mjs` zonder browser, via `playwright.unit.config.ts` |
+| `npm run test:ci-summary` | **CIH-06/07** — de datasuite op `scripts/ci-summary.mjs` zonder browser, inclusief schema v2 en `suiteTests`, via `playwright.unit.config.ts` |
 | `npm test`                | `playwright test` (alle tests, live site)                 |
 | `npm run test:local`      | zelfde suite tegen `docs/` via `playwright.local.config.ts` |
 | `npm run test:localVideo`  | kijkmodus: video/trace/screenshot van élke run (`PW_VIEW=1`) |
@@ -557,13 +557,14 @@ kan ook: `npm run test:localUi` (UI mode met watch mode) of `--debug`
   in de navigatielijst van alle 10 pagina's. `npm run lint` draait met
   `--max-warnings=0`: de poort faalt op errors én op elke warning.
 
-- **Datasuite zonder page object (CIH-06):** `playwright/tests/unit/ci-summary.spec.ts`
-  asserts rechtstreeks op de geschreven history-JSON: er is geen `page`-fixture, geen
-  browser en geen `baseURL`. De tests bouwen een eigen temp-map per test en schrijven
-  uitsluitend daarin, zodat `docs/data/playwright-history.json` en de suite-rapporten in
-  de repo niet worden aangeraakt. De gate-config heeft een eigen `outputDir` en alleen de
-  `list`-reporter; in de suite-configs is het `unit`-project opgenomen zodat de cases in
-  `--list` en in de traceability van `TESTPLAN.md` §15 meetellen.
+- **Datasuite zonder page object (CIH-06/07):** `playwright/tests/unit/ci-summary.spec.ts`
+  asserts rechtstreeks op de geschreven history-JSON, inclusief schema v2 en `suiteTests`:
+  er is geen `page`-fixture, geen browser en geen `baseURL`. De tests bouwen een eigen
+  temp-map per test en schrijven uitsluitend daarin, zodat
+  `docs/data/playwright-history.json` en de suite-rapporten in de repo niet worden
+  aangeraakt. De gate-config heeft een eigen `outputDir` en alleen de `list`-reporter;
+  in de suite-configs is het `unit`-project opgenomen zodat de cases in `--list` en in
+  de traceability van `TESTPLAN.md` §15 meetellen.
 
 - **Indexatie-besluit (open):** `noindex, nofollow` + `docs/robots.txt`
   (`Disallow: /`) staan bewust; op GitHub Pages wordt `robots.txt` op
@@ -612,7 +613,7 @@ kan ook: `npm run test:localUi` (UI mode met watch mode) of `--debug`
 - HTML-validering: `npx html-validate "docs/*.html"`
 - CI-history documentatie: `Project-documentation/CI-PLAYWRIGHT-HISTORY.md`
 - CI-history data: `docs/data/playwright-history.json`
-- CIH-06: `playwright/tests/unit/ci-summary.spec.ts` + `npm run test:ci-summary` (browserloos, CI-poort vóór de browserinstall)
+- CIH-06/07: `playwright/tests/unit/ci-summary.spec.ts` + `npm run test:ci-summary` (browserloos, CI-poort vóór de browserinstall)
 - E2E-flows: `playwright/tests/e2e/e2e.spec.ts` (E2E-01…E2E-06, scenarios S1–S6) + page object `playwright/pages/flows.page.ts`
 - Indexatie: `noindex, nofollow` (alle pagina's) + `docs/robots.txt`
 
@@ -624,7 +625,7 @@ dezelfde wijziging** als de oorzaak, niet later.
 
 | README-claim | Bron van waarheid | Bijwerken wanneer |
 | --- | --- | --- |
-| Aantal tests per suite + totaal (145) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
+| Aantal tests per suite + totaal (148) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
 | Playwright-versie (1.65) | `package.json` → `devDependencies` | versie-upgrade |
 | ESLint-versie (10) | `package.json` → `devDependencies.eslint` | versie-upgrade |
 | Node-grens (`>=24.8 <25`) | `package.json` → `engines.node` | Node-upgrade |

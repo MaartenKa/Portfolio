@@ -1,4 +1,4 @@
-# CI/CD Playwright — overzicht in gewone taal
+﻿# CI/CD Playwright — overzicht in gewone taal
 
 > **Doel van dit bestand:** het CI/CD-proces van deze repo uitleggen zoals je het aan
 > een collega uitlegt die er voor het eerst naar kijkt: wat er gebeurt, waarom, en
@@ -24,7 +24,7 @@ QA-aggregaten en de history-tabel op `automation.html`.
 Zonder backend. Zonder database. Zonder API-token. De site rapporteert over haar
 eigen tests.
 
-Deze keten is in productie bewezen: één run, drie artifacts, een bot-commit met
+Deze keten is in productie bewezen: én run, drie artifacts, een bot-commit met
 `[skip ci]`, direct daarna een Pages-deploy, en de kaarten gevuld in de browser.
 De cijfers per schakel staan in `CI-PLAYWRIGHT-HISTORY.md` §15.
 
@@ -40,7 +40,7 @@ De cijfers per schakel staan in `CI-PLAYWRIGHT-HISTORY.md` §15.
 | Klanten lezen de uitslag bij binnenkomst | `src/ts/main.ts` fetcht de JSON en vult de kaarten |
 
 Het ongewone aan dit project: de etalage is tegelijk het kantoor. Het dagboekje
-staat in dezelfde map als de website, dus één commit van de bot is tegelijk "data
+staat in dezelfde map als de website, dus én commit van de bot is tegelijk "data
 bijhouden" én "site publiceren".
 
 ## 3. De zeven rollen
@@ -52,17 +52,17 @@ bijhouden" én "site publiceren".
 | Werkplaats | `runs-on: ubuntu-latest` | Een tijdelijke Linux-computer, per run leeg en daarna weg |
 | Uitvoerder | Playwright via `npm run test` | Opent Chromium en draait de suite op de live site |
 | Verslaggever | HTML- en JSON-reporter | HTML-rapport voor mensen, JSON voor machines |
-| Rekenmeester | `scripts/ci-summary.mjs` | Maakt van één run één rij in het dagboekje |
+| Rekenmeester | `scripts/ci-summary.mjs` | Maakt van én run én rij in het dagboekje |
 | Postbode | `git`-stap als `github-actions[bot]` | Zet de JSON terug op `main`, zodat Pages publiceert |
 
-## 4. De reis van één run, stap voor stap
+## 4. De reis van én run, stap voor stap
 
 1. **Trigger** — de wekker (cron) of jij via `workflow_dispatch`.
 2. **Repo pakken** — `actions/checkout@v7`: een verse kopie op een lege machine.
 3. **Node.js neerzetten** — `actions/setup-node@v7` met
    `node-version-file: package.json`: de range uit `engines.node` (>=24.8, <25).
 4. **Dependencies** — `npm ci`: exact uit `package-lock.json`, geen verrassingen.
-5. **Type-check** — `npm run typecheck` (`tsc --noEmit`): tests én site-JS in één
+5. **Type-check** — `npm run typecheck` (`tsc --noEmit`): tests én site-JS in én
   poort, vóórdat er een browser wordt gedownload.
 6. **Lint** — `npm run lint` (ESLint 10, flat config `eslint.config.mjs`,
    inclusief `eslint-plugin-playwright`, met `--max-warnings=0`: elke
@@ -80,7 +80,7 @@ bijhouden" én "site publiceren".
    rekenfout faalt zonder downloadkosten.
 8. **Browser** — `npx playwright install --with-deps chromium`: Chromium plus de
    Linux-bibliotheken die Chromium nodig heeft. Alleen Chromium, want de configs
-   kennen één `chromium`-project.
+   kennen én `chromium`-project.
 9. **Tests** — `npm run test` → `playwright test`. De suite gaat naar
    `https://maartenka.github.io/Portfolio/`, dus de live site en niet lokaal.
 10. **Rapporten ontstaan** — `playwright/playwright-report/` (HTML) en
@@ -106,18 +106,18 @@ Paden zijn relatief aan de repo-root (`Portfolio/`).
 
 ### 5.1 Root-bestanden (de regie)
 
-| Bestand | Rol in één zin | Wat het met CI te maken heeft | Risico bij aanpassen |
+| Bestand | Rol in én zin | Wat het met CI te maken heeft | Risico bij aanpassen |
 | --- | --- | --- | --- |
 | `package.json` | Opdrachtenlijst en dev-afhankelijkheden (`@playwright/test`, `typescript`, `http-server`, `@types/node`) | CI roept `npm ci`, `npm run test:ci-summary` en `npm run test` op; `"test": "playwright test"` is het CI-commando van de suite en `"test:ci-summary"` dat van de datasuite | Commando hernoemen → de workflow-stap faalt |
 | `package-lock.json` | De exacte versie-lock | `npm ci` weigert te draaien zonder lockbestand; dit maakt CI reproduceerbaar | Handmatig aanpassen → `npm ci` crasht |
-| `playwright.config.ts` | De speelwijze van de suite: `testDir`, reporters, retries, workers, `baseURL`, timeouts, trace/screenshot/video | Bepaalt wat er draait, én dat er een JSON-report komt waar `ci-summary.mjs` uit leest | JSON-reporter of `outputFile` veranderen → het dagboekje vult niet meer |
-| `tsconfig.json` | Type-check-config (`noEmit`) voor `src/`, `playwright/tests`, `playwright/pages`, `playwright/utils`, `playwright/fixtures`, `playwright.config.ts`, `playwright.local.config.ts` en `playwright.unit.config.ts` | Haalt tests en site in één type-check, lokaal én via `npm run build` | Map weglaten → typefouten blijven onopgemerkt |
+| `playwright.config.ts` | De speelwijze van de suite: `testDir`, reporters, retries, workers, `baseURL`, timeouts, trace/screenshot/video | Bepaalt wat er draait, én dat er een JSON-report komt waar `ci-summary.mjs` uit leest; het is ook de bron voor `suiteTests` | JSON-reporter of `outputFile` veranderen → het dagboekje vult niet meer |
+| `tsconfig.json` | Type-check-config (`noEmit`) voor `src/`, `playwright/tests`, `playwright/pages`, `playwright/utils`, `playwright/fixtures`, `playwright.config.ts`, `playwright.local.config.ts` en `playwright.unit.config.ts` | Haalt tests en site in én type-check, lokaal én via `npm run build` | Map weglaten → typefouten blijven onopgemerkt |
 | `tsconfig.site.json` | Bouwt uitsluitend `src/ts/` naar `docs/js/ts` | Dit is de build van de site-JS die de JSON rendert | `outDir` veranderen → `automation.html` mist zijn JS |
 | `.gitignore` | Negeert `playwright/playwright-report/`, `playwright/test-results/`, `node_modules/`, `dist/`, `.env*` | Houdt de rauwe rapporten uit de repo; `docs/data/` blijft wél getrackt | `docs/data/` per ongeluk negeren → de site krijgt een 404 op de fetch |
 | `.htmlvalidate.json` | HTML-regels (`html-validate:recommended`, lowercase doctype, selfclosing voids) | Bewaakt de HTML van `docs/*.html`, dus ook de `data-testid`-ankers van de CI-sectie | Regels versoepelen → kapotte HTML die de UI-tests niet vangen |
 | `eslint.config.mjs` | ESLint 10 flat config: `src/`, `playwright/` en `scripts/`, met de Playwright-plugin op de testbestanden | `npm run lint` is een van de vier poorten vóór de tests in de workflow | Config weglaten of rules uitzetten → de lint-poort in CI faalt of maskeert defects |
 | `playwright.local.config.ts` | Lokale override van de speelfile-config: neemt `playwright.config.ts` over en zet `baseURL` op `http://127.0.0.1:8080/` | Draait de suite tegen de lokale `docs/`-build, wanneer de live site de nieuwe markup nog niet bevat | In CI gebruiken: dan test je lokaal in plaats van live |
-| `playwright.unit.config.ts` | De gate-config van de datasuite CIH-06: browserloos project `unit`, `list`-reporter, eigen `outputDir` en `retries: 0` | `npm run test:ci-summary` is de vierde poort vóór de browserinstall; de suite-rapporten blijven erdoor schoon | `outputDir` of reporter veranderen → `ci-summary.mjs` leest een ander rapport dan de suite |
+| `playwright.unit.config.ts` | De gate-config van de datasuite CIH-06/07: browserloos project `unit`, `list`-reporter, eigen `outputDir` en `retries: 0` | `npm run test:ci-summary` is de vierde poort vóór de browserinstall; de suite-rapporten blijven erdoor schoon | `outputDir` of reporter veranderen → `ci-summary.mjs` leest een ander rapport dan de suite |
 | `AGENTS.md` | Wijsplaatje naar de relevante documentatie | Verwijst naar de docs in `Project-documentation/` | — |
 
 ### 5.2 De CI-kern: vier bestanden
@@ -137,7 +137,7 @@ en **met welke rechten**.
   `forbidOnly: true` uit `playwright.config.ts` gaan op.
 - Stappen: checkout → setup-node → `npm ci` → vier poorten (`typecheck`, `lint`,
   `validate:html`, `test:ci-summary`) → `check:site` →
-  Chromium installeren (`--with-deps chromium`, want er is één `chromium`-project) →
+  Chromium installeren (`--with-deps chromium`, want er is én `chromium`-project) →
   `npm run test` → drie artifact-uploads → history-script → commit/push.
 - De commit-stap draait alleen op `refs/heads/main`, zet `github-actions[bot]` als
   auteur, doet `git pull --rebase --autostash`, voegt alleen de history-JSON toe,
@@ -192,33 +192,33 @@ Het enige CI-resultaat dat daadwerkelijk in de repo staat. Dit bestand is de bru
 tussen de CI en de site.
 
 ```json
-{ "schemaVersion": 1, "workflow": "playwright.yml", "updated": null, "runs": [] }
+{ "schemaVersion": 2, "workflow": "playwright.yml", "updated": null, "runs": [] }
 ```
 
 - Bewust **leeg** in de repo. Het bestand móét bestaan, anders krijgt
   `automation.html` een 404 op de fetch, en die console error laat de eigen
   smoke-tests falen.
 - Bevat per run: `runId`, `runNumber`, `createdAt`, `event`, `branch`, `commit`,
-  `conclusion`, `total`, `passed`, `failed`, `flaky`, `skipped`, `passRate`,
+  `conclusion`, `total`, `passed`, `failed`, `flaky`, `skipped`, `suiteTests`, `passRate`,
   `durationMs`, `runUrl`.
 - Publiek, en alleen CI-metagegevens: geen testschermen, console logs, screenshots
   of video's.
 
 ### 5.3 De site-kant (wat de cijfers toont)
 
-| Bestand | Rol in één zin | Wat het met CI te maken heeft |
+| Bestand | Rol in én zin | Wat het met CI te maken heeft |
 | --- | --- | --- |
 | `docs/automation.html` | De pagina met de sectie **TESTRESULTATEN** | Bevat de shields.io-badge, vijf kaarten voor suite en laatste run, zes QA-aggregaatkaarten, de toelichtingsregel en de history-tabel, met de `data-testid`-ankers `ci-suite-size`, `ci-runs`, `ci-total-tests`, `ci-pass-rate`, `ci-status`, `ci-total-executed`, `ci-total-passed`, `ci-pass-ratio`, `ci-streak`, `ci-flaky-runs`, `ci-failed-runs`, `ci-metrics-note`, `ci-history-table` en `ci-history-body` |
-| `src/ts/main.ts` | Bron-code van de site-JS | Fetch `data/playwright-history.json` met `cache: "no-store"`, normaliseert elke run, poolt de totalen (Σ `passed` / Σ `total`), berekent streak / flaky / failed, rendert de laatste 10 rijen. Werkt alleen op pagina's met `ci-history-body` |
+| `src/ts/main.ts` | Bron-code van de site-JS | Fetch `data/playwright-history.json` met `cache: "no-store"`, normaliseert elke run inclusief `suiteTests`, poolt de totalen (Σ `passed` / Σ `total`), berekent streak / flaky / failed, rendert de laatste 10 rijen. Werkt alleen op pagina's met `ci-history-body` |
 | `docs/js/ts/main.js` | Het **gebouwde** resultaat van `main.ts` (via `tsconfig.site.json`) | Dit is wat de browser op GitHub Pages echt draait; het staat in de repo, dus Pages hoeft niets te bouwen |
 | `docs/css/style.css` | Stijl van de site | `.automation-latest-grid`, `.automation-metrics-grid`, `.automation-history`, `.automation-history-table-wrap` (horizontaal scrollen op mobiel), `.automation-history-table` (minimaal 640px), `.sr-only` |
 | `docs/index.html` | Home en navigatie | Linkt naar `automation.html`; de smoke-suite controleert die navigatie |
 | `docs/robots.txt`, `docs/sitemap.xml` | Indexatiebeleid | Bewust `Disallow: /` plus `noindex, nofollow`, dus de CI-cijfers staan niet in zoekmachines |
-| `docs/privacy.html` | Privacyverklaring | Sectie 9 legt uit dat de shields.io-badge één extern verzoek per pageview doet en geen persoonsgegevens bevat |
+| `docs/privacy.html` | Privacyverklaring | Sectie 9 legt uit dat de shields.io-badge én extern verzoek per pageview doet en geen persoonsgegevens bevat |
 
 Twee dingen die opvallen:
 
-1. **De site-JS wordt gecommit, niet door CI gebouwd.** De workflow draait géén
+1. **De site-JS wordt gecommit, niet door CI gebouwd.** De workflow draait gén
    `npm run build`. De build is een lokale stap, en `docs/js/ts/main.js` staat in de
    repo. Daardoor is de site die Pages serveert exact wat jij gebouwd hebt: geen
    verborgen CI-build-stap.
@@ -230,7 +230,7 @@ Twee dingen die opvallen:
 
 | Bestand | Rol |
 | --- | --- |
-| `playwright/pages/base.page.ts` | Basisklasse voor page objects: console- én page-errors worden één keer per `page` geregistreerd, `goto()` wacht op `load` (niet op `networkidle`), `gotoWithRetry()` retryt host-5xx voor de smoke-checks en `expectNoRuntimeErrors()` assert dat de lijst leeg is |
+| `playwright/pages/base.page.ts` | Basisklasse voor page objects: console- én page-errors worden én keer per `page` geregistreerd, `goto()` wacht op `load` (niet op `networkidle`), `gotoWithRetry()` retryt host-5xx voor de smoke-checks en `expectNoRuntimeErrors()` assert dat de lijst leeg is |
 | `playwright/fixtures/test-fixtures.ts` | Typed fixtures voor `homePage`, `contactPage`, `navPage`, `ciHistoryPage`, `basePage`, `footerPage`, `a11yPage`, `contentPage`, `seoPage`, `responsivePage` en `formwardMock`; specs importeren `test`/`expect` hieruit. `seoPage` krijgt de `request`-fixture voor `sitemap.xml` en `robots.txt` |
 | `playwright/fixtures/formward.mock.ts` | `FormwardMock`: route-mock met request-registratie; `expectRequestCount` bewijst dat invalid submits geen request veroorzaken |
 | `playwright/pages/home.page.ts` | Page object voor de homepagina (CTA's, navigatie en card-links) |
@@ -243,16 +243,16 @@ Twee dingen die opvallen:
 | `playwright/tests/functional/mobile-menu-functional.spec.ts` | Menu-toggle op desktop en mobiel, `aria-expanded`, focusbeheer, alle nav-links |
 | `playwright/pages/ci-history.page.ts` | Page object `CiHistoryPage`: mockt `data/playwright-history.json` via `page.route()`, navigeert naar `automation.html`, leest kaarten per `data-testid` en de rijen van de history-tabel |
 | `playwright/pages/footer.page.ts` | Page object `FooterPage`: footer-links, externe attributen en actieve footer-link |
-| `playwright/tests/functional/ci-history-functional.spec.ts` | Vijf tests over de CI-resultatensectie: laatste-run kaarten, gepoolde totalen en ratio, één rij per run met run-link, runs zonder noemer, en de lege staat. Testsoort en afbakening: `PLAN-CI-HISTORY-TESTS.md` |
+| `playwright/tests/functional/ci-history-functional.spec.ts` | Zeven tests over de CI-resultatensectie: laatste-run kaarten, gepoolde totalen en ratio, én rij per run met run-link, runs zonder noemer, de lege staat, de `suiteTests`-kaart en de schema v1-valback. Testsoort en afbakening: `PLAN-CI-HISTORY-TESTS.md` |
 | `playwright/tests/functional/footer-functional.spec.ts` | Footer-links, veilige externe attributen en actieve footer-links op contact/privacy |
 | `playwright/tests/accessibility/accessibility.spec.ts` | Accessibility-suite (A11Y-01…A11Y-04, 17 tests): structuur per pagina, tabvolgorde-contracten, skip-link-focus, placeholder-contrast en `forced-colors`-fallback |
 | `playwright/pages/content.page.ts` | Page object `ContentIntegrityPage`: interne links tegen de set van bekende site-bestanden, in-page anchors, het externe link-contract, `alt`-teksten en asset-referenties — structureel, niet via HTTP-bereikbaarheid |
 | `playwright/tests/content-integrity/content-integrity.spec.ts` | Content-integrity-suite (LINK-01, LINK-02, IMG-01, 11 tests) op alle 10 pagina's |
-| `playwright/pages/seo.page.ts` | Page object `SeoPage`: titel en description, site-wide uniekheid, één `<h1>` en unieke id's, `robots` per pagina, canonical + Open Graph + Twitter card, en `sitemap.xml` + `robots.txt` via de `request`-fixture |
+| `playwright/pages/seo.page.ts` | Page object `SeoPage`: titel en description, site-wide uniekheid, én `<h1>` en unieke id's, `robots` per pagina, canonical + Open Graph + Twitter card, en `sitemap.xml` + `robots.txt` via de `request`-fixture |
 | `playwright/tests/seo/seo.spec.ts` | SEO-suite (SEO-01…SEO-04, 32 tests) — de waarden worden uit de DOM gelezen, omdat meta-attributes in de bron op aparte regels staan |
 | `playwright/pages/responsive.page.ts` | Page object `ResponsivePage`: geen horizontale scroll, nav-contract per viewport, compacte layout (full-width knoppen, gestapelde hero-knoppen), hero-tilt, en `expectViewportContract()` met de viewport-vertakking in het page object |
 | `playwright/tests/responsive/responsive.spec.ts` | Responsive-suite (RESP-01, 8 tests) op 7 viewports uit `RESPONSIVE_VIEWPORTS`, alle 10 pagina's per viewport, inclusief de CSS-grenzen 850/849 en 500/499 |
-| `playwright/tests/unit/ci-summary.spec.ts` | **gebouwd (CIH-06)**: 8 datasuite-tests op `scripts/ci-summary.mjs` in het niet-browser `unit`-project — formules uit `stats`, `passRate`-afronding, `total = 0` en getalnormalisatie, `no-report`, `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de CLI-args met de run-URL. Telling: 145 tests in 12 files |
+| `playwright/tests/unit/ci-summary.spec.ts` | **gebouwd (CIH-06/07)**: 9 datasuite-tests op `scripts/ci-summary.mjs` in het niet-browser `unit`-project — formules uit `stats`, `passRate`-afronding, `total = 0` en getalnormalisatie, `no-report`, `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de CLI-args met de run-URL. Telling: 148 tests in 12 files |
 | `playwright/pages/flows.page.ts` | Page object `FlowPage`: journey-continuity voor de E2E-flows — landing op URL én `h1`, footerstate, run-link-contract en de 404-herstelroute |
 | `playwright/tests/e2e/e2e.spec.ts` | **gebouwd**: E2E-gebruikersflows (E2E-01…E2E-06, scenarios S1–S6) — navigatietour, contactjourney, mobiel menu, CI-dashboard, footerreis en 404-herstel. De pyramide-kern uit `TESTPLAN.md` §4 en §8.6 |
 | `playwright/tests/compatibility/`, `regression/` | Nu lege mappen: de plek waar cross-browser (fase 7) en een latere integriteitssuite komen. De gebruikersflows staan inmiddels in `e2e/`, de content-integriteit (LINK/IMG) en SEO in eigen mappen |
@@ -307,7 +307,7 @@ begrijp mijn CI".
 
 | Element | Bron |
 | --- | --- |
-| `ci-suite-size` — Suite omvang | Grootste `total` in de gelogde runs (proxy voor de suite-omvang) |
+| `ci-suite-size` — Suite omvang | Laatste niet-lege `suiteTests` uit schema v2; `max(total)` als valback voor legacy schema v1-entries zonder `suiteTests` |
 | `ci-runs` — Testruns | Aantal runs in de history (max 30) |
 | `ci-total-tests` — Tests uitgevoerd (laatste run) | Laatste run: `total` |
 | `ci-pass-rate` — Tests geslaagd (laatste run) | Laatste run: `passRate` |
@@ -316,7 +316,7 @@ begrijp mijn CI".
 | `ci-total-passed` — Totaal geslaagd | Σ `passed`, getoond als `X van Y` |
 | `ci-pass-ratio` — Geslaagde ratio | Σ `passed` / Σ `total` — het percentage bij de twee kaarten ervoor |
 | `ci-streak` — Groene runs op rij | Aantal opeenvolgende `success` vanaf de nieuwste run |
-| `ci-flaky-runs` — Flaky runs | Runs met minstens één flaky test |
+| `ci-flaky-runs` — Flaky runs | Runs met minstens én flaky test |
 | `ci-failed-runs` — Gefaalde runs | Runs met `conclusion = "failure"` **of** `failed > 0` |
 | `ci-metrics-note` — Toelichting | Noemt het aantal meegerekende runs en Σ geslaagd / Σ uitgevoerd |
 | `ci-history-table` — Laatste CI-runs | Laatste 10 runs: Run, Datum, Status, Tests, Geslaagd, Flaky |
@@ -329,7 +329,7 @@ hoort. Runs met `total = 0` (geannuleerd, geen rapport) hebben geen noemer en
 worden uit de totalen weggelaten; de `ci-metrics-note` zegt dan hoeveel runs wél
 meetelden, bijvoorbeeld `2 van 3 CI-runs geteld`.
 
-Zonder CI-data tonen de kaarten `—` en de tabel één rij met
+Zonder CI-data tonen de kaarten `—` en de tabel én rij met
 `Geen CI-historie beschikbaar.`
 
 ## 7. Waarom de push-trigger uit staat (anti-recursie)
@@ -398,8 +398,8 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
 | CI/CD | Automatisch testen (CI) en publiceren (CD) |
 | Workflow | YAML-bestand met de werkbeschrijving, in `.github/workflows/` |
 | Runner | De tijdelijke computer die de werkbeschrijving uitvoert |
-| Job | Een blok stappen op één runner |
-| Stap | Eén commando of één actie binnen een job |
+| Job | Een blok stappen op én runner |
+| Stap | Eén commando of én actie binnen een job |
 | Artifact | Bewaard bestand van een run, hier de rapporten, 30 dagen |
 | Trigger | Wat de run start: tijd (cron), handmatig (dispatch), push of PR |
 | Cron | Tijdsschema in UTC; GitHub's scheduler is best-effort |
@@ -418,7 +418,7 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
 - Geen screenshots of video's op de site; die zitten in de artifacts.
 - Alleen CI-runs in de tabel, geen lokale `npm test`-runs.
 - GitHub's scheduler is best-effort. De workflow-comment meldt een meting van 2 runs
-  uit 42 verwachte triggers (4 per uur), dus ongeveer 5% verlies. Met één dagelijkse
+  uit 42 verwachte triggers (4 per uur), dus ongeveer 5% verlies. Met én dagelijkse
   run is een gemiste dag dus goed mogelijk.
 - **De live host kan tijdelijk 5xx/timeout geven.** `npm run check:site` controleert
   vooraf alle pagina's; een hostfout stopt de job als infrastructuurprobleem en
@@ -446,27 +446,29 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    `responsive/` (8 tests), en lokaal groen. Voor cross-browser staat fase 7 in het plan.
    **`e2e/` is gevuld:** de zes gebruikersflows S1–S6 (E2E-01…E2E-06) draaien in
    `playwright/tests/e2e/e2e.spec.ts` met page object `flows.page.ts`; doel G14, de
-   cases en de traceability staan in `TESTPLAN.md` §2, §8.6 en §15. De suite telt 145
+   cases en de traceability staan in `TESTPLAN.md` §2, §8.6 en §15. De suite telt 148
    tests in 12 spec-bestanden. De CI-cijfers van run 72 toonden de 139-suite op de
    runner met 135 geslaagd en 4 faalden — de RESP-01 op de smalle viewports (500, 499, 390
    en 320), door de bredere runner-uitvalfont; na de CSS-fix is dat in run 73 omgezet naar
-   139 geslaagd en 0 faalden. De eerste CI-run van de 145-suite is het productiebewijs
+   139 geslaagd en 0 faalden. De eerste CI-run van de 148-suite is het productiebewijs
    dat nog komt. `accessibility/` is gevuld (17 tests) en
-   `unit/` met de datasuite CIH-06 (8 tests, zonder browser), die in runs 72 en 73 als
-   poort vóór de browserinstall draaide.
+    `unit/` met de datasuite CIH-06/07 (9 tests, zonder browser). De CIH-06-poort draaide
+   in runs 72 en 73 vóór de browserinstall; de CIH-07-stand met schema v2 is nog
+   niet in de CI bewezen.
 4. **`docs/js/ts/main.js` is een gebouwd bestand in de repo.** Na een wijziging in
    `src/ts/main.ts` moet `npm run build` gedraaid worden en het resultaat gecommit;
    de CI bouwt het niet.
-5. **`ci-suite-size` is een proxy.** De kaart toont de grootste `total` uit de
-   gelogde runs, niet de werkelijke suite-omvang. Die proxy blijft te hoog als de
-   suite krimpt en te laag als de grootste run buiten de 30-run window valt. Plan:
-   een `suiteTests`-veld in schema v2, geteld uit de JSON-report zelf — zie
-   `PLAN-CI-HISTORY-TESTS.md` §7.
+5. **De kaart-suite-omvang gebruikt `suiteTests` uit schema v2.** De producer
+   schrijft `suiteTests = total + skipped`; de UI kiest de laatste niet-lege
+   `suiteTests` en valt terug op `max(total)` voor legacy schema v1-entries.
+   De CIH-07-producer en UI-bouw zijn gebouwd en getest; de CI-bewijsrun voor
+   de 148-suite staat nog open.
 6. **De producerende kant heeft eigen tests.** `scripts/ci-summary.mjs` draait in de
-   datasuite CIH-06: 8 tests in `playwright/tests/unit/ci-summary.spec.ts`, in de
+   datasuite CIH-06/07: 9 tests in `playwright/tests/unit/ci-summary.spec.ts`, in de
    Playwright-runner zonder browser, als CI-poort `npm run test:ci-summary` vóór de
    browserinstall met de gate-config `playwright.unit.config.ts`. De weergavelaag is
-   gedekt door `ci-history-functional.spec.ts`. Runs 72 en 73 hebben deze stand bewezen:
+   gedekt door `ci-history-functional.spec.ts`. Runs 72 en 73 hebben de CIH-06-stand
+   bewezen; de CIH-07-stand met schema v2 en `suiteTests` staat nog open:
    de datasuite-poort en de Chromium-install concludeerden success, de teststap gaf
    `Running 139 tests`, en de history-records op `main` bevatten beide runs — run 72 met
    135 geslaagd en 4 faalden, run 73 met 139 geslaagd, 0 faalden en `passRate` 100.
@@ -477,11 +479,11 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
 8. **Vier kwaliteitspoorten draaien vóór de tests in de workflow.** `npm run typecheck`
    (`tsc --noEmit`), `npm run lint` (ESLint 10 met `eslint.config.mjs`),
    `npm run validate:html` (alle 10 pagina's slagen) en
-   `npm run test:ci-summary` (de datasuite CIH-06: 8 tests zonder browser via
+   `npm run test:ci-summary` (de datasuite CIH-06/07: 9 tests zonder browser via
    `playwright.unit.config.ts`). Ze staan vóór de browserinstall, zodat een rode poort
    de run direct en goedkoop stop. Zie `TESTPLAN.md` §11 (entry-criteria) en §10 fase 6.
    De browserinstall is teruggebracht naar **Chromium alleen**
-   (`--with-deps chromium`), omdat de configs één `chromium`-project definiëren.
+   (`--with-deps chromium`), omdat de configs én `chromium`-project definiëren.
 9. **De runner heeft bredere system-fonts dan de lokale machine.** De
    responsive-check "geen horizontale scroll" meet documentbreedte, en die is
    font-metric-afhankelijk. In run 72 faalden vier RESP-01-cases op de smalle viewports,
@@ -506,3 +508,7 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
 | `PLAN-HERO-SOFT-3D.md` | Plan en resultaat van de soft-3D homepage-card |
 | `BESTPRACTICES.md` | Hoe je goed test en commentaar schrijft: ISTQB, Playwright en commentaarconventies |
 | `AGENTS.md` | Welke documentatie relevant is |
+
+
+
+

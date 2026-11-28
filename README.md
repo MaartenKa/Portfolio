@@ -18,9 +18,9 @@ met pass-rate, groene streaks en de status van de laatste runs.
 
 | Kenmerk                | Waarde                                              |
 | ---------------------- | --------------------------------------------------- |
-| Testsuite              | **145 tests** in 12 spec-bestanden (137 browser + 8 datasuite) |
+| Testsuite              | **148 tests** in 12 spec-bestanden (139 browser + 9 datasuite) |
 | Browser                | Chromium (Desktop Chrome)                           |
-| Laatste gelogde CI-run | **139/139 geslaagd** (run 73, 100%; de 139-suite draaide groen in de CI, na de CSS-fix die de vier RESP-01-cases van run 72 ophefte) |
+| Laatste gelogde CI-run | **139/139 geslaagd** (run 73, 100%; de 139-suite draaide groen in de CI, na de CSS-fix die de vier RESP-01-cases van run 72 ophefte; de 148-suite met CIH-07 is nog niet in de CI bewezen) |
 | CI                     | GitHub Actions — dagelijks om 18:17 UTC + handmatig |
 | Kwaliteitspoorten      | `tsc --noEmit`, ESLint 10, html-validate, `test:ci-summary` (CIH-06) |
 | Stack                  | HTML/CSS, TypeScript, Playwright 1.65, GitHub Pages |
@@ -65,7 +65,7 @@ npx playwright install    # Chromium voor lokale runs
 npm run build             # site-JS → docs/js/ts + typecheck van alle TS
 npm run test:local        # suite tegen de lokale docs/ op poort 8080
 npm run test:localVideo   # dezelfde suite in de kijkmodus: video/trace van élke run
-npm run test:ci-summary   # datasuite op scripts/ci-summary.mjs (8 tests, zonder browser)
+npm run test:ci-summary   # datasuite op scripts/ci-summary.mjs (9 tests, zonder browser)
 npm run check:site        # live pagina's vooraf op HTTP 200 controleren
 npm run test              # suite tegen de live GitHub Pages-site
 npm run check             # typecheck + lint + HTML-validatie
@@ -105,7 +105,7 @@ playwright/
   tests/smoke|functional/      # 63 tests (smoke + functioneel)
   tests/accessibility/accessibility.spec.ts  # A11Y-01…A11Y-04, 17 tests
   tests/compatibility|e2e|regression/        # gereserveerd, nog leeg
-  tests/unit/ci-summary.spec.ts              # CIH-06: 8 datasuite-tests op ci-summary.mjs
+  tests/unit/ci-summary.spec.ts              # CIH-06/07: 9 datasuite-tests op ci-summary.mjs
 scripts/ci-summary.mjs         # JSON-report → CI-history
 scripts/site-check.mjs         # live-site-preflight vóór de tests
 Project-documentation/         # testplan, CI-documentatie, best practices, verbeterplan
@@ -119,15 +119,15 @@ Project-documentation/         # testplan, CI-documentatie, best practices, verb
 | Homepage         | `playwright/tests/functional/homepage-functional.spec.ts`    |     12 |
 | Contactformulier | `playwright/tests/functional/contact-functional.spec.ts`     |     16 |
 | Mobiel menu      | `playwright/tests/functional/mobile-menu-functional.spec.ts` |     17 |
-| CI-history UI    | `playwright/tests/functional/ci-history-functional.spec.ts`  |      5 |
+| CI-history UI    | `playwright/tests/functional/ci-history-functional.spec.ts`  |      7 |
 | Footer           | `playwright/tests/functional/footer-functional.spec.ts`      |      3 |
 | Accessibility    | `playwright/tests/accessibility/accessibility.spec.ts`       |     17 |
 | Content-integrity | `playwright/tests/content-integrity/content-integrity.spec.ts` |     11 |
 | SEO              | `playwright/tests/seo/seo.spec.ts`                          |     32 |
 | Responsive       | `playwright/tests/responsive/responsive.spec.ts`            |      8 |
 | E2E-gebruikersflows | `playwright/tests/e2e/e2e.spec.ts` (S1–S6)               |      6 |
-| CIH-06 datasuite | `playwright/tests/unit/ci-summary.spec.ts` (zonder browser)  |      8 |
-| **Totaal**       | 12 spec-bestanden                                            | **145** |
+| CIH-06/07 datasuite | `playwright/tests/unit/ci-summary.spec.ts` (zonder browser)  |      9 |
+| **Totaal**       | 12 spec-bestanden                                            | **148** |
 
 ## Kwaliteitspoorten
 
@@ -137,7 +137,7 @@ Project-documentation/         # testplan, CI-documentatie, best practices, verb
 | `npm run lint`          | ESLint 10 inclusief `eslint-plugin-playwright`, `--max-warnings=0` |
 | `npm run validate:html` | html-validate over `docs/**/*.html`                                |
 | `npm run check`         | de drie hierboven achter elkaar                                    |
-| `npm run test:ci-summary` | datasuite CIH-06 op `scripts/ci-summary.mjs` (8 tests, zonder browser) |
+| `npm run test:ci-summary` | datasuite CIH-06/07 op `scripts/ci-summary.mjs` (9 tests, zonder browser) |
 
 De poorten draaien in `playwright.yml` vóór de browserinstall en de tests: de drie
 checks uit `npm run check`, dan de datasuite van CIH-06. Een rode poort stopt de
@@ -183,11 +183,11 @@ suite; de datasuite heeft geen browser nodig, dus hij faalt vóór de download.
   testplan. De E2E-laag is gebouwd (zes flows S1–S6, `playwright/tests/e2e/e2e.spec.ts`);
   `compatibility/` en `regression/` zijn nog gereserveerd.
 - **De producerende kant heeft nu eigen tests.** `scripts/ci-summary.mjs` draait in
-  de datasuite CIH-06: 8 tests in `playwright/tests/unit/ci-summary.spec.ts`, in de
+  de datasuite CIH-06/07: 9 tests in `playwright/tests/unit/ci-summary.spec.ts`, in de
   Playwright-runner zonder browser, via `npm run test:ci-summary` als CI-poort vóór de
-  browserinstall. De weergavelaag is gedekt door vijf UI-tests met gemockte data. De
-  kaart "Suite omvang" blijft een proxy (`max(total)`); schema v2 met `suiteTests`
-  (CIH-07) is het plan.
+  browserinstall. De weergavelaag is gedekt door zeven UI-tests met gemockte data. De
+  kaart "Suite omvang" gebruikt `suiteTests` uit schema v2 van de JSON-report, met
+  `max(total)` als valback voor schema v1-entries zonder `suiteTests` (CIH-07).
 
 ## Contact & licentie
 
