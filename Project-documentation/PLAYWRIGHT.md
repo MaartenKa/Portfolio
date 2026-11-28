@@ -337,8 +337,8 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    en `suiteTests`). De runner draait zonder browser (geen `devices`-use, geen `page`-fixture), en
    `npm run test:ci-summary` is de vierde CI-poort vóór de browserinstall. Elke test
    schrijft in een eigen temp-map.
-   **Gebouwd november 2026:** de suite telt 152 tests in 12 spec-bestanden
-   (143 browser + 9 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
+   **Gebouwd november 2026, in de CI bewezen in run 76:** de suite telt 152 tests in 12
+   spec-bestanden (143 browser + 9 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
 8. **E2E-gebruikersflows** — `tests/e2e/e2e.spec.ts` (6 tests, E2E-01…E2E-06 =
    scenarios S1–S6, TESTPLAN §8.6): de navigatietour langs de zeven nav-links, de
    contactjourney (lege validatie → invullen → submit → `bedankt.html` → back), het
@@ -347,8 +347,9 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    footerreis met de actieve state per pagina, en de herstelroute vanaf het
    404-fallback. Elke stap assert de landing op URL én `h1`; de detail-asserts staan in
    de functionele suites. Page object: `pages/flows.page.ts`.
-   **Gebouwd november 2026:** de suite telt 152 tests in 12 spec-bestanden
-   (143 browser + 9 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
+   **Gebouwd november 2026, in de CI bewezen in run 76:** de suite telt 152 tests in 12
+   spec-bestanden (143 browser + 9 datasuite); de vier CIH-08-tests van de CI-sectie draaiden
+   in dezelfde run mee. Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
 
 ### Config (playwright.config.ts)
 
