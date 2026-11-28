@@ -2,7 +2,14 @@
 
 import { Page, expect } from "@playwright/test";
 import { BasePage } from "./base.page";
-import { EMAIL, GITHUB_URL, LINKEDIN_URL } from "../utils/test-data";
+import {
+  EMAIL,
+  GITHUB_URL,
+  LINKEDIN_URL,
+  MESSAGE_MAX_LENGTH,
+  NAME_MAX_LENGTH,
+  SUBJECT_MAX_LENGTH,
+} from "../utils/test-data";
 
 /** Invoer voor het contactformulier; elk veld is optioneel. */
 export interface ContactFormData {
@@ -26,6 +33,17 @@ export const FORM_TAB_TRAIL = [
   "field-subject",
   "field-message",
   "form-submit",
+] as const;
+
+/**
+ * F8c: de `maxlength`-limieten van de drie gelimiteerde velden, uit het
+ * `data-testid`-contract van `contact.html`. Het e-mailveld heeft geen
+ * lengte-limiet; de validatie van het e-mailtype is daar de grens.
+ */
+export const MAX_LENGTH_FIELDS = [
+  { testId: "field-name", maxLength: NAME_MAX_LENGTH },
+  { testId: "field-subject", maxLength: SUBJECT_MAX_LENGTH },
+  { testId: "field-message", maxLength: MESSAGE_MAX_LENGTH },
 ] as const;
 
 /** Page object voor de contactpagina en het Formward-formulier. */
@@ -181,5 +199,87 @@ export class ContactPage extends BasePage {
     const link = this.page.getByTestId("footer-linkedin");
     await expect(link).toBeVisible();
     await expect(link).toHaveAttribute("href", LINKEDIN_URL);
+  }
+
+  /**
+   * F8c: elk gelimiteerd veld draagt de `maxlength` uit de markup — de
+   * specificatiegrens waar F6 en F8 op bounderen (TESTPLAN §5.5).
+   */
+  async expectMaxLengthContract(): Promise<void> {
+    for (const field of MAX_LENGTH_FIELDS) {
+      await expect(
+        this.page.getByTestId(field.testId),
+        `Veld "${field.testId}" heeft de maxlength niet in de markup`,
+      ).toHaveAttribute("maxlength", String(field.maxLength));
+    }
+  }
+
+  /**
+   * F8e: typen in het bericht. `fill()` zet de `value` direct en omzeilt de
+   * `maxlength`; typen respekteert de limiet, dus de afkapping is daar meetbaar.
+   */
+  async typeMessage(text: string): Promise<void> {
+    await this.page.getByTestId("field-message").click();
+    await this.page.keyboard.insertText(text);
+  }
+
+  /** F8e: de lengte van het bericht in het veld, na de afkapping. */
+  async expectMessageLength(length: number): Promise<void> {
+    const valueLength = await this.page
+      .getByTestId("field-message")
+      .evaluate((element) => (element as HTMLTextAreaElement).value.length);
+
+    expect(valueLength, `Verwacht ${length} tekens in het bericht`).toBe(length);
+  }
+
+  /**
+   * F8a: bij een ongeldige submit is de submit-guard rustend. Native validatie
+   * voert het submit-event niet uit, dus het formulier is niet gemarkeerd en de
+   * knop blijft actief (TESTPLAN §7 F2/F3 en F8).
+   */
+  async expectSubmitGuardIdle(): Promise<void> {
+    const submitted = await this.page
+      .getByTestId("contact-form")
+      .evaluate((element) => (element as HTMLFormElement).dataset.submitted);
+
+    expect(submitted, "De submit-guard is onverwacht actief").toBeUndefined();
+    await expect(this.page.getByTestId("form-submit")).toBeEnabled();
+  }
+
+  /**
+   * F8b: de dubbele submit-actie, in één synchronisch page-script.
+   *
+   * Playwright's `click()` wacht de navigatie van de submit af, dus na de eerste
+   * submit is de knop al weggevoerd en is de guard-state op de pagina niet meer
+   * waarneembaar. De twee submits en de observatie van de guard gebeuren daarom
+   * in één page-script: de eerste submit markeert het formulier en deaktiveert
+   * de knop, de tweede submit wordt door de guard geblokkeerd. De request-count
+   * in de Formward-mock bevestigt daarna dat er maximaal één POST is gegaan.
+   */
+  async expectDoubleSubmitBlocked(): Promise<void> {
+    const guard = await this.page.evaluate(() => {
+      const form = document.querySelector("#contact-form") as HTMLFormElement;
+      const button = form.querySelector(
+        'button[type="submit"]',
+      ) as HTMLButtonElement;
+
+      form.requestSubmit();
+
+      const marked = form.dataset.submitted;
+      const disabled = button.disabled;
+
+      form.requestSubmit();
+
+      return { marked, disabled };
+    });
+
+    expect(
+      guard.marked,
+      "De submit-guard heeft het formulier niet gemarkeerd",
+    ).toBe("true");
+    expect(
+      guard.disabled,
+      "De submitknop is na de eerste submit niet gedeactiveerd",
+    ).toBe(true);
   }
 }

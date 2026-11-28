@@ -125,6 +125,22 @@ export class FormwardMock {
   }
 
   /**
+   * F8d/F8e: asserteert de lengte van één veld in de submit-payload, zodat de
+   * `maxlength`-afkapping doorwerkt tot de POST die Formward ontvangt.
+   *
+   * @param name - Veldnaam in de payload.
+   * @param length - Verwachte aantal tekens.
+   */
+  async expectPostedLength(name: string, length: number): Promise<void> {
+    const fields = await this.firstFields();
+
+    expect(
+      fields[name]?.length,
+      `Verwacht ${length} tekens in payload-veld "${name}"`,
+    ).toBe(length);
+  }
+
+  /**
    * Asserteert dat de submit precies de verwachte Formward-velden bevat.
    *
    * @param names - De verwachte veldnamen.

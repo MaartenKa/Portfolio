@@ -1,10 +1,15 @@
 ﻿import { test } from "../../fixtures/test-fixtures";
 import {
+  AT_LIMIT_CONTACT,
   BOUNDARY_CONTACT,
+  EXCESS_CHAR,
   FORM_POST_FIELDS,
   HONEYPOT_FILLED,
   INVALID_EMAIL_CONTACT,
+  MESSAGE_MAX_LENGTH,
+  NAME_MAX_LENGTH,
   OPTIONAL_SUBJECT_CONTACT,
+  SUBJECT_MAX_LENGTH,
   SPECIAL_CHARS_CONTACT,
   THANK_YOU_PAGE,
   VALID_CONTACT,
@@ -152,6 +157,74 @@ test.describe("Contactpagina - functionele tests", () => {
       await page.goBack();
       await contactPage.expectNotRedirected();
       await formwardMock.expectRequestCount(1);
+    });
+  });
+
+  test.describe("Formulier-limieten en submit-guard (F8, TESTPLAN §7)", () => {
+    test("F8c: de maxlength-limieten staan in het formulier", async ({
+      contactPage,
+    }) => {
+      // De limieten in de markup zijn de specificatiegrens waar F6 en F8 op
+      // bounderen (TESTPLAN §5.5); zonder attribute is er geen bovengrens om te testen.
+      await contactPage.expectMaxLengthContract();
+    });
+
+    test("F8d: de limietwaarden vullen het formulier volledig", async ({
+      contactPage,
+      formwardMock,
+    }) => {
+      // BVA op de échte bovengrens: elk gelimiteerd veld tot op de limiet, en de
+      // POST-payload die Formward ontvangt met die lengtes.
+      await contactPage.fillForm(AT_LIMIT_CONTACT);
+      await contactPage.submitForm();
+      await contactPage.expectRedirectToThankYouPage();
+      await formwardMock.expectRequestCount(1);
+      await formwardMock.expectPostedLength("name", NAME_MAX_LENGTH);
+      await formwardMock.expectPostedLength("subject", SUBJECT_MAX_LENGTH);
+      await formwardMock.expectPostedLength("message", MESSAGE_MAX_LENGTH);
+    });
+
+    test("F8e: bericht boven de limiet wordt afgekapte tot de limiet", async ({
+      contactPage,
+      formwardMock,
+    }) => {
+      // Eén teken boven de limiet: `fill()` omzeilt de maxlength, dus de afkapping
+      // is meetbaar door te typen. De POST draagt het afgekapte bericht.
+      await contactPage.fillForm(AT_LIMIT_CONTACT);
+      await contactPage.typeMessage(EXCESS_CHAR);
+      await contactPage.expectMessageLength(MESSAGE_MAX_LENGTH);
+      await contactPage.submitForm();
+      await contactPage.expectRedirectToThankYouPage();
+      await formwardMock.expectRequestCount(1);
+      await formwardMock.expectPostedLength("message", MESSAGE_MAX_LENGTH);
+    });
+
+    test("F8a: de submit-guard staat niet op bij een ongeldige submit", async ({
+      contactPage,
+      formwardMock,
+    }) => {
+      // Native validatie blokkeert de submit (F2). De guard mag het formulier niet
+      // markeren, zodat de gebruiker na het verbeteren wél kan versturen.
+      await contactPage.submitForm();
+      await contactPage.expectNotRedirected();
+      await contactPage.expectFormInvalid();
+      await contactPage.expectSubmitGuardIdle();
+      await formwardMock.expectRequestCount(0);
+    });
+
+    test("F8b: de dubbele submit-actie levert maximaal één POST op", async ({
+      contactPage,
+      formwardMock,
+    }) => {
+      // Het F8-contract (TESTPLAN §7 en §7.1 regel R8): bij snel dubbel klikken
+      // mag er maximaal één POST naar Formward gaan. De guard markeert het
+      // formulier bij de eerste submit, deaktiveert de knop en blokkeert de
+      // tweede submit; de mock registreert daarom één POST en de redirect blijft
+      // idempotent.
+      await contactPage.fillForm(VALID_CONTACT);
+      await contactPage.expectDoubleSubmitBlocked();
+      await formwardMock.expectRequestCount(1);
+      await contactPage.expectRedirectToThankYouPage();
     });
   });
 });

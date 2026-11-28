@@ -57,14 +57,37 @@ export const OPTIONAL_SUBJECT_CONTACT = {
   message: "Dit is een testbericht.",
 };
 
+/**
+ * F8 (stap A): de `maxlength`-limieten van het contactformulier, zoals ze in
+ * `docs/contact.html` staan. De limiet is de specificatiegrens voor de BVA van
+ * F6 en F8 (TESTPLAN.md §5.5 en §7).
+ */
+
+export const NAME_MAX_LENGTH = 60;
+export const SUBJECT_MAX_LENGTH = 100;
+export const MESSAGE_MAX_LENGTH = 500;
+
 /** Testcase F6: minimale naam en lange berichttekst. */
 export const BOUNDARY_CONTACT = {
   name: "A",
   email: "test@example.com",
   subject: "Boundary",
-  message: "x".repeat(500),
+  message: "x".repeat(MESSAGE_MAX_LENGTH),
 };
 
+/** Testcase F8d: elk gelimiteerd veld exact op de limiet van de HTML. */
+
+export const AT_LIMIT_CONTACT = {
+  name: "a".repeat(NAME_MAX_LENGTH),
+  email: "test@example.com",
+  subject: "s".repeat(SUBJECT_MAX_LENGTH),
+  message: "x".repeat(MESSAGE_MAX_LENGTH),
+};
+
+/** Testcase F8e: één teken boven de berichtlimiet, getypt na de limiet. */
+
+export const EXCESS_CHAR = "x";
+
 /** Testcase F7: unicode, emoji en speciale tekens. */
 export const SPECIAL_CHARS_CONTACT = {
   name: "Test 🚀",
@@ -116,6 +139,7 @@ export const PAGE_SECTION_LABELS: Record<string, readonly string[]> = {
     "Meer weten",
   ],
   "testing.html": [
+
     "Software Testen",
     "Mijn aanpak",
     "Testmethoden",
@@ -129,6 +153,7 @@ export const PAGE_SECTION_LABELS: Record<string, readonly string[]> = {
     "Wat ik automatiseer",
     "Testresultaten",
     "Naar projecten",
+
   ],
   "projects.html": ["Intro", "Projecten", "Toekomstige projecten", "Naar GitHub"],
   "personal.html": [
