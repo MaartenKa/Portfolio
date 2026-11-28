@@ -80,6 +80,7 @@ type NormalizedRun = {
   passed: number;
   failed: number;
   flaky: number;
+  suiteTests: number | null;
   passRate: number;
   createdAt: string;
   runNumber: number | null;
@@ -218,12 +219,16 @@ const normalizeRun = (raw: unknown): NormalizedRun | null => {
   const failed = safeNumber(Number(run.failed));
   const passed = safeNumber(Number(run.passed));
 
+  const suiteTestsRaw = Number(run.suiteTests);
+  const suiteTests = Number.isFinite(suiteTestsRaw) ? safeNumber(suiteTestsRaw) : null;
+
   return {
     conclusion,
     total,
     passed,
     failed,
     flaky,
+    suiteTests,
     passRate: safePassRate(Number(run.passRate)),
     createdAt,
     runNumber: Number.isFinite(runNumber) ? Math.trunc(runNumber) : null,
@@ -253,11 +258,14 @@ const calculateAggregate = (runs: NormalizedRun[]): Aggregate => {
   const counted = runs.filter((run) => run.total > 0);
   const totalTests = counted.reduce((sum, run) => sum + run.total, 0);
   const totalPassed = counted.reduce((sum, run) => sum + run.passed, 0);
+  const suiteSize =
+    runs.map((run) => run.suiteTests).find((value) => value !== null) ??
+    runs.reduce((max, run) => Math.max(max, run.total), 0);
 
   return {
     runs: runs.length,
     countedRuns: counted.length,
-    suiteSize: runs.reduce((max, run) => Math.max(max, run.total), 0),
+    suiteSize,
     totalTests,
     totalPassed,
     pooledPassRate:

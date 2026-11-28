@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "workflow": "playwright.yml",
   "updated": "2026-11-27T09:26:32.090Z",
   "runs": [

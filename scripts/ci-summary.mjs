@@ -153,6 +153,7 @@ function buildEntry(report) {
   const total = expected + flaky + failed;
   const passed = expected + flaky;
   const passRate = total > 0 ? normalizePassRate((passed / total) * 100) : 0;
+  const suiteTests = total + skipped;
   // Een ontbrekend rapport telt als "no-report", niet als een geslaagde run.
   const hasReport = Boolean(report?.stats);
 
@@ -171,6 +172,7 @@ function buildEntry(report) {
     failed,
     flaky,
     skipped,
+    suiteTests,
     passRate,
     durationMs: normalizeNumber(stats.duration),
     runUrl: buildRunUrl(),
@@ -191,7 +193,7 @@ function mergeHistory(history, entry, maxRuns) {
   const deduped = runs.filter((run) => run?.runId !== entry.runId);
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     workflow: "playwright.yml",
     updated: entry.createdAt,
     runs: [entry, ...deduped].slice(0, maxRuns),
