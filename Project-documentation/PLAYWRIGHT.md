@@ -86,7 +86,7 @@ network mocking, CI-ready configuratie).
 │       ├── functional/mobile-menu-functional.spec.ts
 │       ├── functional/ci-history-functional.spec.ts
 │       ├── functional/footer-functional.spec.ts
-│       ├── accessibility/accessibility.spec.ts  # A11Y-01…A11Y-04 (17 tests)
+│       ├── accessibility/accessibility.spec.ts  # A11Y-01…A11Y-04 + CIH-08 (21 tests)
 │       ├── content-integrity/content-integrity.spec.ts # LINK-01, LINK-02, IMG-01 (11 tests)
 │       ├── seo/seo.spec.ts   # SEO-01…SEO-04 (32 tests)
 │       ├── responsive/responsive.spec.ts # RESP-01 (8 tests op 7 viewports)
@@ -281,7 +281,7 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
      lege state. Page object: `pages/ci-history.page.ts`.
     - `footer-functional.spec.ts`: footer-links, externe attributen en de
       actieve footer-link op contact/privacy. Page object: `pages/footer.page.ts`.
-3. **Accessibility** — `tests/accessibility/accessibility.spec.ts` (17 tests,
+3. **Accessibility** — `tests/accessibility/accessibility.spec.ts` (21 tests,
    A11Y-01…A11Y-04, in Chromium):
    - structurele check per pagina (10 pagina's): `lang="nl"`, de benoemde
      landmarks, `aria-expanded` op de toggle, niet-lege `alt`-teksten, de
@@ -337,8 +337,8 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    en `suiteTests`). De runner draait zonder browser (geen `devices`-use, geen `page`-fixture), en
    `npm run test:ci-summary` is de vierde CI-poort vóór de browserinstall. Elke test
    schrijft in een eigen temp-map.
-   **Gebouwd november 2026:** de suite telt 148 tests in 12 spec-bestanden
-   (139 browser + 9 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
+   **Gebouwd november 2026:** de suite telt 152 tests in 12 spec-bestanden
+   (143 browser + 9 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
 8. **E2E-gebruikersflows** — `tests/e2e/e2e.spec.ts` (6 tests, E2E-01…E2E-06 =
    scenarios S1–S6, TESTPLAN §8.6): de navigatietour langs de zeven nav-links, de
    contactjourney (lege validatie → invullen → submit → `bedankt.html` → back), het
@@ -347,8 +347,8 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    footerreis met de actieve state per pagina, en de herstelroute vanaf het
    404-fallback. Elke stap assert de landing op URL én `h1`; de detail-asserts staan in
    de functionele suites. Page object: `pages/flows.page.ts`.
-   **Gebouwd november 2026:** de suite telt 148 tests in 12 spec-bestanden
-   (139 browser + 9 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
+   **Gebouwd november 2026:** de suite telt 152 tests in 12 spec-bestanden
+   (143 browser + 9 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
 
 ### Config (playwright.config.ts)
 
@@ -625,7 +625,7 @@ dezelfde wijziging** als de oorzaak, niet later.
 
 | README-claim | Bron van waarheid | Bijwerken wanneer |
 | --- | --- | --- |
-| Aantal tests per suite + totaal (148) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
+| Aantal tests per suite + totaal (152) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
 | Playwright-versie (1.65) | `package.json` → `devDependencies` | versie-upgrade |
 | ESLint-versie (10) | `package.json` → `devDependencies.eslint` | versie-upgrade |
 | Node-grens (`>=24.8 <25`) | `package.json` → `engines.node` | Node-upgrade |

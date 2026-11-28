@@ -18,9 +18,9 @@ met pass-rate, groene streaks en de status van de laatste runs.
 
 | Kenmerk                | Waarde                                              |
 | ---------------------- | --------------------------------------------------- |
-| Testsuite              | **148 tests** in 12 spec-bestanden (139 browser + 9 datasuite) |
+| Testsuite              | **152 tests** in 12 spec-bestanden (143 browser + 9 datasuite) |
 | Browser                | Chromium (Desktop Chrome)                           |
-| Laatste gelogde CI-run | **139/139 geslaagd** (run 73, 100%; de 139-suite draaide groen in de CI, na de CSS-fix die de vier RESP-01-cases van run 72 ophefte; de 148-suite met CIH-07 is nog niet in de CI bewezen) |
+| Laatste gelogde CI-run | **145/145 geslaagd** (run 74, 100%; de 145-suite met de zes E2E-flows draaide groen in de CI via de nightly; de 152-suite met CIH-07 en CIH-08 is nog niet in de CI bewezen) |
 | CI                     | GitHub Actions — dagelijks om 18:17 UTC + handmatig |
 | Kwaliteitspoorten      | `tsc --noEmit`, ESLint 10, html-validate, `test:ci-summary` (CIH-06) |
 | Stack                  | HTML/CSS, TypeScript, Playwright 1.65, GitHub Pages |
@@ -45,7 +45,8 @@ met pass-rate, groene streaks en de status van de laatste runs.
 - **Toegankelijke markup** — skip-link, `aria`-attributen en `data-testid`-haken,
   bewaakt door een strikte HTML-validator én door de accessibility-suite
   (tabvolgorde, focus-indicator, skip-link-focus, `lang`, landmarks, `alt`-teksten,
-  gemeten placeholder-contrast en `forced-colors`-fallback).
+  gemeten placeholder-contrast, `forced-colors`-fallback en de a11y van de CI-sectie
+  (CIH-08: caption, kolomkoppen, kaartlabels en run-links).
 
 ## Het dashboard
 
@@ -103,7 +104,7 @@ playwright/
   fixtures/formward.mock.ts    # Formward-mock + request-registratie
   utils/test-data.ts           # gedeelde constanten + formulierdatasets
   tests/smoke|functional/      # 63 tests (smoke + functioneel)
-  tests/accessibility/accessibility.spec.ts  # A11Y-01…A11Y-04, 17 tests
+  tests/accessibility/accessibility.spec.ts  # A11Y-01…A11Y-04 + CIH-08, 21 tests
   tests/compatibility|e2e|regression/        # gereserveerd, nog leeg
   tests/unit/ci-summary.spec.ts              # CIH-06/07: 9 datasuite-tests op ci-summary.mjs
 scripts/ci-summary.mjs         # JSON-report → CI-history
@@ -127,7 +128,7 @@ Project-documentation/         # testplan, CI-documentatie, best practices, verb
 | Responsive       | `playwright/tests/responsive/responsive.spec.ts`            |      8 |
 | E2E-gebruikersflows | `playwright/tests/e2e/e2e.spec.ts` (S1–S6)               |      6 |
 | CIH-06/07 datasuite | `playwright/tests/unit/ci-summary.spec.ts` (zonder browser)  |      9 |
-| **Totaal**       | 12 spec-bestanden                                            | **148** |
+| **Totaal**       | 12 spec-bestanden                                            | **152** |
 
 ## Kwaliteitspoorten
 
@@ -174,7 +175,7 @@ suite; de datasuite heeft geen browser nodig, dus hij faalt vóór de download.
   op de runner vóór die fix; na de fix is run 73 groen met **139/139** op dezelfde runner,
  met alle CI-stappen success.
 - **Non-functionele suites zijn nu gebouwd voor responsive, SEO en content-integriteit.**
-  De accessibility-suite (A11Y-01…A11Y-04, 17 tests), de responsive-suite (RESP-01, 8 tests
+  De accessibility-suite (A11Y-01…A11Y-04 + CIH-08, 21 tests), de responsive-suite (RESP-01, 8 tests
   op 7 viewports, inclusief de CSS-grenzen 850/849 en 500/499), de SEO-suite (SEO-01…04,
   32 tests) en de content-integriteit-suite (LINK-01, LINK-02, IMG-01, 11 tests) draaien in
   Chromium met eigen DOM-asserts. axe-core en Lighthouse zijn niet opgenomen

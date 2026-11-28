@@ -245,14 +245,14 @@ Twee dingen die opvallen:
 | `playwright/pages/footer.page.ts` | Page object `FooterPage`: footer-links, externe attributen en actieve footer-link |
 | `playwright/tests/functional/ci-history-functional.spec.ts` | Zeven tests over de CI-resultatensectie: laatste-run kaarten, gepoolde totalen en ratio, én rij per run met run-link, runs zonder noemer, de lege staat, de `suiteTests`-kaart en de schema v1-valback. Testsoort en afbakening: `PLAN-CI-HISTORY-TESTS.md` |
 | `playwright/tests/functional/footer-functional.spec.ts` | Footer-links, veilige externe attributen en actieve footer-links op contact/privacy |
-| `playwright/tests/accessibility/accessibility.spec.ts` | Accessibility-suite (A11Y-01…A11Y-04, 17 tests): structuur per pagina, tabvolgorde-contracten, skip-link-focus, placeholder-contrast en `forced-colors`-fallback |
+| `playwright/tests/accessibility/accessibility.spec.ts` | Accessibility-suite (A11Y-01…A11Y-04 + CIH-08, 21 tests): structuur per pagina, tabvolgorde-contracten, skip-link-focus, placeholder-contrast, `forced-colors`-fallback en de a11y van de CI-sectie (caption, kolomkoppen, kaartlabels, run-links) |
 | `playwright/pages/content.page.ts` | Page object `ContentIntegrityPage`: interne links tegen de set van bekende site-bestanden, in-page anchors, het externe link-contract, `alt`-teksten en asset-referenties — structureel, niet via HTTP-bereikbaarheid |
 | `playwright/tests/content-integrity/content-integrity.spec.ts` | Content-integrity-suite (LINK-01, LINK-02, IMG-01, 11 tests) op alle 10 pagina's |
 | `playwright/pages/seo.page.ts` | Page object `SeoPage`: titel en description, site-wide uniekheid, én `<h1>` en unieke id's, `robots` per pagina, canonical + Open Graph + Twitter card, en `sitemap.xml` + `robots.txt` via de `request`-fixture |
 | `playwright/tests/seo/seo.spec.ts` | SEO-suite (SEO-01…SEO-04, 32 tests) — de waarden worden uit de DOM gelezen, omdat meta-attributes in de bron op aparte regels staan |
 | `playwright/pages/responsive.page.ts` | Page object `ResponsivePage`: geen horizontale scroll, nav-contract per viewport, compacte layout (full-width knoppen, gestapelde hero-knoppen), hero-tilt, en `expectViewportContract()` met de viewport-vertakking in het page object |
 | `playwright/tests/responsive/responsive.spec.ts` | Responsive-suite (RESP-01, 8 tests) op 7 viewports uit `RESPONSIVE_VIEWPORTS`, alle 10 pagina's per viewport, inclusief de CSS-grenzen 850/849 en 500/499 |
-| `playwright/tests/unit/ci-summary.spec.ts` | **gebouwd (CIH-06/07)**: 9 datasuite-tests op `scripts/ci-summary.mjs` in het niet-browser `unit`-project — formules uit `stats`, `passRate`-afronding, `total = 0` en getalnormalisatie, `no-report`, `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de CLI-args met de run-URL. Telling: 148 tests in 12 files |
+| `playwright/tests/unit/ci-summary.spec.ts` | **gebouwd (CIH-06/07)**: 9 datasuite-tests op `scripts/ci-summary.mjs` in het niet-browser `unit`-project — formules uit `stats`, `passRate`-afronding, `total = 0` en getalnormalisatie, `no-report`, `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de CLI-args met de run-URL. Telling: 152 tests in 12 files |
 | `playwright/pages/flows.page.ts` | Page object `FlowPage`: journey-continuity voor de E2E-flows — landing op URL én `h1`, footerstate, run-link-contract en de 404-herstelroute |
 | `playwright/tests/e2e/e2e.spec.ts` | **gebouwd**: E2E-gebruikersflows (E2E-01…E2E-06, scenarios S1–S6) — navigatietour, contactjourney, mobiel menu, CI-dashboard, footerreis en 404-herstel. De pyramide-kern uit `TESTPLAN.md` §4 en §8.6 |
 | `playwright/tests/compatibility/`, `regression/` | Nu lege mappen: de plek waar cross-browser (fase 7) en een latere integriteitssuite komen. De gebruikersflows staan inmiddels in `e2e/`, de content-integriteit (LINK/IMG) en SEO in eigen mappen |
@@ -446,12 +446,12 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    `responsive/` (8 tests), en lokaal groen. Voor cross-browser staat fase 7 in het plan.
    **`e2e/` is gevuld:** de zes gebruikersflows S1–S6 (E2E-01…E2E-06) draaien in
    `playwright/tests/e2e/e2e.spec.ts` met page object `flows.page.ts`; doel G14, de
-   cases en de traceability staan in `TESTPLAN.md` §2, §8.6 en §15. De suite telt 148
+   cases en de traceability staan in `TESTPLAN.md` §2, §8.6 en §15. De suite telt 152
    tests in 12 spec-bestanden. De CI-cijfers van run 72 toonden de 139-suite op de
    runner met 135 geslaagd en 4 faalden — de RESP-01 op de smalle viewports (500, 499, 390
    en 320), door de bredere runner-uitvalfont; na de CSS-fix is dat in run 73 omgezet naar
-   139 geslaagd en 0 faalden. De eerste CI-run van de 148-suite is het productiebewijs
-   dat nog komt. `accessibility/` is gevuld (17 tests) en
+   139 geslaagd en 0 faalden. De eerste CI-run van de 152-suite is het productiebewijs
+   dat nog komt. `accessibility/` is gevuld (21 tests) en
     `unit/` met de datasuite CIH-06/07 (9 tests, zonder browser). De CIH-06-poort draaide
    in runs 72 en 73 vóór de browserinstall; de CIH-07-stand met schema v2 is nog
    niet in de CI bewezen.
@@ -462,7 +462,7 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    schrijft `suiteTests = total + skipped`; de UI kiest de laatste niet-lege
    `suiteTests` en valt terug op `max(total)` voor legacy schema v1-entries.
    De CIH-07-producer en UI-bouw zijn gebouwd en getest; de CI-bewijsrun voor
-   de 148-suite staat nog open.
+   de 152-suite staat nog open.
 6. **De producerende kant heeft eigen tests.** `scripts/ci-summary.mjs` draait in de
    datasuite CIH-06/07: 9 tests in `playwright/tests/unit/ci-summary.spec.ts`, in de
    Playwright-runner zonder browser, als CI-poort `npm run test:ci-summary` vóór de
