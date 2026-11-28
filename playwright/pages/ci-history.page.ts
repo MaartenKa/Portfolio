@@ -25,6 +25,7 @@ export type HistoryRunFixture = {
   commit?: string;
   event?: string;
   skipped?: number;
+  suiteTests?: number;
   durationMs?: number;
 };
 
@@ -43,7 +44,7 @@ export class CiHistoryPage extends BasePage {
    */
   async mockHistory(runs: HistoryRunFixture[]): Promise<CiHistoryPage> {
     const payload = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       workflow: "playwright.yml",
       updated: runs.length > 0 ? runs[0].createdAt : null,
       runs,

@@ -33,6 +33,7 @@ const run = (overrides: Partial<HistoryRunFixture>): HistoryRunFixture => ({
   flaky: 0,
   passRate: 100,
   runUrl: "https://github.com/MaartenKa/Portfolio/actions/runs/45999999001",
+  suiteTests: 145,
   ...overrides,
 });
 

@@ -15,6 +15,7 @@ const run = (overrides: Partial<HistoryRunFixture>): HistoryRunFixture => ({
   flaky: 0,
   passRate: 100,
   runUrl: RUN_URL,
+  suiteTests: 40,
   ...overrides,
 });
 
@@ -211,5 +212,86 @@ test.describe("CI-resultaten - kaarten en geschiedenis", () => {
     await expect(ciHistoryPage.value("ci-metrics-note")).toContainText(
       "Σ geslaagde tests",
     );
+  });
+
+  test("CIH-07a: suiteTests vult de suite-omvang", async ({ ciHistoryPage }) => {
+    const suiteRuns: HistoryRunFixture[] = [
+      run({
+        runId: 6,
+        runNumber: 74,
+        createdAt: "2026-11-28T18:18:00.000Z",
+        total: 145,
+        passed: 145,
+        failed: 0,
+        flaky: 0,
+        passRate: 100,
+        suiteTests: 145,
+      }),
+      run({
+        runId: 5,
+        runNumber: 73,
+        createdAt: "2026-11-27T18:18:00.000Z",
+        total: 139,
+        passed: 139,
+        failed: 0,
+        flaky: 0,
+        passRate: 100,
+        suiteTests: 139,
+      }),
+    ];
+
+    await ciHistoryPage.mockHistory(suiteRuns);
+    await ciHistoryPage.navigate();
+
+    // De kaart toont de suite-omvang uit de nieuwste entry, niet de grootste total
+    // uit het hele venster. De aggregate-kaarten blijven wel de gepoolde totalen.
+    await expect(ciHistoryPage.value("ci-suite-size")).toHaveText("145 tests");
+    await expect(ciHistoryPage.value("ci-runs")).toHaveText("2");
+    await expect(ciHistoryPage.value("ci-total-tests")).toHaveText("145");
+    await expect(ciHistoryPage.value("ci-total-executed")).toHaveText("284");
+    await expect(ciHistoryPage.value("ci-total-passed")).toHaveText(
+      "284 van 284",
+    );
+    await expect(ciHistoryPage.value("ci-pass-ratio")).toHaveText("100%");
+    await expect(ciHistoryPage.value("ci-streak")).toHaveText("2");
+  });
+
+  test("CIH-07b: entries zonder suiteTests vallen terug op max(total)", async ({
+    ciHistoryPage,
+  }) => {
+    const legacyRuns: HistoryRunFixture[] = [
+      run({
+        runId: 7,
+        runNumber: 73,
+        createdAt: "2026-11-27T18:18:00.000Z",
+        total: 139,
+        passed: 139,
+        failed: 0,
+        flaky: 0,
+        passRate: 100,
+        suiteTests: undefined,
+      }),
+      run({
+        runId: 6,
+        runNumber: 72,
+        createdAt: "2026-11-26T18:18:00.000Z",
+        total: 145,
+        passed: 145,
+        failed: 0,
+        flaky: 0,
+        passRate: 100,
+        suiteTests: undefined,
+      }),
+    ];
+
+    await ciHistoryPage.mockHistory(legacyRuns);
+    await ciHistoryPage.navigate();
+
+    // Schema v1-entries hebben geen suiteTests. De UI blijft dan werken op de
+    // proxy max(total), zodat oude geschiedenissen niet leeg of placeholders tonen.
+    await expect(ciHistoryPage.value("ci-suite-size")).toHaveText("145 tests");
+    await expect(ciHistoryPage.value("ci-runs")).toHaveText("2");
+    await expect(ciHistoryPage.value("ci-total-tests")).toHaveText("139");
+    await expect(ciHistoryPage.value("ci-total-executed")).toHaveText("284");
   });
 });
