@@ -626,7 +626,9 @@ echte CI-cijfers tonen.
   (8 tests, browserloos) en de Chromium-install concludeerden success vóór de
   browserinstall, en de teststap gaf `Running 139 tests` met een record van `total = 139`
   (135 geslaagd, 4 faalden). Run 73 draaide dezelfde keten groen: 139/139 en een record
-  met `passRate` 100. Zie `PLAN-CI-HISTORY-TESTS.md` §7 en `TEST-SUITE-STATUS.md` §2.
+  met `passRate` 100. Runs 75 en 76 bewezen de CIH-07-stand in de CI: run 75 met de eerste
+  entry met `suiteTests` (148) en run 76 met `suiteTests` 152 in de eerste 152-suite-run.
+  Zie `PLAN-CI-HISTORY-TESTS.md` §7 en `TEST-SUITE-STATUS.md` §2.
 - De gepubliceerde HTML bevat altijd de placeholders; de cijfers ontstaan pas in
   de DOM na de fetch. "Bron bekijken" is daarom nooit een bewijs van de cijfers.
 
@@ -696,9 +698,10 @@ Run 73 draaide dezelfde keten volledig groen, handmatig gestart op 27 november 2
 Daarmee is de 139-suite voor het eerst groen in de CI, de vier RESP-01-cases mee op de
 runner. De geschiedenis op `main` is de bron van waarheid voor de dashboard-kaarten en
 voor de README-claim over de laatste run. De 152-suite met CIH-07, CIH-08, schema v2 en
-`suiteTests` is nog niet in de CI bewezen. Zie §15.3 voor de volgende CI-bewijsrun.
+`suiteTests` is in de CI bewezen: zie §15.4 (run 75, de eerste `suiteTests`-entry) en
+§15.5 (run 76, de eerste 152-suite-run).
 
-### 15.3 De 145-suite-run (run 74) en de volgende bewijsrun
+### 15.3 De 145-suite-run (run 74, `schedule`)
 
 Run 74 is de eerste CI-run die de E2E-laag meedraaide: de nightly van 28 november 2026
 om 01:28 UTC op commit `78dfc2e`, jobduur 69,7 s. Per schakel, uit het record in
@@ -717,12 +720,50 @@ Twee kanttekeningen bij dit record:
 1. **De 145-suite is de 139-suite plus de zes E2E-flows.** Ná run 74 groeide de suite met
    CIH-07 (de datasuite op schema v2 en de twee UI-tests op `suiteTests`) en met CIH-08
    (de vier a11y-tests van de CI-sectie): de suite telt nu 152 tests in 12 spec-bestanden.
-2. **Het schema-v2-bewijs is nog open.** Het record van run 74 bevat geen `suiteTests`,
-   want de producer op commit `78dfc2e` kende dat veld nog niet; geen van de 30 entries in
-   de JSON heeft `suiteTests`. De volgende `workflow_dispatch`-run op de current HEAD is de
-   bewijsrun: verwacht `Running 152 tests`, een entry met `suiteTests: 152`, drie artifacts
-   en een bot-commit (`PLAN-CI-HISTORY-TESTS.md` §9, en conclusie 2 van dit hoofdstuk over
-   de `schedule`-trigger).
+2. **Het schema-v2-bewijs kwam ná dit record binnen.** Het record van run 74 bevat geen
+   `suiteTests`, want de producer op commit `78dfc2e` kende dat veld nog niet. De twee volgende
+   `workflow_dispatch`-runs op de current HEAD zijn de bewijsruns: run 75 (148/148, de eerste
+   entry met `suiteTests`) en run 76 (152/152, `suiteTests` 152). Zie §15.4 en §15.5, en
+   `PLAN-CI-HISTORY-TESTS.md` §9 met de conclusie 2 van dit hoofdstuk over de
+   `schedule`-trigger.
+
+### 15.4 De eerste `suiteTests`-entry (run 75, `workflow_dispatch`)
+
+Run 75 draaide op commit `90f35e4` — de build met CIH-07 (schema v2 in producer én UI) en de
+zes E2E-flows, nog zonder CIH-08: 139 browser + 9 datasuite = 148. Per schakel, uit het
+record in `docs/data/playwright-history.json` en de Actions-log:
+
+| Schakel | Bewijsbron | Waarde |
+| ------- | ---------- | ------ |
+| Vier poorten + preflight | CI-log | de vier poorten en `check:site` `success`, vóór de browserinstall |
+| Tests | CI-log | `Running 148 tests using 1 worker` → 148 geslaagd, 0 faalden |
+| Artifacts | CI-log | 3: `playwright-report`, `playwright-json-report`, `playwright-history` |
+| History-record | JSON op `main` | `runNumber 75`, `conclusion success`, `total 148`, `passed 148`, `failed 0`, `skipped 0`, `suiteTests` **148**, `passRate` 100, `durationMs` 70516 |
+| Bot-commit en Pages-deploy | git-log / Actions-log | `chore(ci): update Playwright history [skip ci]`, daarna `pages build and deployment` |
+
+Dit is het eerste CI-bewijs van schema v2: de `suiteTests` in deze entry komt van de echte
+producer `scripts/ci-summary.mjs` op de runner, niet uit een testfixture.
+
+### 15.5 De 152-suite-run (run 76, `workflow_dispatch`)
+
+Run 76 is de eerste CI-run van de volledige 152-suite, handmatig gestart op commit `8425631`
+(28 november 2026 om 13:03 UTC, jobduur 2 m 31 s). Per schakel:
+
+| Schakel | Bewijsbron | Waarde |
+| ------- | ---------- | ------ |
+| Vier poorten (typecheck, lint, html-validate, CIH-06/07) | CI-log | alle vier `success`, vóór de browserinstall |
+| Preflight live site (`check:site`) | CI-log | `success` |
+| Browserinstall | CI-log | `success` met `--with-deps chromium` |
+| Tests | CI-log | `Running 152 tests using 1 worker` → 152 geslaagd, 0 faalden, inclusief de vier CIH-08-tests |
+| Artifacts | CI-log | 3: `playwright-report`, `playwright-json-report`, `playwright-history` |
+| History-record | JSON op `main` | `runNumber 76`, `conclusion success`, `total 152`, `passed 152`, `failed 0`, `skipped 0`, `suiteTests` **152**, `passRate` 100, `durationMs` 67417 |
+| Bot-commit en Pages-deploy | git-log / Actions-log | `chore(ci): update Playwright history [skip ci]`, daarna `pages build and deployment` |
+| Dashboard | `automation.html` na de Pages-deploy en de `max-age=600`-periode | "Suite omvang" **152 tests** uit `suiteTests`, niet uit de `max(total)`-valback |
+
+Daarmee is laag C — de keten — bewezen voor schema v2 én voor de a11y van de CI-sectie: de
+JSON die `main` en de Pages-site dragen, is door de producer zelf geschreven. De history-JSON
+is de bron van waarheid: 30 entries met `runNumber 76` als nieuwste, en `suiteTests` in de
+entries van runs 75 en 76.
 
 ## 16. Testsoort en vervolgplan
 
@@ -746,4 +787,5 @@ poort staan in `playwright.config.ts`, `playwright.local.config.ts` en `package.
 Run 72 heeft de poort in de CI gezet, met de datasuite vóór de browserinstall en een
 history-record met `total = 139` (135 geslaagd, 4 faalden); run 73 draaide de volledige
 suite groen: 139 geslaagd, 0 faalden en `passRate` 100. De 152-suite met schema v2 en
-`suiteTests` is nog niet in de CI bewezen. Zie §15.3 voor de volgende CI-bewijsrun.
+`suiteTests` is in de CI bewezen: run 75 (eerste entry met `suiteTests`, 148/148) en run 76
+(152/152, `suiteTests` 152, de vier CIH-08-tests mee). Zie §15.4 en §15.5.

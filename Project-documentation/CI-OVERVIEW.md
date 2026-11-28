@@ -450,28 +450,33 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    tests in 12 spec-bestanden. De CI-cijfers van run 72 toonden de 139-suite op de
    runner met 135 geslaagd en 4 faalden — de RESP-01 op de smalle viewports (500, 499, 390
    en 320), door de bredere runner-uitvalfont; na de CSS-fix is dat in run 73 omgezet naar
-   139 geslaagd en 0 faalden. De eerste CI-run van de 152-suite is het productiebewijs
-   dat nog komt. `accessibility/` is gevuld (21 tests) en
+   139 geslaagd en 0 faalden. Run 75 is de eerste CI-run met een `suiteTests`-entry (148/148)
+   en run 76 is de eerste CI-run van de 152-suite: 152/152, `suiteTests` 152.
+   `accessibility/` is gevuld (21 tests) en
     `unit/` met de datasuite CIH-06/07 (9 tests, zonder browser). De CIH-06-poort draaide
-   in runs 72 en 73 vóór de browserinstall; de CIH-07-stand met schema v2 is nog
-   niet in de CI bewezen.
+   in runs 72 en 73 vóór de browserinstall; de CIH-07-stand met schema v2 is bewezen in
+   runs 75 en 76, door de echte producer op de runner.
 4. **`docs/js/ts/main.js` is een gebouwd bestand in de repo.** Na een wijziging in
    `src/ts/main.ts` moet `npm run build` gedraaid worden en het resultaat gecommit;
    de CI bouwt het niet.
 5. **De kaart-suite-omvang gebruikt `suiteTests` uit schema v2.** De producer
    schrijft `suiteTests = total + skipped`; de UI kiest de laatste niet-lege
    `suiteTests` en valt terug op `max(total)` voor legacy schema v1-entries.
-   De CIH-07-producer en UI-bouw zijn gebouwd en getest; de CI-bewijsrun voor
-   de 152-suite staat nog open.
+   De CIH-07-producer en UI-bouw zijn gebouwd en getest, en in de CI bewezen: run 75
+   schreef de eerste entry met `suiteTests` (148) en run 76 de eerste entry van de
+   152-suite (`suiteTests` 152). De kaart op `automation.html` leest dus de
+   producer-waarde, niet de valback.
 6. **De producerende kant heeft eigen tests.** `scripts/ci-summary.mjs` draait in de
    datasuite CIH-06/07: 9 tests in `playwright/tests/unit/ci-summary.spec.ts`, in de
    Playwright-runner zonder browser, als CI-poort `npm run test:ci-summary` vóór de
    browserinstall met de gate-config `playwright.unit.config.ts`. De weergavelaag is
    gedekt door `ci-history-functional.spec.ts`. Runs 72 en 73 hebben de CIH-06-stand
-   bewezen; de CIH-07-stand met schema v2 en `suiteTests` staat nog open:
+   bewezen; de CIH-07-stand met schema v2 en `suiteTests` is bewezen in runs 75 en 76:
    de datasuite-poort en de Chromium-install concludeerden success, de teststap gaf
-   `Running 139 tests`, en de history-records op `main` bevatten beide runs — run 72 met
-   135 geslaagd en 4 faalden, run 73 met 139 geslaagd, 0 faalden en `passRate` 100.
+   `Running 139 tests` in run 72 en `Running 152 tests` in run 76, en de history-records op
+   `main` bevatten die runs — run 72 met 135 geslaagd en 4 faalden, run 73 met 139
+   geslaagd, 0 faalden en `passRate` 100, run 75 met `suiteTests` 148 en run 76 met
+   `suiteTests` 152.
 7. **De suite draait tegen de live site.** Nieuwe UI-tests slagen pas ná deploy plus
    de cache-periode uit §11. Voor lokaal werk aan `docs/` staat er een vaste
    hulpm-config in de repo: `playwright.local.config.ts` (`npm run test:local`,
