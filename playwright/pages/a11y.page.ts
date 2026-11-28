@@ -35,7 +35,7 @@ const FORM_LABEL_TEST_IDS: Record<string, string> = {
 };
 
 /**
- * Page object voor de accessibility-suite (A11Y-01…A11Y-04).
+ * Page object voor de accessibility-suite (A11Y-01…A11Y-04, CIH-08).
  *
  * De asserts staan hier, in lijn met PLAYWRIGHT.md §8; de specs roepen alleen
  * methods aan. De suite bewijst DOM-/interactiegedrag: taal, landmarks, labels,
@@ -388,5 +388,219 @@ export class AccessibilityPage extends BasePage {
     expect(hero.backgroundImage, "De gradient blijft staan in forced-colors-modus").toBe(
       "none",
     );
+  }
+
+  /**
+   * CIH-08: de geschiedenis-tabel heeft een Nederlandse caption als accessible
+   * name. De caption staat als `.sr-only` in de markup: visueel één pixel, maar
+   * niet `display: none` en niet `visibility: hidden` — anders leest een
+   * screenreader de tabel zonder naam.
+   *
+   * @param caption - De verwachte captietekst uit `test-data.ts`.
+   */
+  async expectTableCaption(caption: string): Promise<void> {
+    const table = this.page.getByTestId("ci-history-table");
+    await expect(table).toBeVisible();
+
+    const read = await table.evaluate(
+      (element, expected: string) => {
+        const node = element.querySelector("caption");
+        const style = node ? getComputedStyle(node) : null;
+
+        return {
+          text: node?.textContent?.trim() ?? "",
+          srOnly: node?.classList.contains("sr-only") ?? false,
+          display: style?.display ?? "",
+          visibility: style?.visibility ?? "",
+          expected,
+        };
+      },
+      caption,
+    );
+
+    expect(
+      read.text,
+      `De tabel heeft geen accessible name uit de caption (${read.text})`,
+    ).toBe(read.expected);
+    expect(read.srOnly, "De caption is niet als sr-only gemarkeerd").toBe(true);
+    expect(
+      read.display,
+      "De caption is display:none en dus niet leesbaar voor de screenreader",
+    ).not.toBe("none");
+    expect(
+      read.visibility,
+      "De caption is visibility:hidden en dus niet leesbaar voor de screenreader",
+    ).not.toBe("hidden");
+  }
+
+  /**
+   * CIH-08: de kolomkoppen zijn als kolom gemarkeerd (`scope="col"`) in de
+   * contractvolgorde. Zonder scope leest een screenreader cel en kop niet als
+   * samenhangend paar.
+   *
+   * @param columns - De kolomnamen in de volgorde van de markup.
+   */
+  async expectTableHeader(columns: readonly string[]): Promise<void> {
+    const headers = await this.page
+      .getByTestId("ci-history-table")
+      .evaluate((element) =>
+        Array.from(element.querySelectorAll("thead th")).map((th) => ({
+          text: th.textContent?.trim() ?? "",
+          scope: th.getAttribute("scope") ?? "",
+        })),
+      );
+
+    const names = headers.map((th) => th.text);
+    expect(names, "De kolomkoppen wijken af van de contractlijst").toEqual([
+      ...columns,
+    ]);
+
+    const unscoped = headers
+      .filter((th) => th.scope !== "col")
+      .map((th) => th.text);
+    expect(
+      unscoped,
+      `Koppen zonder scope="col": ${unscoped.join(", ")}`,
+    ).toEqual([]);
+  }
+
+  /**
+   * CIH-08: élke rij van de geschiedenis vult de zes kolommen, zodat elke cel
+   * op de juiste kolomkop aansluit. De `colspan` van de placeholder-rij telt
+   * mee: de zes-kolomsstructuur is ook in de lege toestand het contract.
+   *
+   * @param expectedRows - Het aantal rijen dat de mock oplevert.
+   * @param columns - Het aantal kolommen van de tabel.
+   */
+  async expectRowShape(expectedRows: number, columns: number): Promise<void> {
+    const shape = await this.page
+      .getByTestId("ci-history-body")
+      .evaluate((body) =>
+        Array.from(body.querySelectorAll("tr")).map(
+          (row) =>
+            Array.from(row.querySelectorAll("td")).reduce(
+              (cells, td) => cells + (td.colSpan || 1),
+              0,
+            ),
+        ),
+      );
+
+    expect(
+      shape,
+      `Het aantal rijen is niet ${expectedRows} (het is ${shape.length})`,
+    ).toHaveLength(expectedRows);
+    expect(
+      shape,
+      `Rijen vullen de ${columns} kolommen niet: ${shape.join(", ")}`,
+    ).toEqual(new Array(expectedRows).fill(columns));
+  }
+
+  /**
+   * CIH-08: de run-link heeft de runnaam als leesbare tekst en is als externe
+   * link gemarkeerd — dezelfde ingang voor toetsenbord, screenreader en ziende
+   * gebruiker.
+   *
+   * @param name - De verwachte linktekst, bijvoorbeeld `Run 74`.
+   * @param href - De GitHub Actions-URL van die run.
+   */
+  async expectRunLink(name: string, href: string): Promise<void> {
+    const link = this.page
+      .getByTestId("ci-history-body")
+      .getByRole("link", { name });
+
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute("href", href);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  }
+
+  /**
+   * CIH-08: de kaarten van de CI-sectie blijven leesbaar: élke kaart heeft een
+   * contractlabel en een waarde die niet verborgen is. De site-wide assert op
+   * decoratieve `aria-hidden`-iconen staat al in A11Y-02; hier staat de
+   * kaartset van de dynamische sectie zelf.
+   *
+   * @param labels - De kaartlabels in de volgorde van de markup.
+   * @param section - De `aria-label` van de CI-sectie.
+   */
+  async expectCardsReadable(
+    labels: readonly string[],
+    section: string,
+  ): Promise<void> {
+    const cards = await this.page.evaluate((label: string) => {
+        const scope = document.querySelector(`section[aria-label="${label}"]`);
+        const nodes = Array.from(scope?.querySelectorAll("article.card") ?? []);
+
+        return {
+          labels: nodes.map(
+            (card) => card.querySelector("p")?.textContent?.trim() ?? "",
+          ),
+          unreadable: nodes
+            .filter((card) => {
+              const value = card.querySelector("h3");
+              return (
+                !value ||
+                value.getAttribute("aria-hidden") === "true" ||
+                value.textContent.trim() === ""
+              );
+            })
+            .map((card) => card.querySelector("p")?.textContent?.trim() ?? "?"),
+        };
+    }, section);
+
+    expect(
+      cards.labels,
+      "De kaartlabels van de CI-sectie wijken af van de contractlijst",
+    ).toEqual([...labels]);
+    expect(
+      cards.unreadable,
+      `Kaarten zonder leesbare waarde: ${cards.unreadable.join(", ")}`,
+    ).toEqual([]);
+  }
+
+  /**
+   * CIH-08: de statusbadge heeft een eigen accessible name en de badge-afbeelding
+   * een Nederlandse alt-tekst, zodat de link niet als kaal shield-icoon leest.
+   *
+   * @param label - De `aria-label` van de badge-link.
+   * @param alt - De `alt`-tekst van de badge-afbeelding.
+   */
+  async expectStatusBadgeAccessible(label: string, alt: string): Promise<void> {
+    const badge = this.page.getByRole("link", { name: label });
+    await expect(badge).toBeVisible();
+    await expect(badge.getByRole("img")).toHaveAccessibleName(alt);
+  }
+
+  /**
+   * CIH-08: de run-links in de geschiedenis zijn toetsenbordbereikbaar in de
+   * volgorde van de rijen. De tab start op de statusbadge-link; de volgende
+   * focusbare elementen in de sectie zijn de run-links, rij voor rij.
+   *
+   * @param badgeLabel - De accessible name van de statusbadge-link.
+   * @param names - De runnamen in rijvolgorde, bijvoorbeeld `Run 74`.
+   */
+  async expectRunLinksInTabOrder(
+    badgeLabel: string,
+    names: readonly string[],
+  ): Promise<void> {
+    await this.page.getByRole("link", { name: badgeLabel }).focus();
+
+    const trail: string[] = [];
+
+    for (let step = 0; step < names.length; step += 1) {
+      await this.page.keyboard.press("Tab");
+      trail.push(
+        await this.page.evaluate(
+          () =>
+            (document.activeElement as HTMLElement | null)?.textContent?.trim() ??
+            "",
+        ),
+      );
+    }
+
+    expect(
+      trail,
+      `De toetsenbordvolgorde langs de run-links is ${trail.join(", ")}`,
+    ).toEqual([...names]);
   }
 }
