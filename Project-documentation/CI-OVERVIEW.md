@@ -252,7 +252,7 @@ Twee dingen die opvallen:
 | `playwright/tests/seo/seo.spec.ts` | SEO-suite (SEO-01…SEO-04, 32 tests) — de waarden worden uit de DOM gelezen, omdat meta-attributes in de bron op aparte regels staan |
 | `playwright/pages/responsive.page.ts` | Page object `ResponsivePage`: geen horizontale scroll, nav-contract per viewport, compacte layout (full-width knoppen, gestapelde hero-knoppen), hero-tilt, en `expectViewportContract()` met de viewport-vertakking in het page object |
 | `playwright/tests/responsive/responsive.spec.ts` | Responsive-suite (RESP-01, 8 tests) op 7 viewports uit `RESPONSIVE_VIEWPORTS`, alle 10 pagina's per viewport, inclusief de CSS-grenzen 850/849 en 500/499 |
-| `playwright/tests/unit/ci-summary.spec.ts` | **gebouwd (CIH-06/07)**: 9 datasuite-tests op `scripts/ci-summary.mjs` in het niet-browser `unit`-project — formules uit `stats`, `passRate`-afronding, `total = 0` en getalnormalisatie, `no-report`, `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de CLI-args met de run-URL. Telling: 152 tests in 12 files |
+| `playwright/tests/unit/ci-summary.spec.ts` | **gebouwd (CIH-06/07)**: 9 datasuite-tests op `scripts/ci-summary.mjs` in het niet-browser `unit`-project — formules uit `stats`, `passRate`-afronding, `total = 0` en getalnormalisatie, `no-report`, `CI_SUMMARY_STATUS`, dedup op `runId`, `--max`-kappen en de CLI-args met de run-URL. Telling: 157 tests in 12 files |
 | `playwright/pages/flows.page.ts` | Page object `FlowPage`: journey-continuity voor de E2E-flows — landing op URL én `h1`, footerstate, run-link-contract en de 404-herstelroute |
 | `playwright/tests/e2e/e2e.spec.ts` | **gebouwd**: E2E-gebruikersflows (E2E-01…E2E-06, scenarios S1–S6) — navigatietour, contactjourney, mobiel menu, CI-dashboard, footerreis en 404-herstel. De pyramide-kern uit `TESTPLAN.md` §4 en §8.6 |
 | `playwright/tests/compatibility/`, `regression/` | Nu lege mappen: de plek waar cross-browser (fase 7) en een latere integriteitssuite komen. De gebruikersflows staan inmiddels in `e2e/`, de content-integriteit (LINK/IMG) en SEO in eigen mappen |
@@ -446,7 +446,7 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    `responsive/` (8 tests), en lokaal groen. Voor cross-browser staat fase 7 in het plan.
    **`e2e/` is gevuld:** de zes gebruikersflows S1–S6 (E2E-01…E2E-06) draaien in
    `playwright/tests/e2e/e2e.spec.ts` met page object `flows.page.ts`; doel G14, de
-   cases en de traceability staan in `TESTPLAN.md` §2, §8.6 en §15. De suite telt 152
+   cases en de traceability staan in `TESTPLAN.md` §2, §8.6 en §15. De suite telt 157
    tests in 12 spec-bestanden. De CI-cijfers van run 72 toonden de 139-suite op de
    runner met 135 geslaagd en 4 faalden — de RESP-01 op de smalle viewports (500, 499, 390
    en 320), door de bredere runner-uitvalfont; na de CSS-fix is dat in run 73 omgezet naar
@@ -458,7 +458,9 @@ toon de site niet als link: `main.ts` accepteert uitsluitend
    runs 75 en 76, door de echte producer op de runner.
 4. **`docs/js/ts/main.js` is een gebouwd bestand in de repo.** Na een wijziging in
    `src/ts/main.ts` moet `npm run build` gedraaid worden en het resultaat gecommit;
-   de CI bouwt het niet.
+   de CI bouwt het niet. De submit-guard van het contactformulier (`F8`) staat in die
+   bron, en de CI test de guard op de **live** site — dus het CI-bewijs van de guard
+   volgt pas op de eerste run na de deploy van `main`.
 5. **De kaart-suite-omvang gebruikt `suiteTests` uit schema v2.** De producer
    schrijft `suiteTests = total + skipped`; de UI kiest de laatste niet-lege
    `suiteTests` en valt terug op `max(total)` voor legacy schema v1-entries.

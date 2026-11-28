@@ -206,7 +206,12 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
   - `ContactPage extends BasePage` — `navigate()`, `fillForm()`,
     `fillHoneypot()` (de bot-simulatie, omdat het veld `display:none` is),
     `submitForm()`, `expectFormInvalid()`, `expectFieldInvalid()` en assertions op
-    velden, honeypot, tabvolgorde en externe links. De Formward-mock staat in
+    velden, honeypot, tabvolgorde en externe links. Voor F8:
+    `expectMaxLengthContract()` (de `maxlength`-limieten uit de markup),
+    `typeMessage()` met `expectMessageLength()` (de afkapping, gemeten door te typen
+    omdat `fill()` de `maxlength` omzeilt), `expectSubmitGuardIdle()` (geen guard bij
+    een ongeldige submit) en `expectDoubleSubmitBlocked()` (de dubbele submit-actie in
+    één page-script). De Formward-mock staat in
     `FormwardMock`, niet in dit Page Object.
   - `NavigationPage extends BasePage` (in `mobile.page.ts`) — mobiele
     menu-toggle interactie: `toggleMenu()`, `expectMenuOpen()`,
@@ -269,7 +274,9 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
      (mockt Formward; valide submit → redirect naar `bedankt.html`;
      ongeldige/lege submit → géén redirect dankzij native validatie; F5 asserteert
      de honeypot-waarde in de POST-payload en de tabvolgorde die het honeypot-veld
-     overslaat).
+     overslaat). De F8-suite op dezelfde spec: het `maxlength`-contract, de
+     BVA-limiet in en boven de grens, de submit-guard bij een ongeldige submit, en
+     de dubbele submit-actie met maximaal één POST.
    - `mobile-menu-functional.spec.ts`: mobiele menu-toggle opent/sluit het
      menu, assert `aria-expanded`, navigeert via nav-links en checkt desktop
      (toggle verborgen, nav inline).
@@ -337,8 +344,8 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    en `suiteTests`). De runner draait zonder browser (geen `devices`-use, geen `page`-fixture), en
    `npm run test:ci-summary` is de vierde CI-poort vóór de browserinstall. Elke test
    schrijft in een eigen temp-map.
-   **Gebouwd november 2026, in de CI bewezen in run 76:** de suite telt 152 tests in 12
-   spec-bestanden (143 browser + 9 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
+   **Gebouwd november 2026, in de CI bewezen in run 76:** de suite telt 157 tests in 12
+   spec-bestanden (148 browser + 9 datasuite). Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
 8. **E2E-gebruikersflows** — `tests/e2e/e2e.spec.ts` (6 tests, E2E-01…E2E-06 =
    scenarios S1–S6, TESTPLAN §8.6): de navigatietour langs de zeven nav-links, de
    contactjourney (lege validatie → invullen → submit → `bedankt.html` → back), het
@@ -347,8 +354,8 @@ Statische site. Elke `.html` is een zelfstandige pagina. Belangrijkste punten:
    footerreis met de actieve state per pagina, en de herstelroute vanaf het
    404-fallback. Elke stap assert de landing op URL én `h1`; de detail-asserts staan in
    de functionele suites. Page object: `pages/flows.page.ts`.
-   **Gebouwd november 2026, in de CI bewezen in run 76:** de suite telt 152 tests in 12
-   spec-bestanden (143 browser + 9 datasuite); de vier CIH-08-tests van de CI-sectie draaiden
+   **Gebouwd november 2026, in de CI bewezen in run 76:** de suite telt 157 tests in 12
+   spec-bestanden (148 browser + 9 datasuite); de vier CIH-08-tests van de CI-sectie draaiden
    in dezelfde run mee. Plan: `PLAN-CI-HISTORY-TESTS.md` §7.
 
 ### Config (playwright.config.ts)
@@ -488,7 +495,10 @@ kan ook: `npm run test:localUi` (UI mode met watch mode) of `--debug`
   viewports `DESKTOP_VIEWPORT` en `MOBILE_VIEWPORT`) en formulierdatasets `VALID_CONTACT`,
   `INVALID_EMAIL_CONTACT`, `OPTIONAL_SUBJECT_CONTACT`, `BOUNDARY_CONTACT`,
   `SPECIAL_CHARS_CONTACT`, de honeypot-waarde `HONEYPOT_FILLED` en de
-  F5-veldlijst `FORM_POST_FIELDS`. Voor de non-functionele suites: `RESPONSIVE_VIEWPORTS`
+  F5-veldlijst `FORM_POST_FIELDS`. Voor F8: de `maxlength`-limieten
+  `NAME_MAX_LENGTH` (60), `SUBJECT_MAX_LENGTH` (100) en `MESSAGE_MAX_LENGTH` (500),
+  de dataset `AT_LIMIT_CONTACT` op de limiet en `EXCESS_CHAR` voor de afkapping.
+  Voor de non-functionele suites: `RESPONSIVE_VIEWPORTS`
   (7 viewports), `NAV_BREAKPOINT` (850), `COMPACT_BREAKPOINT` (500),
   `NAV_LINK_TEST_IDS`, `SITE_BASE_URL`, `OG_IMAGE_URL`, `TITLE_PREFIX`, de titel- en
   description-lengtegrenzen, `ROBOTS_CONTENT`, de OG-waarden, `SITEMAP_PAGES` (8),
@@ -626,7 +636,7 @@ dezelfde wijziging** als de oorzaak, niet later.
 
 | README-claim | Bron van waarheid | Bijwerken wanneer |
 | --- | --- | --- |
-| Aantal tests per suite + totaal (152) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
+| Aantal tests per suite + totaal (157) | `npx playwright test --list` | test toegevoegd/verwijderd/hernoemd |
 | Playwright-versie (1.65) | `package.json` → `devDependencies` | versie-upgrade |
 | ESLint-versie (10) | `package.json` → `devDependencies.eslint` | versie-upgrade |
 | Node-grens (`>=24.8 <25`) | `package.json` → `engines.node` | Node-upgrade |

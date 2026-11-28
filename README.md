@@ -18,9 +18,9 @@ met pass-rate, groene streaks en de status van de laatste runs.
 
 | Kenmerk                | Waarde                                              |
 | ---------------------- | --------------------------------------------------- |
-| Testsuite              | **152 tests** in 12 spec-bestanden (143 browser + 9 datasuite) |
+| Testsuite              | **157 tests** in 12 spec-bestanden (148 browser + 9 datasuite) |
 | Browser                | Chromium (Desktop Chrome)                           |
-| Laatste gelogde CI-run | **152/152 geslaagd** (run 76, 100%, handmatig gestart op de 152-suite — 143 browser + 9 datasuite; de vier CIH-08-tests draaiden voor het eerst mee in de CI; het history-record bevat `suiteTests` 152, en run 75 was de eerste entry met `suiteTests` — 148/148, de stand vóór CIH-08) |
+| Laatste gelogde CI-run | **152/152 geslaagd** (run 76, 100%, handmatig gestart op de 152-suite — 143 browser + 9 datasuite; de vier CIH-08-tests draaiden voor het eerst mee in de CI; het history-record bevat `suiteTests` 152, en run 75 was de eerste entry met `suiteTests` — 148/148, de stand vóór CIH-08). De 157-suite met de submit-guard en de BVA-limieten is lokaal 157/157 groen; het CI-bewijs van die site-JS volgt op de eerste run na de deploy |
 | CI                     | GitHub Actions — dagelijks om 18:17 UTC + handmatig |
 | Kwaliteitspoorten      | `tsc --noEmit`, ESLint 10, html-validate, `test:ci-summary` (CIH-06) |
 | Stack                  | HTML/CSS, TypeScript, Playwright 1.65, GitHub Pages |
@@ -118,7 +118,7 @@ Project-documentation/         # testplan, CI-documentatie, best practices, verb
 | ---------------- | ------------------------------------------------------------ | -----: |
 | Smoke            | `playwright/tests/smoke/smoke.spec.ts`                       |     10 |
 | Homepage         | `playwright/tests/functional/homepage-functional.spec.ts`    |     12 |
-| Contactformulier | `playwright/tests/functional/contact-functional.spec.ts`     |     16 |
+| Contactformulier | `playwright/tests/functional/contact-functional.spec.ts`     |     21 |
 | Mobiel menu      | `playwright/tests/functional/mobile-menu-functional.spec.ts` |     17 |
 | CI-history UI    | `playwright/tests/functional/ci-history-functional.spec.ts`  |      7 |
 | Footer           | `playwright/tests/functional/footer-functional.spec.ts`      |      3 |
@@ -128,7 +128,7 @@ Project-documentation/         # testplan, CI-documentatie, best practices, verb
 | Responsive       | `playwright/tests/responsive/responsive.spec.ts`            |      8 |
 | E2E-gebruikersflows | `playwright/tests/e2e/e2e.spec.ts` (S1–S6)               |      6 |
 | CIH-06/07 datasuite | `playwright/tests/unit/ci-summary.spec.ts` (zonder browser)  |      9 |
-| **Totaal**       | 12 spec-bestanden                                            | **152** |
+| **Totaal**       | 12 spec-bestanden                                            | **157** |
 
 ## Kwaliteitspoorten
 
@@ -184,7 +184,9 @@ suite; de datasuite heeft geen browser nodig, dus hij faalt vóór de download.
   testplan. De E2E-laag is gebouwd (zes flows S1–S6, `playwright/tests/e2e/e2e.spec.ts`);
   `compatibility/` en `regression/` zijn nog gereserveerd. De accessibility-suite inclusief
   de vier CIH-08-tests en de E2E-laag draaiden groen in de CI: run 76 met 152/152 op de
-  runner.
+  runner. De submit-guard van het contactformulier en de `maxlength`-limieten van de
+  velden (F8) zijn op 28 november 2026 gebouwd en lokaal gemeten; het CI-bewijs van die
+  site-JS volgt op de eerste run na de deploy.
 - **De producerende kant heeft nu eigen tests.** `scripts/ci-summary.mjs` draait in
   de datasuite CIH-06/07: 9 tests in `playwright/tests/unit/ci-summary.spec.ts`, in de
   Playwright-runner zonder browser, via `npm run test:ci-summary` als CI-poort vóór de
