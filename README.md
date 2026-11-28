@@ -20,7 +20,7 @@ met pass-rate, groene streaks en de status van de laatste runs.
 | ---------------------- | --------------------------------------------------- |
 | Testsuite              | **152 tests** in 12 spec-bestanden (143 browser + 9 datasuite) |
 | Browser                | Chromium (Desktop Chrome)                           |
-| Laatste gelogde CI-run | **145/145 geslaagd** (run 74, 100%; de 145-suite met de zes E2E-flows draaide groen in de CI via de nightly; de 152-suite met CIH-07 en CIH-08 is nog niet in de CI bewezen) |
+| Laatste gelogde CI-run | **152/152 geslaagd** (run 76, 100%, handmatig gestart op de 152-suite — 143 browser + 9 datasuite; de vier CIH-08-tests draaiden voor het eerst mee in de CI; het history-record bevat `suiteTests` 152, en run 75 was de eerste entry met `suiteTests` — 148/148, de stand vóór CIH-08) |
 | CI                     | GitHub Actions — dagelijks om 18:17 UTC + handmatig |
 | Kwaliteitspoorten      | `tsc --noEmit`, ESLint 10, html-validate, `test:ci-summary` (CIH-06) |
 | Stack                  | HTML/CSS, TypeScript, Playwright 1.65, GitHub Pages |
@@ -182,13 +182,18 @@ suite; de datasuite heeft geen browser nodig, dus hij faalt vóór de download.
   (`package.json` heeft geen extra dependency), dus screenreader-gedrag en
   performance-meting blijven handmatig; visual baselines (VIS-01) staan als fase 5 in het
   testplan. De E2E-laag is gebouwd (zes flows S1–S6, `playwright/tests/e2e/e2e.spec.ts`);
-  `compatibility/` en `regression/` zijn nog gereserveerd.
+  `compatibility/` en `regression/` zijn nog gereserveerd. De accessibility-suite inclusief
+  de vier CIH-08-tests en de E2E-laag draaiden groen in de CI: run 76 met 152/152 op de
+  runner.
 - **De producerende kant heeft nu eigen tests.** `scripts/ci-summary.mjs` draait in
   de datasuite CIH-06/07: 9 tests in `playwright/tests/unit/ci-summary.spec.ts`, in de
   Playwright-runner zonder browser, via `npm run test:ci-summary` als CI-poort vóór de
   browserinstall. De weergavelaag is gedekt door zeven UI-tests met gemockte data. De
   kaart "Suite omvang" gebruikt `suiteTests` uit schema v2 van de JSON-report, met
-  `max(total)` als valback voor schema v1-entries zonder `suiteTests` (CIH-07).
+  `max(total)` als valback voor schema v1-entries zonder `suiteTests` (CIH-07). Schema v2 is
+  in de CI bewezen: run 75 schreef de eerste entry met `suiteTests` (148) en run 76 de eerste
+  entry van de 152-suite (`suiteTests` 152), dus de kaart leest de producer-waarde en niet de
+  valback.
 
 ## Contact & licentie
 
