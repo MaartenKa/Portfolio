@@ -7,7 +7,7 @@
 | **Eigenaar**   | QA Engineer (zie §13)                                                                       |
 | **Testobject** | Statische portfolio-site in `docs/` (10 HTML-bestanden) + Playwright-suite in `playwright/` |
 | **Testbasis**  | §3.3                                                                                        |
-| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 152 tests in 12 spec-bestanden; `npm run test:ci-summary` = 9/9 (datasuite CIH-06/07); `npm run test:local` = 152/152; in de CI draaide run 76 de 152-suite met 152/152 en `suiteTests` 152         |
+| **Bewijs**     | `npm run check` groen; `npx playwright test --list` = 157 tests in 12 spec-bestanden; `npm run test:ci-summary` = 9/9 (datasuite CIH-06/07); `npm run test:local` = 157/157; in de CI draaide run 76 de 152-suite met 152/152 en `suiteTests` 152; het CI-bewijs van de submit-guard (F8) volgt op de eerste run na de deploy         |
 
 **Scope:** de statische portfolio-website in `docs/` — 9 contentpagina's plus de
 `404.html`-fallback (10 HTML-bestanden), het CSS-design-systeem, één klein
@@ -38,7 +38,8 @@ De huidige suite dekt (1) **grotendeels** (10 HTML-bestanden, inclusief de
 **grotendeels** en (3) **volledig** — de mobiele menu-toggle is geautomatiseerd
 in `mobile-menu-functional.spec.ts` (incl. ARIA, state-transitions, focus,
 `Escape` en klik-buiten). Het formulier is gedekt voor F1–F7, F9 en F10 (F5 op
-payload- en tabvolgorde-contract); F8 is gepland (§7). De P2-accessibility fixes
+payload- en tabvolgorde-contract) en F8 (submit-guard en de `maxlength`-limieten, gebouwd
+28 november 2026, §7). De P2-accessibility fixes
 op de site (skip-link, decoratieve `aria-hidden`-iconen, Nederlandse
 section-labels, placeholder-contrast en `forced-colors` fallback) zijn sinds
 november 2026 gedekt door de accessibility-suite: 21 tests in
@@ -192,8 +193,8 @@ checks**. De "unit-laag" wordt gedeeltelijk vervangen door directe DOM/ARIA-asse
   (`scripts/ci-summary.mjs`) zonder browser, als `npm run test:ci-summary`-poort vóór
   de browserinstall: 9 tests in `playwright/tests/unit/ci-summary.spec.ts` inclusief CIH-07 in het project
   `unit` (geen `devices`-use, geen `page`-fixture), met de gate-config
-  `playwright.unit.config.ts`. De suite telt 152 tests in 12 spec-bestanden
-  (143 browser + 9 datasuite) — `PLAN-CI-HISTORY-TESTS.md` §7 fase B is damit gebouwd.
+  `playwright.unit.config.ts`. De suite telt 157 tests in 12 spec-bestanden
+  (148 browser + 9 datasuite) — `PLAN-CI-HISTORY-TESTS.md` §7 fase B is damit gebouwd.
 
 > **Conventie:** gebruik Page Objects voor UI-interactie; alleen de lightweight
 > smoke-laag mag rechtstreeks `page` gebruiken (netwerk/infrastructuurcheck).
@@ -237,7 +238,8 @@ uitgevoerde UAT.
 - **Smoke / sanity:** elke pagina laadt (HTTP 200), geen console/page errors. _(bestaand; 10 tests)_
 - **Navigatie:** elke `nav-*`-link, CTA en card-link opent de juiste URL. _(bestaand: NAV-01…NAV-05)_
 - **Formulier:** zie §7 (validatie, honeypot, submit, redirect). F1–F7, F9 en F10
-  zijn gedekt; F8 is gepland. De suite telt 16 contact-tests.
+  zijn gedekt, en F8 (submit-guard, dubbele submit en de `maxlength`-limieten) is gebouwd
+  op 28 november 2026. De suite telt 21 contact-tests.
 - **CI-history dashboard:** kaarten en Geschiedenis-tabel op `automation.html` — zie §8.5 _(bestaand, 5 tests)_.
 - **Menu-toggle (MOBIEEL — bestaand):** zie TC-MENU in §8.3
   (`mobile-menu-functional.spec.ts`). Open/sluiten, focusbeheer, `Escape` en
@@ -308,9 +310,11 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
 - **Vereisten-gebaseerd** — uit de doelen G1–G13 en het formulier-gedrag (§7).
 - **Error guessing / exploratorisch** — handmatige sessies; reproduceerbare bugs
   worden geautomatiseerd.
-- **Boundary value analysis** — minimaal (1 teken) en de gemeten bovenwaarde (500
-  tekens) op naam en bericht (§7 F6). De velden hebben géén `maxlength`, `minlength` of
-  `pattern` in de HTML, dus F6 is een data-grens en geen specificatie-boundary. De
+- **Boundary value analysis** — minimaal (1 teken) en de bovengrens op naam, onderwerp en
+  bericht (§7 F6 en F8). De HTML draagt de limieten sinds 28 november 2026 zelf:
+  `maxlength` 60 op naam, 100 op onderwerp en 500 op bericht, dus de bovenwaarde is een
+  échte specificatie-boundary — F8c leest de attribute uit de markup, F8d vult tot op de
+  limiet en F8e typen één teken boven de limiet met de afkapping als assert. De
   viewport-breakpoints 850px/500px zijn wél échte grenzen: RESP-01 (§8.4) meet de grens
   zelf en de grens eronder — 850 en 849, 500 en 499.
 - **Equivalence partitioning** — geldige vs. ongeldige e-mail, lege vs. gevulde
@@ -342,6 +346,7 @@ De concrete techniek bepaalt _hoe_ de tests worden afgeleid:
   | `INVALID_EMAIL_CONTACT` | F3 | Bestaand |
   | `OPTIONAL_SUBJECT_CONTACT` | F4 | Bestaand |
   | `BOUNDARY_CONTACT` | F6 | Bestaand |
+  | `AT_LIMIT_CONTACT` + `EXCESS_CHAR` | F8d, F8e | Bestaand |
   | `SPECIAL_CHARS_CONTACT` | F7 | Bestaand |
   | `missingRequired` | F2 | Gepland (F2 gebruikt lege velden) |
   | `honeypotFilled` | F5 | Bestaand |
@@ -416,9 +421,9 @@ De belangrijkste data-flow. Verwacht-gedrag per scenario:
 | F3  | Ongeldige e-mail                  | `ongeldig-email`                      | géén submit, e-mail-validatiemelding                                                                              | Bestaand (checkValidity + invalid field + 0 requests)                       |
 | F4  | Alleen optioneel veld ontbreekt   | `subject` leeg                        | WEL geldige submit (subject is niet `required`)                                                                   | Bestaand (mock; 1 request)                                                  |
 | F5  | Honeypot ingevuld (bot)           | `_gotcha` gevuld                      | de honeypot-waarde gaat mee in de Formward-POST (zes veldnamen en de `_gotcha`-waarde), het veld blijft verborgen en de tabvolgorde slaat het over; de verwijdering zelf is Formward-upstream (§3.2) | Bestaand (payload- en tabvolgorde-assert)                                 |
-| F6  | Boundary: minimale/ extreme tekst | naam = 1 teken, bericht = 500 tekens | WEL geldige submit; geen fouten/truncatie in UI (data-grens; de HTML heeft geen `maxlength`, dus geen specificatiegrens — zie §5.5)                                         | Bestaand (mock; 1 request)                                                  |
+| F6  | Boundary: minimale/ extreme tekst | naam = 1 teken, bericht = 500 tekens (de `maxlength`-limiet) | WEL geldige submit; geen fouten/truncatie in UI — de bovenwaarde is nu de specificatiegrens uit de HTML (zie §5.5 en F8c…F8e)                                         | Bestaand (mock; 1 request)                                                  |
 | F7  | Speciale tekens / unicode         | emoji, quotes, accents                | WEL geldige submit; tekst wordt veilig gerenderd (geen HTML-injectie op static page)                              | Bestaand (mock; 1 request)                                                  |
-| F8  | Dubbel submit                     | snel dubbel klikken op verstuurknop   | Maximaal één POST naar Formward; redirect blijft idempotent                                                       | Gepland                                                                    |
+| F8  | Dubbel submit en de veldlimieten  | snel dubbel klikken op verstuurknop; veld tot op en boven de `maxlength` | Maximaal één POST naar Formward; redirect blijft idempotent; de afkapping boven de limiet is de waarde in de POST | **Bestaand** (5 tests F8a…F8e; guard in `src/ts/main.ts`, mock; 1 request)   |
 | F9  | Redirect-target is correct        | geldige submit                        | eind-URL = `bedankt.html` (subpath `/Portfolio/` behouden) + bedankt-tekst zichtbaar (geen lege/pagina-not-found) | Bestaand (met mock; bewijst afhandeling, niet de echte `_redirect`-waarde) |
 | F10 | Terugnavigatie na redirect        | geldige submit → back                 | browser back werkt naar `contact.html` zonder crash; formulier is gereset/leeg (nieuwe context per test)          | Bestaand (back + 1 request)                                                 |
 
@@ -439,24 +444,27 @@ zichtbaar open werk.
 | R5 | gevuld | geldig | gevuld | any | **gevuld** | nee | ja (1, met `_gotcha`) | ja | F5 |
 | R6 | 1 teken | geldig | 500 tekens | any | leeg | nee | ja (1) | ja | F6 |
 | R7 | unicode | geldig | unicode | any | leeg | nee | ja (1) | ja | F7 |
-| R8 | gevuld | geldig | gevuld | any | leeg | nee | **max. 1 bij dubbel klikken** | idempotent | F8 (gepland) |
+| R8 | gevuld | geldig | gevuld | any | leeg | nee | **max. 1 bij dubbel klikken** | idempotent | F8a, F8b |
 
-> **Dekking per regel:** R1–R7 zijn geautomatiseerd in `contact-functional.spec.ts`;
-> R8 is het open F8-besluit (submit-guard in de HTML, of het recorden als niet
-> lokaal-automatiseerbaar). De partitie uit §5.5 — honeypot "gevuld" (R5) én
+> **Dekking per regel:** R1–R8 zijn geautomatiseerd in `contact-functional.spec.ts`;
+> R8 is op 28 november 2026 gesloten met de submit-guard in `src/ts/main.ts` en de
+> tests F8a en F8b. De partitie uit §5.5 — honeypot "gevuld" (R5) én
 > "leeg bij een geldige submit" (R1) — is nu beide geassert: R5 op de payload, R1 op
 > de request-count. De flow E2E-02 (S2, §8.6) doorloopt R1 als journey.
 
 > **Testdata-koppeling:** de datasets staan in `playwright/utils/test-data.ts`:
 > `VALID_CONTACT` (F1/F9/F10), `INVALID_EMAIL_CONTACT` (F3),
 > `OPTIONAL_SUBJECT_CONTACT` (F4), `BOUNDARY_CONTACT` (F6) en
-> `SPECIAL_CHARS_CONTACT` (F7).
+> `SPECIAL_CHARS_CONTACT` (F7); voor F8 de limietconstanten `NAME_MAX_LENGTH` (60),
+> `SUBJECT_MAX_LENGTH` (100) en `MESSAGE_MAX_LENGTH` (500), de dataset
+> `AT_LIMIT_CONTACT` en `EXCESS_CHAR` voor de afkapping boven de limiet.
 > De Formward-mock (`FormwardMock`-fixture) blijft actief en registreert
 > requests én de urlencoded POST-payload; F2/F3 asserten dat invalid submits
 > **0 Formward-requests** veroorzaken. Er is geen `clearFormMock()` meer nodig.
 >
-> **Status:** F1–F7, F9 en F10 zijn geautomatiseerd; F5 dekt het payload- en
-> tabvolgorde-contract van de honeypot en F8 is gepland.
+> **Status:** F1–F10 zijn geautomatiseerd; F5 dekt het payload- en
+> tabvolgorde-contract van de honeypot, en F8 is op 28 november 2026 gebouwd met de
+> submit-guard en de `maxlength`-limieten (tests F8a…F8e, 21 contact-tests).
 > Deze matrix is een specificatie, geen bewijs van volledige dekking.
 >
 > **Aandachtspunt redirect (`_redirect`):** `contact.html` verstuurt
@@ -476,11 +484,11 @@ logische, CI-vriendelijke conventie; elke testcase is klein en gefocust (BestPra
 
 De statuskolommen gebruiken de legenda uit §5. **Bestaand** betekent dat er een
 test in een spec-bestand staat; **Deels** betekent dat slechts een subset is
-geautomatiseerd. De huidige suite telt **152 tests in 12 spec-bestanden**: smoke 10,
-homepage 12, contact 16, mobiel menu 17, CI-history 7, footer 3, accessibility 21,
+geautomatiseerd. De huidige suite telt **157 tests in 12 spec-bestanden**: smoke 10,
+homepage 12, contact 21, mobiel menu 17, CI-history 7, footer 3, accessibility 21,
 content-integrity 11, SEO 32, responsive 8, de E2E-flows 6 en de datasuite CIH-06/07 9.
-Deze matrix beschrijft de target-set; F8 is
-nog gepland, en VIS-01 en PERF-01 zijn fase 5.
+Deze matrix beschrijft de target-set; F8 is gebouwd (28 november 2026), en VIS-01 en
+PERF-01 zijn fase 5.
 
 ### 8.1 Smoke / sanity (G1) — `playwright/tests/smoke/smoke.spec.ts` _(bestaand)_
 
@@ -552,7 +560,7 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 | CIH-04 | Runs zonder noemer (`total = 0`) vallen buiten de totalen      | alleen 2 van 3 runs geteld: `ci-total-executed` = "80", `ci-pass-ratio` = "90%", `ci-streak` = "0", `ci-status` = "Geannuleerd"; notering bevat "2 van 3 CI-runs geteld"                                                             | Bestaand |
 | CIH-05 | Lege geschiedenis: placeholders en placeholder-rij             | alle kaarten tonen "—", `ci-history-body` bevat "Geen CI-historie beschikbaar."                                                                                                                                                      | Bestaand |
 
-> **Bewijs:** `npx playwright test --list` telt 7 tests in dit spec-bestand (152 in
+> **Bewijs:** `npx playwright test --list` telt 7 tests in dit spec-bestand (157 in
 > de hele suite). De tabel heeft in de markup 6 kolommen (Run, Datum, Status,
 > Tests, Geslaagd, Flaky) en géén `data-testid` per rij; rijen worden via
 > `getByRole("row")` geteld. Er is **géén** aparte JSON-schema- of 404-fallback-test **in dit spec-bestand**.
@@ -564,7 +572,7 @@ producerende kant (`scripts/ci-summary.mjs`) en niet de CI/deploy-keten zelf
 > na `validate:html`, en de gate-config `playwright.unit.config.ts`. De cases staan in
 > `PLAN-CI-HISTORY-TESTS.md` §7. CIH-07 (schema v2 met `suiteTests`) is gebouwd;
 > CIH-08 (a11y van de CI-sectie) is gebouwd: 4 tests in
-> `accessibility.spec.ts`. De suite telt 152 tests in 12
+> `accessibility.spec.ts`. De suite telt 157 tests in 12
 > spec-bestanden; run 72 heeft de datasuite als poort in de CI gedraaid, vóór de
 > browserinstall, en de teststap gaf `Running 139 tests`. Run 73 draaide de volledige
 > suite groen: 139 geslaagd, 0 faalden en `passRate` 100. De CI-bewijsrun is binnen: run 75 schreef de eerste entry met `suiteTests` (148/148) en run 76 draaide de 152-suite (152/152, `suiteTests` 152, met de vier CIH-08-tests mee).
@@ -588,7 +596,7 @@ hergebruikt.
 | E2E-05  | S5 footerjourney    | home (footer-contract) → `footer-contact` → `footer-privacy` → `nav-home`    | `href` van de vier footerlinks en de externe `target`/`rel` (NAV-04); actieve link op contact en op privacy; géén actieve link op de homepage (NAV-05)     | **Bestaand**                 |
 | E2E-06  | S6 404-herstel      | onbekend pad → `404.html` → `nav-home`                                       | het onbekende pad geeft HTTP 404, de fallback van de site toont de fallback-content, en de navigatie herstelt naar de home zonder runtime errors          | **Bestaand**                 |
 
-> **Bewijs:** `npx playwright test --list` telt 6 tests in dit spec-bestand (152 in
+> **Bewijs:** `npx playwright test --list` telt 6 tests in dit spec-bestand (157 in
 > de hele suite, 12 spec-bestanden). Lokaal gemeten op 27 november 2026: 6/6 groen
 > en de suite 148/148 (`npm run test:local`, 1 worker, `retries: 0`, lokale `docs/`
 > op poort 8080). De E2E-laag vult damit de kern van de pyramide (§4) — de open
@@ -756,11 +764,12 @@ moeten definitief zijn; dan wordt deze taak uitgevoerd. Nu is er de taakomschrij
 - De testdata en verwachtingen zijn deterministisch: gemockte endpoints, vaste
   fixtures en geen afhankelijkheid van live CI-cijfers.
 
-### Exit criteria — huidige baseline (suite zoals nu, 152 tests)
+### Exit criteria — huidige baseline (suite zoals nu, 157 tests)
 
 1. **Poorten groen** — `npm run check` (typecheck + lint + html-validate) en
    `npm run test:ci-summary` (9 datasuite-tests) slagen.
-2. **Suite groen** — 152/152 tests slagen lokaal (`npm run test:local`), 0 failures en
+2. **Suite groen** — 157/157 tests slagen lokaal (`npm run test:local`, gemeten
+   28 november 2026: `157 passed`, 1 worker, `retries: 0`), 0 failures en
    0 skipped in het JSON-report. In de CI draaide de suite groen in run 73: 139 geslaagd
    en 0 faalden, `passRate` 100, met alle CI-stappen success — dat is de 139-suite vóór
    de E2E-laag; het bewijs is binnen: run 76 draaide de 152-suite met 152 geslaagd en 0 faalden, `suiteTests` 152 en `passRate` 100 op dezelfde runner. De vier
@@ -775,7 +784,10 @@ moeten definitief zijn; dan wordt deze taak uitgevoerd. Nu is er de taakomschrij
 4. **Determinisme** — de suite is herhaalbaar groen: lokaal met `retries: 0`, CI met
    `retries: 2` als vangnet. Een test die alleen via een retry slaagt, telt als
    **flaky** en moet worden onderzocht (zie §12.1).
-5. **Beperkingen benoemd** — F8 is gepland; VIS-01 en PERF-01 uit fase 5 ontbreken nog.
+5. **Beperkingen benoemd** — F8 is gebouwd (28 november 2026: submit-guard in
+   `src/ts/main.ts`, `maxlength` in `contact.html` en 5 tests in
+   `contact-functional.spec.ts`); het CI-bewijs van die site-JS volgt op de eerste run
+   na de deploy. VIS-01 en PERF-01 uit fase 5 ontbreken nog.
    De E2E-laag (S1–S6) is gebouwd: 6 flows in `playwright/tests/e2e/e2e.spec.ts`
    (§8.6, G14), lokaal groen. De pyramide-basis is gebouwd: CIH-06 als
    `npm run test:ci-summary`-poort (8 tests, `playwright/tests/unit/ci-summary.spec.ts`,
@@ -807,7 +819,7 @@ het acceptatieniveau van een volledige release, niet de huidige stand.
 | Vereisten-dekking       | Elk in-scope productdoel G1–G10, G13 en G14 heeft ≥1 **bestaande** testcase; G11/G12 worden door CI-config en een CI-run bewezen, niet door een testcase; geplande cases tellen niet mee als dekking | Traceerbaarheid §15 + `npx playwright test --list`               |
 | Pass-rate               | 100% pass, 0 fail, 0 skipped, 0 unexpected                                                                                                                                                      | Playwright JSON-report                                           |
 | Flaky-aandeel           | 0% (geen test die alleen via een retry slaagt)                                                                                                                                                  | JSON-report `flaky`-veld + 5 groene runs met `retries: 0` lokaal |
-| Dekking van de F-matrix | 9/10 cases bestaand (F8 gepland)                                                                                                                                                      | §7                                                               |
+| Dekking van de F-matrix | 10/10 cases bestaand (F8 gebouwd 28 november 2026)                                                                                                                                                      | §7                                                               |
 | CI-history              | CIH-01…CIH-07 gebouwd en groen (7 UI + 9 datasuite); CIH-07 is lokaal gebouwd, CI-bewijs schema v2 open                       | `ci-history-functional.spec.ts`; CIH-06/07: `playwright/tests/unit/ci-summary.spec.ts` + `npm run test:ci-summary` |
 
 > Let op: de CI draait met `workers: 1` (`playwright.config.ts`). "Parallel" betekent
@@ -906,7 +918,7 @@ werk, niet als bewijs.
 | ---- | ----------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------- |
 | G1   | SM-01, SM-02, SM-03                 | `smoke.spec.ts`                                                 | Bestaand                                                          | 10 smoke-tests                         |
 | G2   | NAV-01…NAV-05                       | `homepage-functional.spec.ts`, `mobile-menu-functional.spec.ts`, `footer-functional.spec.ts` | NAV-01–05 bestaand                                               | 12 homepage + 17 menu + 3 footer-tests |
-| G3   | F1…F10                              | `contact-functional.spec.ts`                                    | F1–F7, F9, F10 bestaand; F8 gepland                               | 16 contact-tests                       |
+| G3   | F1…F10                              | `contact-functional.spec.ts`                                    | F1–F10 bestaand; F8 gebouwd 28 november 2026                       | 21 contact-tests                       |
 | G4   | MENU-01…MENU-10                     | `mobile-menu-functional.spec.ts`                                | MENU-01–10 bestaand                                               | 17 menu-tests                          |
 | G5   | RESP-01                             | `responsive.spec.ts`                                          | Bestaand                                                          | 8 responsive-tests                   |
 | G6   | A11Y-01…A11Y-04                     | `accessibility.spec.ts`                                         | Bestaand                                                          | 17 accessibility-tests             |
@@ -954,6 +966,8 @@ werk, niet als bewijs.
 | F6 | `contact-functional.spec.ts` | `F6: boundary-waarden worden geaccepteerd` |
 | F7 | `contact-functional.spec.ts` | `F7: speciale tekens worden geaccepteerd` |
 | F10 | `contact-functional.spec.ts` | `F10: browser back na redirect werkt` |
+| F8a, F8b | `contact-functional.spec.ts` | `F8a: de submit-guard staat niet op bij een ongeldige submit`; `F8b: de dubbele submit-actie levert maximaal één POST op` |
+| F8c, F8d, F8e | `contact-functional.spec.ts` | `F8c: de maxlength-limieten staan in het formulier`; `F8d: de limietwaarden vullen het formulier volledig`; `F8e: bericht boven de limiet wordt afgekapte tot de limiet` |
 | CIH-01 | `ci-history-functional.spec.ts` | `laatste-run kaarten tonen de nieuwste CI-run` |
 | CIH-02 | `ci-history-functional.spec.ts` | `aggregate kaarten poolen alle runs en de ratio is Σ passed / Σ total` |
 | CIH-03 | `ci-history-functional.spec.ts` | `geschiedenis toont een rij per run met een werkende run-link` |
@@ -979,8 +993,8 @@ werk, niet als bewijs.
 | E2E-06 | `e2e.spec.ts` | `E2E-06 (S6): een onbekend pad eindigt als 404 en de navigatie herstelt naar de homepage` |
 | CIH-08a…d | `accessibility.spec.ts` | `CIH-08a: de geschiedenis-tabel heeft een Nederlandse caption en zes gekopde kolommen`; `CIH-08b: élke geschiedenisrij vult de zes kolommen en de run-link is veilig en leesbaar`; `CIH-08c: de lege geschiedenis houdt de caption en de zes-kolomsstructuur intact`; `CIH-08d: de CI-kaarten blijven leesbaar en de run-links zijn toetsenbordbereikbaar in rijvolgorde` |
 
-> Cases zonder rij in deze tabel zijn nog open: F8 is gepland, en VIS-01 en PERF-01 zijn
-> fase 5. De tabel beschrijft de bestaande suite — inclusief de non-functionele suites
+> Cases zonder rij in deze tabel zijn nog open: VIS-01 en PERF-01 zijn
+> fase 5. F8 is op 28 november 2026 gebouwd en staat sindsdien in deze tabel. De tabel beschrijft de bestaande suite — inclusief de non-functionele suites
 > uit stap 2 (RESP-01, SEO-01…04, LINK-01/LINK-02/IMG-01) en de accessibility-suite.
 
 ---
@@ -990,7 +1004,7 @@ werk, niet als bewijs.
 | Onderdeel         | Deliverable                                     | Bron / bewijs                                                          |
 | ----------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
 | Testplan          | dit document, met status per testcase           | `Project-documentation/TESTPLAN.md`                                    |
-| Testsuite         | 12 spec-bestanden, 152 tests (152/152 in de CI, run 76)                    | `playwright/tests/` + `npx playwright test --list`                     |
+| Testsuite         | 12 spec-bestanden, 157 tests (157/157 lokaal, 28 nov 2026; 152/152 in de CI, run 76)                    | `playwright/tests/` + `npx playwright test --list`                     |
 | Testrapportage    | HTML-report en JSON-report per run              | `playwright/playwright-report/`, `playwright/test-results/report.json` |
 | CI-history        | `docs/data/playwright-history.json` + dashboard | `scripts/ci-summary.mjs`, `automation.html`                            |
 | Kwaliteitspoorten | typecheck, lint, html-validate en de datasuite `test:ci-summary` (CIH-06) | `npm run check`, `npm run test:ci-summary`, `playwright.yml`           |

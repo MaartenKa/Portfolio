@@ -8,17 +8,16 @@
 
 ## 1. Baseline
 
-- **152 tests in 12 spec-bestanden.**
-- Smoke: 10, homepage: 12, contact: 16, mobiel menu: 17, CI-history: 7, footer: 3,
+- **157 tests in 12 spec-bestanden.**
+- Smoke: 10, homepage: 12, contact: 21, mobiel menu: 17, CI-history: 7, footer: 3,
   accessibility: 21, content-integrity: 11, SEO: 32, responsive: 8, E2E-flows: 6,
   CIH-06/07 datasuite: 9.
-- `npm run check` → groen (gemeten 28 november 2026, na de CIH-08-bouw).
+- `npm run check` → groen (gemeten 28 november 2026, na de F8-bouw).
 - `npm run test:ci-summary` → **9/9 geslaagd** (de datasuite van CIH-06/07, zonder browser).
-- `npm run test:local` → **152/152 tests geslaagd** (gemeten 28 november 2026: afsluitregel
-  `152 passed`, 1 worker, `retries: 0`, tegen de lokale `docs/` op poort 8080, in 1,1 m). De
-  zes E2E-flows draaiden lokaal 6/6 groen; de vier CIH-08-tests 4/4, en de
-  accessibility-suite 21/21 in 15,4 s.
-- `npx playwright test --list` → 152 tests in 12 files.
+- `npm run test:local` → **157/157 tests geslaagd** (gemeten 28 november 2026: afsluitregel
+  `157 passed`, 1 worker, `retries: 0`, tegen de lokale `docs/` op poort 8080, in 1,2 m). De
+  contact-suite draaide 21/21 groen, inclusief de vijf F8-tests.
+- `npx playwright test --list` → 157 tests in 12 files.
 - Sequencering: lokaal **152/152** (gemeten 28 november). De 139-suite draaide voor het
   eerst in de CI in run **72**:
   **135 geslaagd, 4 faalden**. Alle vier faalden in de RESP-01-cases op de smalle viewports
@@ -95,12 +94,13 @@
 | **E2E-gebruikersflows (stap 4)** | `playwright/tests/e2e/e2e.spec.ts` + `FlowPage` (`pages/flows.page.ts`), 6 tests E2E-01…E2E-06 op de scenarios S1–S6 uit `TESTPLAN.md` §8.6: de navigatietour langs de zeven nav-links, de contactjourney (lege validatie → invullen → submit → `bedankt.html` → back, met één POST en de Formward-velden), het mobiele menu op 390×844 (open, focus op de eerste link, navigeer, gesloten op de landing), het CI-dashboard met drie gemockte runs (laatste-run kaarten, aggregate ratio Σ 431/435 = 99,1%, drie rijen, run-link met `target`/`rel`, terug naar home), de footerreis (contract van de vier links, actieve state op contact en privacy, geen actieve link op home) en de 404-herstelroute. De landingscheck is URL + zichtbare `h1`; de detail-asserts blijven in de gefocuste suites en de URL-contracten zijn de bestaande mappen uit de page objects (BESTPRACTICES §25, TESTPLAN risico R16). De fixture `flowPage` staat in `test-fixtures.ts`. Doel G14, de conditie-actietabel §7.1 en de traceability §15 zijn in het plan opgenomen. Gemeten: `npm run check` groen, `--list` 148 tests in 12 files, E2E 6/6 en de suite 148/148 lokaal (27 november 2026). |
 | **Responsive-defect in CI — opgeheven in run 73** | Vier RESP-01-cases (500×640, 499×640, 390×844, 320×568) faalden in CI op de check "geen horizontale scroll": de documentbreedte liep 37–46 px boven de viewport, in elke poging met dezelfde maat. Root-cause is environment-gevoelig: de runner-uitvalfont is breder dan het lokale "Segoe UI", dus is de min-content van lange onbreekbare woorden groter dan de kolom — h1 "Automatiseren" (`automation.html`), h1 "Laten we kennismaken" (`contact.html`), h2 "Van handmatig naar geautomatiseerd" (`testing.html`) en de URL-link op `privacy.html`. De fix staat in `docs/css/style.css` (op `body`) en is gecommit en gedeployed. Met de wide-font proxy gemeten: vóór de fix overloop op automation (533/533/432/355 px op 500/499/390/320), testing (342 px op 320), contact (393/323 px) en privacy (337 px); na de fix is `scrollWidth == innerWidth` op alle 10 pagina's in alle 7 viewports. Lokaal opnieuw groen: `npm run check` en `npm run test:local` 139/139 (27 november). Run **73** bevestigt de groene CI-stand op de runner: 139/139, `passRate` 100, 3 artifacts en alle 16 stappen success. |
 | **CI-bewijs van de 152-suite en schema v2 (runs 75 en 76)** | Run 75 (`workflow_dispatch` op commit `90f35e4`) is de eerste history-entry met `suiteTests`: 148/148 met `suiteTests` 148, getekend door de producer op de runner — de stand vóór CIH-08 (139 browser + 9 datasuite). Run 76 (`workflow_dispatch` op commit `8425631`) is de eerste CI-run van de 152-suite: vier poorten en `check:site` success, Chromium-install, `Running 152 tests using 1 worker`, 152 geslaagd, 0 faalden, `suiteTests` 152, `passRate` 100, jobduur 2 m 31 s, drie artifacts, bot-commit en Pages-deploy. Laag C (de keten) is damit bewezen voor schema v2 en voor de vier CIH-08-tests; de kaart "Suite omvang" op `automation.html` leest de producer-waarde. |
+| **F8 — submit-guard en BVA-limieten van het contactformulier (28 november 2026)** | `docs/contact.html` kreeg `id="contact-form"` en `maxlength` (60 op naam, 100 op onderwerp, 500 op bericht); `src/ts/main.ts` kreeg de submit-guard — de eerste geldige submit markeert het formulier via `dataset.submitted` en deaktiveert de knop, en de tweede submit wordt met `preventDefault()` geblokkeerd, damit maximaal één POST naar Formward gaat (TESTPLAN §7 F8 en §7.1 regel R8). Vijf tests in `contact-functional.spec.ts`: F8c het `maxlength`-contract, F8d de veldwaarden tot op de limiet met de lengtes in de POST-payload, F8e één teken boven de limiet met afkapping, F8a geen guard bij een ongeldige submit (native validatie blijft de poort vóór de guard), F8b de dubbele submit-actie met één POST en idempotent redirect. Methodiek: `fill()` omzeilt `maxlength`, dus de afkapping is via typen gemeten; Playwright's `click()` wacht de submit-navigatie af, dus de dubbele submit is in één synchronisch page-script uitgevoerd. Negatieve controle: met de guard offline in het gebouwde JS faalt F8b op "De submit-guard heeft het formulier niet gemarkeerd", dus de test meet de guard en niet het toeval. Gemeten: `npm run check` groen, `npm run test:ci-summary` 9/9, contact-suite 21/21, suite 157/157 lokaal, `--list` 157 in 12 files. Plan: `PLAN-CONTACT-SUBMIT-GUARD.md`. |
 
 ## 3. Wat nog open is
 
 | # | Open punt | Bewijs / locatie | Actie |
 | --- | --- | --- | --- |
-| 1 | **F8** | Dubbel submit / maximaal één POST is niet geautomatiseerd. | Productbesluit: submit-guard toevoegen, F8 meten met `dblclick` en een `≤ 1`-request-assert, of F8 als niet-lokaal-automatiseerbaar documenteren. |
+| 1 | **F8** — **gesloten** | De submit-guard staat in `src/ts/main.ts`, de `maxlength`-limieten in `contact.html`, en vijf tests F8a…F8e in `contact-functional.spec.ts` (21 contact-tests, lokaal 157/157 op 28 november 2026). Het CI-bewijs van de guard staat open tot de eerste run na de deploy. | — |
 | 2 | **SM-03 live fallback** | Lokaal is `404.html` direct getest; unknown-path-fallback is een live/GitHub-Pages-check. | Live fallback handmatig of via live-only test afdekken. |
 | 3 | **Non-functioneel** | A11Y (21, inclusief CIH-08 op de CI-sectie), RESP-01 (8), SEO-01…04 (32) en LINK-01/02 + IMG-01 (11) zijn gebouwd en lokaal groen. VIS-01 en PERF-01 ontbreken nog; screenreader-gedrag blijft een handmatige check. | VIS-01 en PERF-01: besluit over visual baselines en Lighthouse (stap 8 in §6). |
 | 4 | **CI-history data/keten** | CIH-06 is gebouwd en in runs 72 en 73 via de CI-poort gemeten. CIH-07 is gebouwd: 9 datasuite-tests inclusief schema v2 en `suiteTests`, plus 7 UI-tests met `suiteTests` en `max(total)`-fallback. CIH-08 is gebouwd: 4 a11y-tests op de CI-sectie in `accessibility.spec.ts`. **Gesloten:** de CI-bewijsrun is binnen — run 75 schreef de eerste entry met `suiteTests` (148/148) en run 76 is de eerste run van de 152-suite (152/152, `suiteTests` 152), met de vier CIH-08-tests mee. | — |
@@ -250,6 +250,12 @@ Expliciet vastgelegd, zodat de audit niet als afrekening gelezen wordt.
   Pages-deploy. De vier CIH-08-tests en de zes E2E-flows draaiden mee, en het CI-bewijs van
   CIH-07 (schema v2 in de producer) is damit gesloten. Zie `CI-PLAYWRIGHT-HISTORY.md` §15.4
   en §15.5.
+- **F8 is gebouwd (28 november 2026)**: de submit-guard in `src/ts/main.ts` en de
+  `maxlength`-limieten in `docs/contact.html`, met vijf tests F8a…F8e in de contact-suite
+  (21 tests). Regel R8 uit de conditie-actietabel van `TESTPLAN.md` §7.1 is damit gedekt,
+  en de BVA van §5.5 boundert op échte specificatiegrenzen uit de HTML. De CI-bewijsrun van
+  de guard staat open tot de eerste run na de deploy van `main`. Plan:
+  `PLAN-CONTACT-SUBMIT-GUARD.md`.
 - **Wide-font proxy als diagnosetechniek (november 2026)**: een tijdelijk Node-script
   diende de lokale `docs/`-build en forceerde een brede font
   (`* { font-family: Verdana, sans-serif !important; }` via `page.addStyleTag`) als proxy
@@ -305,7 +311,10 @@ Expliciet vastgelegd, zodat de audit niet als afrekening gelezen wordt.
 5. **Testmanagement-artefacten:** defectregister met ID's en testcase-link, register voor de
    handmatige en exploratoire checks uit TESTPLAN §5.3, en dekking per acceptatiecriterium
    (§3.3) in §15.
-6. **F8** — besluit over de submit-guard, samen met de BVA-grens in de HTML (`maxlength`).
+6. **F8 — uitgevoerd (28 november 2026)**: submit-guard in `src/ts/main.ts`,
+   `maxlength` in `docs/contact.html`, vijf tests F8a…F8e, contact-suite 21/21 en de
+   suite 157/157 lokaal. Het CI-bewijs van de guard volgt op de eerste run na de deploy.
+   Plan: `PLAN-CONTACT-SUBMIT-GUARD.md`.
 7. **Poort per build** (TESTPLAN fase 7, G12): pre-deploy/PR-gate — de voorwaarde waaronder
    de smoke-rol in TESTPLAN §5.4 staat.
 8. **Expliciete besluiten over de gedeclareerde types:** cross-browser (Firefox/WebKit),
@@ -328,6 +337,7 @@ Actief:
 - `PLAN-CI-HISTORY-TESTS.md`
 - `PLAN-DEPENDENCY-UPGRADES.md`
 - `PLAN-HERO-SOFT-3D.md`
+- `PLAN-CONTACT-SUBMIT-GUARD.md`
 
 Historisch/obsolete:
 
