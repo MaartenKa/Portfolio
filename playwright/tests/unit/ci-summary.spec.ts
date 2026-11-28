@@ -41,6 +41,7 @@ type HistoryEntry = {
   failed: number;
   flaky: number;
   skipped: number;
+  suiteTests: number | null;
   passRate: number;
   durationMs: number;
   runUrl: string;
@@ -87,6 +88,7 @@ const oldRun = (
   failed: 0,
   flaky: 0,
   skipped: 0,
+  suiteTests: 10,
   passRate: 100,
   durationMs: 1000,
   runUrl: `https://github.com/MaartenKa/Portfolio/actions/runs/${runId}`,
@@ -231,8 +233,9 @@ test.describe("CIH-06 — de producer van de CI-history", () => {
     const latest = file.runs[0];
 
     // 36 expected + 2 flaky = 41 tests die meetellen in de noemer, en 3 die
-    // faalden. De skipped-test telt niet mee: 38 van 41 is 92.7%.
-    expect(file.schemaVersion).toBe(1);
+    // faalden. De skipped-test telt niet mee in de pass-ratio: 38 van 41 is 92.7%.
+    // De suite-omvang is de suite zoals ze in de report staat: 41 + 1 skipped = 42.
+    expect(file.schemaVersion).toBe(2);
     expect(file.workflow).toBe("playwright.yml");
     expect(file.updated).toBe(latest.createdAt);
     expect(latest.total).toBe(41);
@@ -240,6 +243,7 @@ test.describe("CIH-06 — de producer van de CI-history", () => {
     expect(latest.failed).toBe(3);
     expect(latest.flaky).toBe(2);
     expect(latest.skipped).toBe(1);
+    expect(latest.suiteTests).toBe(42);
     expect(latest.passRate).toBe(92.7);
     expect(latest.durationMs).toBe(34903);
     expect(latest.runId).toBe(1234567890);
@@ -445,7 +449,7 @@ test.describe("CIH-06 — de producer van de CI-history", () => {
     // entry.
     expect(file.runs).toHaveLength(2);
     expect(file.runs.map((run) => run.runId)).toEqual([26, 25]);
-    expect(file.schemaVersion).toBe(1);
+    expect(file.schemaVersion).toBe(2);
     expect(file.workflow).toBe("playwright.yml");
     expect(file.updated).toBe(file.runs[0].createdAt);
 
@@ -498,6 +502,36 @@ test.describe("CIH-06 — de producer van de CI-history", () => {
     expect(file.runs[2].runUrl).toBe(
       "https://github.com/MaartenKa/Portfolio/actions/runs/88",
     );
+
+    cleanup(dir);
+  });
+
+  test("CIH-07 schema v2: suiteTests vullen de nieuwe entry en oude entries blijven", () => {
+    const dir = makeTempDir();
+    const report = path.join(dir, "report.json");
+    const history = path.join(dir, "playwright-history.json");
+
+    // Een schema v1-historie: twee oudere entries zonder suiteTests. De producer
+    // mag ze behouden en de nieuwe entry als schema v2 met suiteTests vooraan zetten.
+    writeHistory(history, [
+      oldRun(25, { suiteTests: null, total: 139, passed: 139 }),
+      oldRun(24, { suiteTests: null, total: 139, passed: 139 }),
+    ]);
+
+    writeReport(report, { expected: 145, flaky: 0, unexpected: 0, skipped: 0 });
+
+    const result = runSummary({ report, history, env: ciEnv("26") });
+    expect(result.status).toBe(0);
+
+    const file = readHistory(history);
+
+    expect(file.schemaVersion).toBe(2);
+    expect(file.workflow).toBe("playwright.yml");
+    expect(file.runs).toHaveLength(3);
+    expect(file.runs[0].suiteTests).toBe(145);
+    expect(file.runs[0].total).toBe(145);
+    expect(file.runs[1].suiteTests).toBeNull();
+    expect(file.runs[2].suiteTests).toBeNull();
 
     cleanup(dir);
   });
