@@ -1,6 +1,6 @@
 "use strict";
 // Portfolio — src/ts/main.ts
-// Menu-toggle en CI-history-UI voor de statische site.
+// Menu-toggle, submit-guard en CI-history-UI voor de statische site.
 const copyrightYear = String(new Date().getFullYear());
 document.querySelectorAll(".copyright-year").forEach((el) => {
     el.textContent = copyrightYear;
@@ -53,6 +53,24 @@ if (menuToggle && navLinks) {
             return;
         }
         closeMenu(true);
+    });
+}
+// Submit-guard voor het contactformulier: één submit per formulierpagina.
+// De browser vuurt het submit-event alleen bij een geldig formulier, dus
+// native validatie blijft de poort vóór de guard (TESTPLAN.md §7 F2/F3). De
+// tweede submit wordt geblokkeerd, zodat er maximaal één POST naar Formward
+// gaat (TESTPLAN.md §7 F8 en conditie-actietabel R8).
+const contactForm = document.querySelector("#contact-form");
+if (contactForm) {
+    const submitButton = contactForm.querySelector('button[type="submit"]');
+    contactForm.addEventListener("submit", (event) => {
+        if (contactForm.dataset.submitted === "true") {
+            event.preventDefault();
+            return;
+        }
+        contactForm.dataset.submitted = "true";
+        if (submitButton)
+            submitButton.disabled = true;
     });
 }
 const allowedConclusions = new Set([

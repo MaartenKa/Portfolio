@@ -132,6 +132,7 @@
 
           <div class="card">
             <form
+              id="contact-form"
               data-testid="contact-form"
               action="https://forms.formward.eu/f/269c7657-9b51-4404-b3c8-0f3acd13c0d7"
               method="POST"
@@ -146,6 +147,7 @@
                   data-testid="field-name"
                   placeholder="Uw naam"
                   autocomplete="name"
+                  maxlength="60"
                   required
                 />
               </div>
@@ -171,6 +173,7 @@
                   name="subject"
                   data-testid="field-subject"
                   placeholder="Waar gaat uw bericht over?"
+                  maxlength="100"
                 />
               </div>
 
@@ -182,6 +185,7 @@
                   data-testid="field-message"
                   rows="7"
                   placeholder="Schrijf hier uw bericht..."
+                  maxlength="500"
                   required
                 ></textarea>
               </div>
